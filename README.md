@@ -18,10 +18,15 @@ https://github.com/memmaker/crawl-linley/compare/fd103ab...main
   the inventory and every item prompt use a list with a cursor and item
   menus (`source/rvip.cc`).
 
+- `web:` browser build: `source/libweb.cc` + `winclass-web.cc` (the web
+  half of Itakura's window classes), `web/` (page, build, deploy). Live at
+  https://ruzzoli.de/roguelikes/crawl-linley/
+
 Build and play:
 
     cd source && make -f makefile.x11 && rm -f *.o
     ../play.sh
+    web/build.sh && web/deploy.sh     # browser version (Emscripten)
 
 Tiles: RLTiles (http://rltiles.sourceforge.net/), public domain.
 Licence of the game: `licence.txt`.
