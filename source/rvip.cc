@@ -683,6 +683,10 @@ static int command_menu()
 // Replaces the plain key read at the command prompt.
 int rvip_getkey()
 {
+#ifdef USE_WEB
+    web_autosave();
+#endif
+
     // arrived at the stairs we were walking to: take them
     if (stairs_key)
     {

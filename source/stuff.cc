@@ -12,6 +12,7 @@
  */
 
 #include "AppHdr.h"
+#include "rvip.h"
 #include "stuff.h"
 
 #include <stdlib.h>
@@ -280,6 +281,10 @@ void end(int end_arg)
 
 #ifdef WIN32CONSOLE
     deinit_libw32c();
+#endif
+
+#ifdef USE_WEB
+    web_end(end_arg);           // syncs the saves, shows "Play again"
 #endif
 
     exit(end_arg);

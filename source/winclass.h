@@ -1,4 +1,6 @@
-#ifdef USE_X11
+#ifdef USE_WEB
+// web: no X11 (winclass-web.cc)
+#elif defined(USE_X11)
 #include <X11/Xlib.h>
 #include <X11/X.h>
 #elif defined(WINDOWS)
@@ -12,7 +14,14 @@
  * 内部イメージ型の定義
  */
 
-#ifdef USE_X11
+#ifdef USE_WEB
+/*********** web: RGBA image in memory ********/
+struct web_img { int width, height, bytes_per_line; char *data; };
+typedef web_img *img_type;
+#define ImgWidth(img) (img->width)
+#define ImgHeight(img) (img->height)
+
+#elif defined(USE_X11)
 /*********** X11 ********/
 typedef XImage *img_type;
 #define ImgWidth(img) (img->width)
@@ -97,7 +106,8 @@ class WinClass
 #endif
 
     // Pointer to the window
-#ifdef USE_X11
+#ifdef USE_WEB
+#elif defined(USE_X11)
     Window win;
 #elif defined(WINDOWS)
     HWND hWnd;
@@ -181,7 +191,10 @@ class RegionClass
     // 着せ変えなどでタイル領域でも使用
     int fx; //フォントサイズ  dx,dy と異っても良い(行間マージンなど)
     int fy;
-#ifdef USE_X11
+#ifdef USE_WEB
+    int asc;
+    void init_font(const char *name);
+#elif defined(USE_X11)
     int asc; //font ascent
   #ifdef JP
     XFontSet font; //fontset

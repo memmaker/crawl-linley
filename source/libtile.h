@@ -1,4 +1,6 @@
-#ifdef USE_X11
+#ifdef USE_WEB
+// web: no X11 (winclass-web.cc)
+#elif defined(USE_X11)
 #include <X11/Xlib.h>
 #include <X11/X.h>
 #elif defined(WINDOWS)

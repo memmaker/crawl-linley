@@ -21,6 +21,7 @@
  */
 
 #include "AppHdr.h"
+#include "rvip.h"
 #include "files.h"
 
 #include <string.h>
@@ -1078,6 +1079,10 @@ void save_game(bool leave_game)
 #ifdef SHARED_FILES_CHMOD_PRIVATE
     // change mode (unices)
     chmod(charFile, SHARED_FILES_CHMOD_PRIVATE);
+#endif
+
+#ifdef USE_WEB
+    web_sync_files();
 #endif
 
     // if just save, early out

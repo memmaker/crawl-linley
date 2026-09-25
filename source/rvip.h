@@ -17,6 +17,13 @@ extern int rvip_raw_dirs;
 #define RVIP_REOPEN     (-2)
 
 int rvip_getkey();
+
+#ifdef USE_WEB
+// libweb.cc
+void web_autosave();
+extern "C" void web_sync_files();
+void web_end(int code);
+#endif
 bool rvip_walk_stairs(int key);
 void rvip_push_key(int key);
 int rvip_item_list(int type_expect, bool browse, const char *prompt = NULL);

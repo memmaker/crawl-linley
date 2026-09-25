@@ -2,3 +2,5 @@ save/*
 !save/.keep
 source/*.o
 source/crawl
+web/dist/
+web/stage/
