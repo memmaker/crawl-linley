@@ -18,8 +18,8 @@
 #include <stdio.h>
 #include <algorithm>
 
-#include <iostream.h>
-#include <iomanip.h>
+#include <iostream>
+#include <iomanip>
 using namespace std;
 
 

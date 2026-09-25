@@ -209,16 +209,18 @@ long unmarshallLong(struct tagHeader &th)
 // single precision float -- marshall in network order.
 void marshallFloat(struct tagHeader &th, float data)
 {
-    long intBits = *((long *)(&data));
+    int intBits;  // port: float is 4 bytes, long is 8 on 64-bit
+    memcpy(&intBits, &data, sizeof(intBits));
     marshallLong(th, intBits);
 }
 
 // single precision float -- unmarshall in network order.
 float unmarshallFloat(struct tagHeader &th)
 {
-    long intBits = unmarshallLong(th);
-
-    return *((float *)(&intBits));
+    int intBits = unmarshallLong(th);  // port: 4-byte int, see marshallFloat
+    float data;
+    memcpy(&data, &intBits, sizeof(data));
+    return data;
 }
 
 // string -- marshall length & string data

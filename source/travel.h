@@ -110,7 +110,7 @@ struct level_id {
     }
 
     struct less_than {
-        bool operator () ( const level_id &first, const level_id &second ) {
+        bool operator () ( const level_id &first, const level_id &second ) const {
             return first.branch < second.branch ||
                 (first.branch == second.branch && first.depth < second.depth);
         }

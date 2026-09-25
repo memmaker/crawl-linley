@@ -49,162 +49,54 @@ extern XImage *ImgCreateSimple(int wx, int wy);
 
 XImage *read_png (char *fname)
 {
-  char sig_buf [SIG_CHECK_SIZE];
-  png_struct *png_ptr;
-  png_info *info_ptr;
-  png_byte **png_image;
-  png_byte *png_pixel;
-  unsigned int x, y;
-  int linesize;
-  png_uint_16 c;
-  unsigned int i;
+  // port: libpng 1.6 accessors; 8-bit paletted or gray images only
+  FILE *ifp = fopen(fname, "rb");
+  if (!ifp) pm_error ("file not found");
 
-  //X11
-  XImage *res;
-  //X11
-  unsigned long pix_table[256];
-
-
-  FILE *ifp = fopen(fname,"r");
-
-  if(!ifp) pm_error ("file not found");
-
-  if (fread (sig_buf, 1, SIG_CHECK_SIZE, ifp) != SIG_CHECK_SIZE)
-    pm_error ("input file empty or too short");
-  if (png_sig_cmp ((unsigned char *)sig_buf, (png_size_t) 0, (png_size_t) SIG_CHECK_SIZE) != 0)
-    pm_error ("input file not a PNG file");
-
-  png_ptr = png_create_read_struct (PNG_LIBPNG_VER_STRING, NULL, NULL, NULL);
-  if (png_ptr == NULL) {
-    pm_error ("cannot allocate LIBPNG structure");
-  }
-  info_ptr = png_create_info_struct (png_ptr);
-  if (info_ptr == NULL) {
-    png_destroy_read_struct (&png_ptr, (png_infopp)NULL, (png_infopp)NULL);
-    pm_error ("cannot allocate LIBPNG structures");
-  }
-
-  if (setjmp (png_ptr->jmpbuf)) {
-    png_destroy_read_struct (&png_ptr, (png_infopp)NULL, (png_infopp)NULL);
-    free (png_ptr);
-    free (info_ptr);
+  png_structp png_ptr = png_create_read_struct (PNG_LIBPNG_VER_STRING, NULL, NULL, NULL);
+  png_infop info_ptr = png_create_info_struct (png_ptr);
+  if (setjmp (png_jmpbuf (png_ptr)))
     pm_error ("setjmp returns error condition");
-  }
 
   png_init_io (png_ptr, ifp);
-  png_set_sig_bytes (png_ptr, SIG_CHECK_SIZE);
   png_read_info (png_ptr, info_ptr);
-
-
-
-  png_image = (png_byte **)malloc (info_ptr->height * sizeof (png_byte*));
-  if (png_image == NULL) {
-    free (png_ptr);
-    free (info_ptr);
-    pm_error ("couldn't alloc space for image");
-  }
-
-  if (info_ptr->bit_depth == 16)
-    linesize = 2 * info_ptr->width;
-  else
-    linesize = info_ptr->width;
-
-  if (info_ptr->color_type == PNG_COLOR_TYPE_GRAY_ALPHA)
-    linesize *= 2;
-  else
-  if (info_ptr->color_type == PNG_COLOR_TYPE_RGB)
-    linesize *= 3;
-  else
-  if (info_ptr->color_type == PNG_COLOR_TYPE_RGB_ALPHA)
-    linesize *= 4;
-
-  for (y = 0 ; y < info_ptr->height ; y++) {
-    png_image[y] = (png_byte *)malloc (linesize);
-    if (png_image[y] == NULL) {
-      for (x = 0 ; x < y ; x++)
-        free (png_image[x]);
-      free (png_image);
-      free (png_ptr);
-      free (info_ptr);
-      pm_error ("couldn't alloc space for image");
-    }
-  }
-
-  if (info_ptr->bit_depth < 8)
+  if (png_get_bit_depth (png_ptr, info_ptr) < 8)
     png_set_packing (png_ptr);
 
-  /* sBIT handling is very tricky. If we are extracting only the image, we
-     can use the sBIT info for grayscale and color images, if the three
-     values agree. If we extract the transparency/alpha mask, sBIT is
-     irrelevant for trans and valid for alpha. If we mix both, the
-     multiplication may result in values that require the normal bit depth,
-     so we will use the sBIT info only for transparency, if we know that only
-     solid and fully transparent is used */
+  unsigned int w = png_get_image_width (png_ptr, info_ptr);
+  unsigned int h = png_get_image_height (png_ptr, info_ptr);
+  unsigned long pix_table[256];
+  unsigned int i;
 
-  if (info_ptr->valid & PNG_INFO_sBIT) {
-
-        if ((info_ptr->color_type == PNG_COLOR_TYPE_PALETTE ||
-             info_ptr->color_type == PNG_COLOR_TYPE_RGB ||
-             info_ptr->color_type == PNG_COLOR_TYPE_RGB_ALPHA) &&
-            (info_ptr->sig_bit.red != info_ptr->sig_bit.green ||
-             info_ptr->sig_bit.red != info_ptr->sig_bit.blue) ) {
-	  pm_message ("different bit depths for color channels not supported");
-	  pm_message ("writing file with %d bit resolution", info_ptr->bit_depth);
-        } else 
-          if ((info_ptr->color_type == PNG_COLOR_TYPE_PALETTE) &&
-	      (info_ptr->sig_bit.red < 255)) {
-	    for (i = 0 ; i < info_ptr->num_palette ; i++) {
-	      info_ptr->palette[i].red   >>= (8 - info_ptr->sig_bit.red);
-	      info_ptr->palette[i].green >>= (8 - info_ptr->sig_bit.green);
-	      info_ptr->palette[i].blue  >>= (8 - info_ptr->sig_bit.blue);
-	    }
-
-          } else 
-          if ((info_ptr->color_type == PNG_COLOR_TYPE_GRAY ||
-               info_ptr->color_type == PNG_COLOR_TYPE_GRAY_ALPHA) &&
-	      (info_ptr->sig_bit.gray < info_ptr->bit_depth)) {
-	    png_set_shift (png_ptr, &(info_ptr->sig_bit));
-          }
-
-
-      }
-
-  if (info_ptr->color_type == PNG_COLOR_TYPE_PALETTE) 
+  if (png_get_color_type (png_ptr, info_ptr) == PNG_COLOR_TYPE_PALETTE)
   {
-//X11
-        for (i = 0 ; i < info_ptr->num_palette ; i++) 
-          pix_table[i] = create_pixel(info_ptr->palette[i].red, 
-           info_ptr->palette[i].green, info_ptr->palette[i].blue);
+      png_colorp pal;
+      int npal;
+      png_get_PLTE (png_ptr, info_ptr, &pal, &npal);
+      for (i = 0; i < (unsigned int) npal; i++)
+          pix_table[i] = create_pixel(pal[i].red, pal[i].green, pal[i].blue);
   }
   else
-  if (info_ptr->color_type == PNG_COLOR_TYPE_GRAY)
   {
-        for (i = 0 ; i < 256 ; i++)
-//X11
+      for (i = 0; i < 256; i++)
           pix_table[i] = create_pixel(i, i, i);
   }
 
-  png_read_image (png_ptr, png_image);
+  png_bytep *rows = (png_bytep *) malloc (h * sizeof (png_bytep));
+  for (i = 0; i < h; i++)
+      rows[i] = (png_bytep) malloc (png_get_rowbytes (png_ptr, info_ptr));
+  png_read_image (png_ptr, rows);
   png_read_end (png_ptr, info_ptr);
 
-  res = ImgCreateSimple(info_ptr->width, info_ptr->height);
-
-  for (y = 0 ; y < info_ptr->height ; y++) {
-    png_pixel = png_image[y];
-    for (x = 0 ; x < info_ptr->width ; x++) {
-      c = *png_pixel;
-      png_pixel++;
-      XPutPixel(res, x, y, pix_table[c]);
-    }
+  XImage *res = ImgCreateSimple(w, h);
+  for (unsigned int y = 0; y < h; y++)
+  {
+      for (unsigned int x = 0; x < w; x++)
+          XPutPixel(res, x, y, pix_table[rows[y][x]]);
+      free (rows[y]);
   }
-
-  for (y = 0 ; y < info_ptr->height ; y++)
-    free (png_image[y]);
-  free (png_image);
-  free (png_ptr);
-  free (info_ptr);
-
+  free (rows);
+  png_destroy_read_struct (&png_ptr, &info_ptr, NULL);
   fclose(ifp);
   return res;
 }
-

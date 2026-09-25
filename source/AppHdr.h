@@ -408,7 +408,7 @@
     // Setting it to nothing or not setting it will cause all game files to
     // be dumped in the current directory.
     //
-    #define SAVE_DIR_PATH       "/opt/crawl/lib/"
+    #define SAVE_DIR_PATH       "save/"
 
     // will make this little thing go away.  Define SAVE_PACKAGE_CMD
     // to a command to compress and bundle the save game files into a
@@ -420,9 +420,9 @@
     //
     // Comment these lines out if you want to leave the save files uncompressed.
     //
-    #define SAVE_PACKAGE_CMD    "/usr/bin/zip -m -q -j -1 %s.zip %s.*"
-    #define LOAD_UNPACKAGE_CMD  "/usr/bin/unzip -q -o %s.zip -d" SAVE_DIR_PATH
-    #define PACKAGE_SUFFIX      ".zip"
+    // #define SAVE_PACKAGE_CMD    "/usr/bin/zip -m -q -j -1 %s.zip %s.*"
+    // #define LOAD_UNPACKAGE_CMD  "/usr/bin/unzip -q -o %s.zip -d" SAVE_DIR_PATH
+    // #define PACKAGE_SUFFIX      ".zip"
 
     // This provides some rudimentary protection against people using
     // save file cheats on multi-user systems.

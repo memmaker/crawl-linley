@@ -47,12 +47,12 @@ void Kills::record_kill(const struct monsters *mon) {
 #if defined(WIN32CONSOLE) || defined(WINDOWS)
     kill &k = kills[descriptor];
 #else
-    kill::kill &k = kills[descriptor];
+    class kill &k = kills[descriptor];
 #endif
     if (k.kills)
         k.add_kill(mon, get_packed_place());
     else
-        k = kill::kill(mon);
+        k = kill(mon);
 }
 
 struct kill_exp {
@@ -85,14 +85,14 @@ std::string Kills::kill_info() const {
     std::vector<kill_exp> all_kills;
 
     long count = 0;
-    std::map<___monster_desc, kill::kill, ___monster_desc::less_than>::
+    std::map<___monster_desc, class kill, ___monster_desc::less_than>::
         const_iterator iter = kills.begin();
     for (; iter != kills.end(); ++iter) {
         const ___monster_desc &md = iter->first;
 #if defined(WIN32CONSOLE) || defined(WINDOWS)
         const kill &k = iter->second;
 #else
-        const kill::kill &k = iter->second;
+        const class kill &k = iter->second;
 #endif
         all_kills.push_back( kill_exp( k.exp, k.base_name(md), k.info(md) ) );
         count += k.kills;
@@ -199,7 +199,7 @@ void Kills::save(FILE *file) const {
     // How many kill records do we have?
     writeLong(file, kills.size());
 
-    std::map<___monster_desc, kill::kill, ___monster_desc::less_than>::
+    std::map<___monster_desc, class kill, ___monster_desc::less_than>::
         const_iterator iter = kills.begin();
     for ( ; iter != kills.end(); ++iter) {
         iter->first.save(file);

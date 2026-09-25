@@ -460,7 +460,7 @@ void TextRegionClass::redraw(int x1, int y1, int x2, int y2){
 
         while (x<=tail){
             oldcol = col;
-            col = abuf[adrs+x];
+            col = (x < tail) ? abuf[adrs+x] : oldcol;  // port: tail may be mx
             if (oldcol != col || x==tail)
             {
                 fillrect(head*dx, y*dy, x*dx, (y+1)*dy,oldcol>>4);
@@ -476,7 +476,7 @@ void TextRegionClass::redraw(int x1, int y1, int x2, int y2){
 #endif
                 head = x;
             }
-            if (cbuf[adrs+x] & 0x80) x+=2;
+            if (x < tail && (cbuf[adrs+x] & 0x80)) x+=2;
             else x++;
         }
     }

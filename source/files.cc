@@ -208,7 +208,7 @@ void make_filename( char *buf, const char *prefix, int level, int where,
     UNUSED( isGhost );
 
     char suffix[4], lvl[5];
-    char finalprefix[kFileNameLen];
+    char finalprefix[kFileNameLen + 1];  // port: terminator written at [kFileNameLen]
 
     //if (level < 0) level = 0; //
     strcpy(suffix, (level < 10) ? "0" : "");

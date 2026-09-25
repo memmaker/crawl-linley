@@ -41,7 +41,7 @@ static struct playerspell spelldata[] = {
 #include "spl-data.h"
 };
 
-static int plyrspell_list[NUM_SPELLS];
+static int plyrspell_list[SPELL_NO_SPELL + 1];  // port: was NUM_SPELLS, indexed with SPELL_NO_SPELL
 
 #define PLYRSPELLDATASIZE (sizeof(spelldata)/sizeof(struct playerspell))
 
@@ -64,7 +64,7 @@ void init_playerspells(void)
     // can only use up to PLYRSPELLDATASIZE _MINUS ONE_,  or the 
     // last entry tries to set plyrspell_list[SPELL_NO_SPELL] 
     // which corrupts the heap.
-    for (x = 0; x < PLYRSPELLDATASIZE - 1; x++)
+    for (x = 0; x < PLYRSPELLDATASIZE; x++)
         plyrspell_list[spelldata[x].id] = x;
 
     for (x = 0; x < NUM_SPELLS; x++)

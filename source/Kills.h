@@ -31,7 +31,7 @@ struct ___monster_desc {
 
     struct less_than {
         bool operator () ( const ___monster_desc &m1, 
-                           const ___monster_desc &m2) {
+                           const ___monster_desc &m2) const {
             return m1.monnum < m2.monnum || 
                 (m1.monnum == m2.monnum && m1.modifier < m2.modifier);
         }
@@ -88,7 +88,7 @@ public:
 
     std::string kill_info() const;
 private:
-    std::map<___monster_desc, kill::kill, ___monster_desc::less_than> kills;
+    std::map<___monster_desc, class kill, ___monster_desc::less_than> kills;
     std::vector<kill_ghost> ghosts;
 
     void record_ghost_kill(const struct monsters *mon);

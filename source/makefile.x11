@@ -10,17 +10,17 @@ include makefile.obj
 OBJECTS += tiles.o libx11.o libx11_png.o libtile.o winclass.o winclass-x11.o
 
 # CXX = /usr/local/bin/g++
-CXX = g++
+CXX = clang++
 DELETE = rm -f
 COPY = cp
 OS_TYPE = LINUX
-EXTRA_FLAGS = -DV_FIX -DWIZARD -DUSE_TILE -DUSE_X11
+EXTRA_FLAGS = -DV_FIX -DWIZARD -DUSE_TILE -DUSE_X11 -DX_LOCALE -std=gnu++98 -I/opt/X11/include -I/opt/homebrew/include -w
 
 # For Mac OSX
 #EXTRA_FLAGS = -DV_FIX -DWIZARD -DUSE_TILE -DUSE_X11 -DX_LOCALE
 
-CFLAGS = -Wall -Wwrite-strings -Wstrict-prototypes \
-            -Wmissing-prototypes \
+CFLAGS = -Wall -Wwrite-strings  \
+             \
             -O -D$(OS_TYPE) $(EXTRA_FLAGS)
 
 # LDFLAGS = -static
@@ -28,12 +28,12 @@ MCHMOD = 2755
 # INSTALLDIR = /usr/games
 INSTALLDIR = /opt/crawl/bin
 
-LIB = -L/usr/X11R6/lib -lX11 -lpng
+LIB = -L/opt/X11/lib -lX11 -L/opt/homebrew/lib -lpng
 # for MAC OSX
 #LIB = -L/usr/X11R6/lib -lX11 `libpng-config --libs`
 
 # Include for Linux
-INCLUDES = -I/usr/include/ncurses
+INCLUDES =
 
 all: $(GAME)
 

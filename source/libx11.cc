@@ -241,7 +241,7 @@ void init_region_tile(){
 img_type ImgLoadFileSimple(const char *name)
 {
         char fname[512];
-        sprintf(fname,"%s%s.png", SAVE_DIR_PATH, name);
+        sprintf(fname,"tiles/%s.png", name); // port: tiles live in tiles/
         return ImgLoadFile(fname);
 }
 
