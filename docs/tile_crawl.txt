@@ -1,0 +1,23 @@
+*** Dungeon Crawl tile version ***
+
+-Dungeon Crawl tile version
+http://crawlj.sourceforge.jp/down_e.html
+
+-information about this tileset
+http://rltiles.sourceforge.net/
+
+-The following Darshan's patches applied
+ Travel
+ Pickup thrown
+ Pickup dropped
+ Friend branding
+ Easier butchering
+ Ban pickup
+ Explore
+ Stash tracking
+ Kill tracking
+ Dump screenshot
+ Targeting zero-experience monsters
+ Playing sounds
+http://www.angelfire.com/trek/mazewest/
+

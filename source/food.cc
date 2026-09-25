@@ -120,7 +120,11 @@ void weapon_switch( int targ )
 {
     if (targ == -1)
     {
+#ifdef JP 
+        mpr( "あなたは素手に戻った。" );
+#else
         mpr( "You switch back to your bare hands." );
+#endif
     }
     else
     {
@@ -129,7 +133,11 @@ void weapon_switch( int targ )
 
         char let = index_to_letter( targ );
 
+#ifdef JP 
+        snprintf( info, INFO_SIZE, "%c - %sに武器を戻した。", let, buff );
+#else
         snprintf( info, INFO_SIZE, "Switching back to %c - %s.", let, buff );
+#endif
         mpr( info );
     }
 
@@ -143,7 +151,10 @@ void weapon_switch( int targ )
         unwield_item(you.equip[EQ_WEAPON]);
 
     you.equip[EQ_WEAPON] = targ;
-
+#ifdef USE_TILE
+    if (Options.use_tile)
+        TilePlayerRefresh();
+#endif
     // special checks: staves of power, etc
     if (targ != -1)
         wield_effects( targ, false );
@@ -173,13 +184,21 @@ bool butchery(void)
 
     if (igrd[you.x_pos][you.y_pos] == NON_ITEM)
     {
+#ifdef JP 
+        mpr("ここには何もない！");
+#else
         mpr("There isn't anything here!");
+#endif
         return (false);
     }
 
     if (player_is_levitating() && !wearing_amulet(AMU_CONTROLLED_FLIGHT))
     {
+#ifdef JP 
+        mpr("あなたは今いる高さから床に手が届かない。");
+#else
         mpr("You can't reach the floor from up here.");
+#endif
         return (false);
     }
 
@@ -199,47 +218,53 @@ bool butchery(void)
         // be annoyed with the excess prompt).
         if (Options.easy_butcher && !can_butcher)
         {
-            const int a_slot = letter_to_index('a');
-            const int b_slot = letter_to_index('b');
-            int swap_slot = a_slot;
-
             //mv: check for berserk first
             if (you.berserker)
             {
+#ifdef JP 
+                mpr ("あなたは狂乱のあまり、肉を捌くナイフを探すことができない！");
+#else
                 mpr ("You are too berserk to search for a butchering knife!");
+#endif
                 return (false);
             }
 
-            // Find out which slot is our auto-swap slot
-            if (you.equip[EQ_WEAPON] == a_slot)
-                swap_slot = b_slot;
-
-
-            // check if the swap slot is appropriate first
-            if (you.equip[EQ_WEAPON] != swap_slot)
-            {
-                if (is_valid_item( you.inv[ swap_slot ] ) // must have one
-
-                    // must be able to cut with it
-                    && can_cut_meat( you.inv[ swap_slot ].base_type,
-                                     you.inv[ swap_slot ].sub_type )
-
-                    // must be known to be uncursed weapon
-                    && you.inv[ swap_slot ].base_type == OBJ_WEAPONS
-                    && item_known_uncursed( you.inv[ swap_slot ] ))
-                {
-                    mpr( "Switching to your swap slot weapon." );
+             // We'll now proceed to look through the entire inventory for
+             // choppers/slicers.  We'll skip special weapons because
+             // wielding/unwielding a foo of distortion would be disastrous.
+             for (int i = 0; i < ENDOFPACK; ++i)
+             {
+                 if (is_valid_item( you.inv[i] )
+                         && can_cut_meat( you.inv[i].base_type,
+                             you.inv[i].sub_type )
+                         && you.inv[i].base_type == OBJ_WEAPONS
+                         && item_known_uncursed(you.inv[i])
+                         && item_ident( you.inv[i], ISFLAG_KNOW_TYPE )
+                         && get_weapon_brand(you.inv[i])
+                                 != SPWPN_DISTORTION
+                         && can_wield( you.inv[i] ))
+                 {
+#ifdef JP 
+                    mpr( "あなたは肉を捌くため武器を持ち替えた。" );
+#else
+                    mpr( "Switching to a butchering implement.");
+#endif
                     wpn_switch = true;
-                    wield_weapon( true );
-                }
-            }
+                    wield_weapon( true, i );
+                    break;
+                  }
+              }
 
             // if we didn't swap above, then we still can't cut... let's
             // call wield_weapon() in the "prompt the user" way...
             if (!wpn_switch)
             {
                 // prompt for new weapon
+#ifdef JP 
+                mpr( "どの武器で肉を捌きますか？", MSGCH_PROMPT );
+#else
                 mpr( "What would you like to use?", MSGCH_PROMPT );
+#endif
                 wield_weapon( false );
 
                 // let's see if the user did something...
@@ -282,9 +307,17 @@ bool butchery(void)
     if (!barehand_butcher && you.equip[EQ_WEAPON] == -1)
     {
         if (you.equip[ EQ_GLOVES ] == -1)
+#ifdef JP 
+            mpr("なんと。素手で？");
+#else
             mpr("What, with your bare hands?");
+#endif
         else
+#ifdef JP 
+            mpr("手が防具に包まれているため、爪を使えない！");
+#else
             mpr("You can't use your claws with your gloves on!");
+#endif
 
         // Switching back to avoid possible bug where player can use
         // this to switch weapons in zero time.
@@ -295,7 +328,11 @@ bool butchery(void)
     }
     else if (!can_butcher)
     {
+#ifdef JP 
+        mpr("肉を捌くには鋭い武器を使う必要があります。");
+#else
         mpr("Maybe you should try using a sharper implement.");
+#endif
 
         // Switching back to avoid possible bug where player can use
         // this to switch weapons in zero time.
@@ -339,10 +376,18 @@ bool butchery(void)
             && (mitm[igrd[you.x_pos][you.y_pos]].base_type == OBJ_CORPSES &&
                 mitm[igrd[you.x_pos][you.y_pos]].sub_type == CORPSE_BODY))
     {
+#ifdef JP 
+        strcpy(info, "");
+#else
         strcpy(info, "Butcher ");
+#endif
         it_name(igrd[you.x_pos][you.y_pos], DESC_NOCAP_A, str_pass);
         strcat(info, str_pass);
+#ifdef JP 
+        strcat(info, "を捌きますか？");
+#else
         strcat(info, "\?");
+#endif
         mpr(info, MSGCH_PROMPT);
 
         unsigned char keyin = getch();
@@ -366,9 +411,17 @@ bool butchery(void)
         last_item = NON_ITEM;
 
         if (barehand_butcher)
+#ifdef JP 
+            mpr("あなたは死体をバラバラに引き裂き始めた。");
+#else
             mpr("You start tearing the corpse apart.");
+#endif
         else
+#ifdef JP 
+            mpr("あなたは切り刻み始めた。");
+#else
             mpr("You start hacking away.");
+#endif
 
         if (you.duration[DUR_PRAYER]
             && (you.religion == GOD_OKAWARU
@@ -409,10 +462,18 @@ bool butchery(void)
                 goto out_of_eating;
             }
 
+#ifdef JP 
+            strcpy(info, "");
+#else
             strcpy(info, "Butcher ");
+#endif
             it_name(o, DESC_NOCAP_A, str_pass);
             strcat(info, str_pass);
+#ifdef JP 
+            strcat(info, "を捌きますか？");
+#else
             strcat(info, "\?");
+#endif
             mpr(info, MSGCH_PROMPT);
 
             keyin = getch();
@@ -435,9 +496,17 @@ bool butchery(void)
                 item_got = o;
 
                 if (barehand_butcher)
+#ifdef JP 
+                    mpr("あなたは死体をバラバラに引き裂き始めた。");
+#else
                     mpr("You start tearing the corpse apart.");
+#endif
                 else
+#ifdef JP 
+                    mpr("あなたは切り刻み始めた。");
+#else
                     mpr("You start hacking away.");
+#endif
 
                 if (you.duration[DUR_PRAYER]
                     && (you.religion == GOD_OKAWARU
@@ -484,7 +553,11 @@ bool butchery(void)
         }                       // end "for k" loop
     }
 
+#ifdef JP 
+    mpr("ここには解体するような物はない。");
+#else
     mpr("There isn't anything to dissect here.");
+#endif
 
     if (wpn_switch && !new_cursed)
         weapon_switch( old_weapon );
@@ -498,13 +571,21 @@ void eat_food(void)
 
     if (you.is_undead == US_UNDEAD)
     {
+#ifdef JP 
+        mpr("あなたは食べることができない。");
+#else
         mpr("You can't eat.");
+#endif
         return;
     }
 
     if (you.hunger >= 11000)
     {
+#ifdef JP 
+        mpr("あなたは満腹で食べることができない。");
+#else
         mpr("You're too full to eat anything.");
+#endif
         return;
     }
 
@@ -523,7 +604,11 @@ void eat_food(void)
         return;
     }
 
+#ifdef JP 
+    which_inventory_slot = prompt_invent_item( "どのアイテムを食べますか？", OBJ_FOOD );
+#else
     which_inventory_slot = prompt_invent_item( "Eat which item?", OBJ_FOOD );
+#endif
     if (which_inventory_slot == PROMPT_ABORT)
     {
         canned_msg( MSG_OK );
@@ -534,7 +619,11 @@ void eat_food(void)
     // expanded to handle more than just OBJ_FOOD 16mar200 {dlb}
     if (you.inv[which_inventory_slot].base_type != OBJ_FOOD)
     {
+#ifdef JP 
+        mpr("あなたはそれを食べられない!");
+#else
         mpr("You can't eat that!");
+#endif
         return;
     }
 
@@ -587,15 +676,27 @@ static bool food_change(bool suppress_message)
         you.hunger_state = newstate;
         set_redraw_status( REDRAW_HUNGER );
 
+        // Stop the travel command, if it's in progress and we just got hungry
+        if (newstate < HS_SATIATED && you.running < 0) 
+            you.running = 0;
+
         if (suppress_message == false)
         {
             switch (you.hunger_state)
             {
             case HS_STARVING:
+#ifdef JP 
+                mpr("あなたはひどく飢えている！", MSGCH_FOOD);
+#else
                 mpr("You are starving!", MSGCH_FOOD);
+#endif
                 break;
             case HS_HUNGRY:
+#ifdef JP 
+                mpr("あなたは空腹を感じている。", MSGCH_FOOD);
+#else
                 mpr("You are feeling hungry.", MSGCH_FOOD);
+#endif
                 break;
             default:
                 break;
@@ -615,18 +716,37 @@ static void describe_food_change(int food_increment)
     if (magnitude == 0)
         return;
 
+#ifdef JP 
+    strcpy(info, (magnitude <= 100) ? "あなたはやや" :
+                 (magnitude <= 350) ? "あなたは幾分" :
+                 (magnitude <= 800) ? "あなたはかなり"
+                                    : "あなたはとても");
+#else
     strcpy(info, (magnitude <= 100) ? "You feel slightly " :
                  (magnitude <= 350) ? "You feel somewhat " :
                  (magnitude <= 800) ? "You feel a quite a bit "
                                     : "You feel a lot ");
+#endif
 
+#ifdef JP 
+#else
     if ((you.hunger_state > HS_SATIATED) ^ (food_increment < 0))
         strcat(info, "more ");
     else
         strcat(info, "less ");
+#endif
 
+#ifdef JP 
+    strcat(info, (you.hunger_state > HS_SATIATED) ? "満腹感が"
+                                                  : "空腹感が");
+    if ((you.hunger_state > HS_SATIATED) ^ (food_increment < 0))
+        strcat(info, "増した。");    
+    else
+        strcat(info, "薄れた。");
+#else
     strcat(info, (you.hunger_state > HS_SATIATED) ? "full."
                                                   : "hungry.");
+#endif
     mpr(info);
 }                               // end describe_food_change()
 
@@ -665,8 +785,13 @@ static bool eat_from_floor(void)
             continue;
 
         it_name( o, DESC_NOCAP_A, str_pass );
+#ifdef JP 
+        snprintf( info, INFO_SIZE, "%s%s食べますか？", str_pass, 
+                 (mitm[o].quantity > 1) ? "から1個" : "を" );
+#else
         snprintf( info, INFO_SIZE, "Eat %s%s?", (mitm[o].quantity > 1) ? "one of " : "", 
                  str_pass );
+#endif
         mpr( info, MSGCH_PROMPT );
 
         unsigned char keyin = tolower( getch() );
@@ -729,12 +854,20 @@ static void eat_chunk( int chunk_effect )
         switch (chunk_effect)
         {
         case CE_MUTAGEN_RANDOM:
+#ifdef JP 
+            mpr("この肉はとても奇妙な味がする。");
+#else
             mpr("This meat tastes really weird.");
+#endif
             mutate(100);
             break;
 
         case CE_MUTAGEN_BAD:
+#ifdef JP 
+            mpr("この肉は*とても*奇妙な味がする。");
+#else
             mpr("This meat tastes *really* weird.");
+#endif
             give_bad_mutation();
             break;
 
@@ -744,22 +877,39 @@ static void eat_chunk( int chunk_effect )
             break;
 
         case CE_POISONOUS:
+#ifdef JP 
+            mpr("うへ！  この肉は有毒だ！");
+#else
             mpr("Yeeuch - this meat is poisonous!");
+#endif
             poison_player( 3 + random2(4) );
             break;
 
         case CE_ROTTEN:
         case CE_CONTAMINATED:
+#ifdef JP 
+            mpr("この肉はどうも悪くなっているようだ。");
+#else
             mpr("There is something wrong with this meat.");
+#endif
             disease_player( 50 + random2(100) );
             break;
 
         // note that this is the only case that takes time and forces redraw
         case CE_CLEAN:
+#ifdef JP 
+            strcpy(info, "この肉は");
+#else
             strcpy(info, "This raw flesh ");
+#endif
 
+#ifdef JP 
+            strcat(info, (likes_chunks) ? "おいしい。"
+                                        : "あまり食欲をそそらない。");
+#else
             strcat(info, (likes_chunks) ? "tastes good."
                                         : "is not very appetising.");
+#endif
             mpr(info);
 
             start_delay( DELAY_EAT, 2 );
@@ -777,36 +927,60 @@ static void ghoul_eat_flesh( int chunk_effect )
 
     if (chunk_effect != CE_ROTTEN && chunk_effect != CE_CONTAMINATED)
     {
+#ifdef JP 
+        mpr("この肉はおいしい。");
+#else
         mpr("This raw flesh tastes good.");
+#endif
 
         if (!one_chance_in(5))
             healed = true;
 
         if (player_rotted() && !one_chance_in(3))
         {
+#ifdef JP 
+            mpr("あなたは元気になったように感じた。");
+#else
             mpr("You feel more resilient.");
+#endif
             unrot_hp(1);
         }
     }
     else
     {
         if (chunk_effect == CE_ROTTEN)
+#ifdef JP 
+            mpr( "この腐った肉はとてもおいしい！" );
+#else
             mpr( "This rotting flesh tastes delicious!" );
+#endif
         else // CE_CONTAMINATED
+#ifdef JP 
+            mpr( "この肉はとてもおいしい！" );
+#else
             mpr( "This flesh tastes delicious!" );
+#endif
 
         healed = true;
 
         if (player_rotted() && !one_chance_in(4))
         {
+#ifdef JP 
+            mpr("あなたは元気になったように感じた。");
+#else
             mpr("You feel more resilient.");
+#endif
             unrot_hp(1);
         }
     }
 
     if (you.strength < you.max_strength && one_chance_in(5))
     {
+#ifdef JP 
+        mpr("あなたは腕力が回復した。");
+#else
         mpr("You feel your strength returning.");
+#endif
         you.strength++;
         you.redraw_strength = 1;
     }
@@ -930,22 +1104,41 @@ static void eating(unsigned char item_class, int item_type)
 
         // next, let's take care of messaging {dlb}:
         if (how_carnivorous > 0 && carnivore_modifier < 0)
+#ifdef JP 
+            mpr("オエ……。あなたには肉が必要だ！");
+#else
             mpr("Blech - you need meat!");
+#endif
         else if (how_herbivorous > 0 && herbivore_modifier < 0)
+#ifdef JP 
+            mpr("オエ……。あなたには野菜が必要だ！");
+#else
             mpr("Blech - you need greens!");
+#endif
 
         if (how_herbivorous < 1)
         {
             switch (item_type)
             {
             case FOOD_MEAT_RATION:
+#ifdef JP 
+                mpr("肉の保存食は実に満足の行く食事だ！");
+#else
                 mpr("That meat ration really hit the spot!");
+#endif
                 break;
             case FOOD_BEEF_JERKY:
+#ifdef JP 
+                strcpy(info, "このビーフジャーキーは");
+                strcat(info, (one_chance_in(4)) ? "噛み応えがある"
+                                                : "おいしい");
+                strcat(info, "！");
+#else
                 strcpy(info, "That beef jerky was ");
                 strcat(info, (one_chance_in(4)) ? "jerk-a-riffic"
                                                 : "delicious");
                 strcat(info, "!");
+#endif
                 mpr(info);
                 break;
             default:
@@ -958,53 +1151,113 @@ static void eating(unsigned char item_class, int item_type)
             switch (item_type)
             {
             case FOOD_BREAD_RATION:
+#ifdef JP 
+                mpr("パンの保存食は実に満足の行く食事だ！");
+#else
                 mpr("That bread ration really hit the spot!");
+#endif
                 break;
             case FOOD_PEAR:
             case FOOD_APPLE:
             case FOOD_APRICOT:
+#ifdef JP 
+                strcpy(info, "むむむ……おいしい");
+                strcat(info, (item_type == FOOD_APPLE)   ? "リンゴだ。" :
+                             (item_type == FOOD_PEAR)    ? "洋ナシだ。" :
+                             (item_type == FOOD_APRICOT) ? "アンズだ。"
+                                                         : "果物だ。");
+#else
                 strcpy(info, "Mmmm... Yummy ");
                 strcat(info, (item_type == FOOD_APPLE)   ? "apple." :
                              (item_type == FOOD_PEAR)    ? "pear." :
                              (item_type == FOOD_APRICOT) ? "apricot."
                                                          : "fruit.");
+#endif
                 mpr(info);
                 break;
             case FOOD_CHOKO:
+#ifdef JP 
+                mpr("このハヤトウリはまるで味がしない。");
+#else
                 mpr("That choko was very bland.");
+#endif
                 break;
             case FOOD_SNOZZCUMBER:
+#ifdef JP 
+                mpr("クサキウリはまさしく腐った味がする！");
+#else
                 mpr("That snozzcumber tasted truly putrid!");
+#endif
                 break;
             case FOOD_ORANGE:
+#ifdef JP 
+                strcpy(info, "このオレンジはとてもおいしい！");
+#else
                 strcpy(info, "That orange was delicious!");
+#endif
                 if (one_chance_in(8))
+#ifdef JP 
+                    strcat(info, "皮までもおいしかった！");
+#else
                     strcat(info, " Even the peel tasted good!");
+#endif
                 mpr(info);
                 break;
             case FOOD_BANANA:
+#ifdef JP 
+                strcpy(info, "このバナナはとてもおいしい！");
+#else
                 strcpy(info, "That banana was delicious!");
+#endif
                 if (one_chance_in(8))
+#ifdef JP 
+                    strcat(info, "皮までもおいしかった！");
+#else
                     strcat(info, " Even the peel tasted good!");
+#endif
                 mpr(info);
                 break;
             case FOOD_STRAWBERRY:
+#ifdef JP 
+                mpr("このイチゴはとてもおいしい！");
+#else
                 mpr("That strawberry was delicious!");
+#endif
                 break;
             case FOOD_RAMBUTAN:
+#ifdef JP 
+                mpr("このランブータンはとてもおいしい！");
+#else
                 mpr("That rambutan was delicious!");
+#endif
                 break;
             case FOOD_LEMON:
+#ifdef JP 
+                mpr("このレモンは酸っぱい……だがとてもおいしい！");
+#else
                 mpr("That lemon was rather sour... But delicious nonetheless!");
+#endif
                 break;
             case FOOD_GRAPE:
+#ifdef JP 
+                mpr("このブドウはとてもおいしい！");
+#else
                 mpr("That grape was delicious!");
+#endif
                 break;
             case FOOD_SULTANA:
+#ifdef JP 
+                mpr("この種なし干しブドウはとてもおいしい！ (だが小さすぎる)");
+#else
                 mpr("That sultana was delicious! (but very small)");
+#endif
                 break;
             case FOOD_LYCHEE:
+#ifdef JP 
+                mpr("このライチはとてもおいしい！");
+#else
                 mpr("That lychee was delicious!");
+#endif
                 break;
             default:
                 break;
@@ -1014,14 +1267,26 @@ static void eating(unsigned char item_class, int item_type)
         switch (item_type)
         {
         case FOOD_HONEYCOMB:
+#ifdef JP 
+            mpr("この蜂の巣はとてもおいしい。");
+#else
             mpr("That honeycomb was delicious.");
+#endif
             break;
         case FOOD_ROYAL_JELLY:
+#ifdef JP 
+            mpr("このロイヤルゼリーはとてもおいしい！");
+#else
             mpr("That royal jelly was delicious!");
+#endif
             restore_stat(STAT_ALL, false);
             break;
         case FOOD_PIZZA:
+#ifdef JP 
+            strcpy(info, "むむむ……");
+#else
             strcpy(info, "Mmm... ");
+#endif
 
             if (SysEnv.crawl_pizza && !one_chance_in(3))
                 strcat(info, SysEnv.crawl_pizza);
@@ -1029,6 +1294,17 @@ static void eating(unsigned char item_class, int item_type)
             {
                 temp_rand = random2(9);
 
+#ifdef JP 
+                strcat(info, (temp_rand == 0) ? "ハム＆パイナップルピザだ。" :
+                             (temp_rand == 1) ? "とても厚いピザだ。" :
+                             (temp_rand == 2) ? "ベジタブルピザだ。" :
+                             (temp_rand == 3) ? "ペパローニピザだ。" :
+                             (temp_rand == 4) ? "うへ。アンチョビーピザだ！" :
+                             (temp_rand == 5) ? "チーズたっぷりのピザだ。" :
+                             (temp_rand == 6) ? "最高にうまいピザだ。" :
+                             (temp_rand == 7) ? "超最高にうまいピザだ！"
+                                              : "チキンピザだ。");
+#else
                 strcat(info, (temp_rand == 0) ? "Ham and pineapple." :
                              (temp_rand == 1) ? "Extra thick crust." :
                              (temp_rand == 2) ? "Vegetable." :
@@ -1038,13 +1314,31 @@ static void eating(unsigned char item_class, int item_type)
                              (temp_rand == 6) ? "Supreme." :
                              (temp_rand == 7) ? "Super Supreme!"
                                               : "Chicken.");
+#endif
             }
             mpr(info);
             break;
         case FOOD_CHEESE:
+#ifdef JP 
+            strcpy(info, "むむむ……");
+#else
             strcpy(info, "Mmm... ");
+#endif
             temp_rand = random2(9);
 
+#ifdef JP 
+            strcat(info, (temp_rand == 0) ? "チェーダーチーズだ" :
+                         (temp_rand == 1) ? "エダムチーズだ" :
+                         (temp_rand == 2) ? "ウェンズレデールチーズだ" :
+                         (temp_rand == 3) ? "カマンベールだ" :
+                         (temp_rand == 4) ? "ヤギ乳のチーズだ" :
+                         (temp_rand == 5) ? "フルーツチーズだ" :
+                         (temp_rand == 6) ? "モツァレラだ" :
+                         (temp_rand == 7) ? "ヒツジ乳のチーズだ"
+                                          : "ヤク乳のチーズだ");
+
+            strcat(info, "。");
+#else
             strcat(info, (temp_rand == 0) ? "Cheddar" :
                          (temp_rand == 1) ? "Edam" :
                          (temp_rand == 2) ? "Wensleydale" :
@@ -1056,10 +1350,15 @@ static void eating(unsigned char item_class, int item_type)
                                           : "Yak cheese");
 
             strcat(info, ".");
+#endif
             mpr(info);
             break;
         case FOOD_SAUSAGE:
+#ifdef JP 
+            mpr("このソーセージはとてもおいしい！");
+#else
             mpr("That sausage was delicious!");
+#endif
             break;
         default:
             break;
@@ -1102,6 +1401,16 @@ static bool can_ingest(int what_isit, int kindof_thing, bool suppress_msg)
 
     // ur_chunkslover not defined in terms of ur_carnivorous because
     // a player could be one and not the other IMHO - 13mar2000 {dlb}
+#ifdef V_FIX
+    bool ur_chunkslover = (you.hunger_state <= HS_HUNGRY
+                           || wearing_amulet(AMU_THE_GOURMAND)
+                           || you.species == SP_KOBOLD
+                           || you.species == SP_OGRE
+                           || you.species == SP_OGRE_MAGE
+                           || you.species == SP_TROLL
+                           || you.species == SP_GHOUL
+                           || you.mutation[MUT_CARNIVOROUS]);
+#else
     bool ur_chunkslover = (you.hunger_state <= HS_HUNGRY
                            || wearing_amulet(AMU_THE_GOURMAND)
                            || you.species == SP_KOBOLD
@@ -1109,6 +1418,7 @@ static bool can_ingest(int what_isit, int kindof_thing, bool suppress_msg)
                            || you.species == SP_TROLL
                            || you.species == SP_GHOUL
                            || you.mutation[MUT_CARNIVOROUS]);
+#endif
 
     switch (what_isit)
     {
@@ -1134,7 +1444,11 @@ static bool can_ingest(int what_isit, int kindof_thing, bool suppress_msg)
             {
                 survey_says = false;
                 if (!suppress_msg)
+#ifdef JP 
+                    mpr("残念ながら、あなたは肉食性だ。");
+#else
                     mpr("Sorry, you're a carnivore.");
+#endif
             }
             else
                 survey_says = true;
@@ -1145,13 +1459,21 @@ static bool can_ingest(int what_isit, int kindof_thing, bool suppress_msg)
             {
                 survey_says = false;
                 if (!suppress_msg)
+#ifdef JP 
+                    mpr("あなたは生肉を食べることができない！");
+#else
                     mpr("You can't eat raw meat!");
+#endif
             }
             else if (!ur_chunkslover)
             {
                 survey_says = false;
                 if (!suppress_msg)
+#ifdef JP 
+                    mpr("あなたはそれを食べられるほど腹が空いていない！");
+#else
                     mpr("You aren't quite hungry enough to eat that!");
+#endif
             }
             else
                 survey_says = true;
@@ -1287,6 +1609,18 @@ static int determine_chunk_effect(int which_chunk_type, bool rotten_chunk)
     // prize rotten meat ... yum! {dlb}:
     if (wearing_amulet(AMU_THE_GOURMAND))
     {
+#ifdef V_FIX
+        if (you.species == SP_GHOUL)
+        {
+            if ( (this_chunk_effect == CE_CLEAN)||(this_chunk_effect == CE_CONTAMINATED) )
+                this_chunk_effect = CE_ROTTEN;
+        }
+        else
+        {
+            if ( (this_chunk_effect == CE_ROTTEN)||(this_chunk_effect == CE_CONTAMINATED) )
+                this_chunk_effect = CE_CLEAN;
+        }
+#else
         if (you.species == SP_GHOUL)
         {
             if (this_chunk_effect == CE_CLEAN)
@@ -1297,6 +1631,7 @@ static int determine_chunk_effect(int which_chunk_type, bool rotten_chunk)
             if (this_chunk_effect == CE_ROTTEN)
                 this_chunk_effect = CE_CLEAN;
         }
+#endif
     }
 
     return (this_chunk_effect);

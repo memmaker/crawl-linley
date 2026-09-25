@@ -56,7 +56,7 @@ void mons_trap(struct monsters *monster)
 
     // new function call {dlb}
     int which_trap = trap_at_xy(monster->x, monster->y);
-    if (which_trap == -1) 
+    if (which_trap == -1)
         return;
 
     bool trapKnown = (grd[monster->x][monster->y] != DNGN_UNDISCOVERED_TRAP);
@@ -74,7 +74,11 @@ void mons_trap(struct monsters *monster)
         if (trap_category(env.trap[which_trap].type) == DNGN_TRAP_MECHANICAL)
         {
             if (trapKnown)
+#ifdef JP
+                simple_monster_message(monster, "は罠の上を安全に飛んでいる。");
+#else
                 simple_monster_message(monster, " flies safely over a trap.");
+#endif
 
             return;             // early return {dlb}
         }
@@ -90,42 +94,66 @@ void mons_trap(struct monsters *monster)
     {
     case TRAP_DART:
         projectileFired = true;
+#ifdef JP
+        strcpy(beem.beam_name, "投げ矢");
+#else
         strcpy(beem.beam_name, " dart");
+#endif
         beem.damage = dice_def( 1, 4 );
         beem.colour = OBJ_MISSILES;
         beem.type = MI_DART;
         break;
     case TRAP_NEEDLE:
         projectileFired = true;
+#ifdef JP
+        strcpy(beem.beam_name, "吹き矢針");
+#else
         strcpy(beem.beam_name, " needle");
+#endif
         beem.damage = dice_def( 1, 0 );
         beem.colour = OBJ_MISSILES;
         beem.type = MI_NEEDLE;
         break;
     case TRAP_ARROW:
         projectileFired = true;
+#ifdef JP
+        strcpy(beem.beam_name, "矢");
+#else
         strcpy(beem.beam_name, "n arrow");
+#endif
         beem.damage = dice_def( 1, 7 );
         beem.colour = OBJ_MISSILES;
         beem.type = MI_ARROW;
         break;
     case TRAP_SPEAR:
         projectileFired = true;
+#ifdef JP
+        strcpy(beem.beam_name, "槍");
+#else
         strcpy(beem.beam_name, " spear");
+#endif
         beem.damage = dice_def( 1, 10 );
         beem.colour = OBJ_WEAPONS;
         beem.type = WPN_SPEAR;
         break;
     case TRAP_BOLT:
         projectileFired = true;
+#ifdef JP
+        strcpy(beem.beam_name, "クロスボウの矢");
+#else
         strcpy(beem.beam_name, " bolt");
+#endif
         beem.damage = dice_def( 1, 13 );
         beem.colour = OBJ_MISSILES;
         beem.type = MI_BOLT;
         break;
     case TRAP_AXE:
         projectileFired = true;
+#ifdef JP
+        strcpy(beem.beam_name, "斧");
+#else
         strcpy(beem.beam_name, "n axe");
+#endif
         beem.damage = dice_def( 1, 15 );
         beem.colour = OBJ_WEAPONS;
         beem.type = WPN_HAND_AXE;
@@ -142,7 +170,11 @@ void mons_trap(struct monsters *monster)
     case TRAP_AMNESIA:
         if (mons_intel(monster->type) > I_ANIMAL)
             simple_monster_message(monster,
+#ifdef JP
+                                   "は一瞬困惑したようだ。");
+#else
                                    " seems momentarily disoriented.");
+#endif
         break;
     // blade traps sometimes fail to trigger altogether,
     // resulting in an "early return" from this f(x) for
@@ -153,16 +185,28 @@ void mons_trap(struct monsters *monster)
             if (trapKnown)
             {
                 simple_monster_message(monster,
+#ifdef JP
+                                        "は刃の罠を発動しそこねた。");
+#else
                                         " fails to trigger a blade trap.");
+#endif
             }
             return;             // early return {dlb}
         }
         else if (random2(monster->evasion) > 8)
         {
             if (monsterNearby && !simple_monster_message(monster,
+#ifdef JP
+                                           "は左右に揺れる巨大な刃を避けた。"))
+#else
                                            " avoids a huge, swinging blade."))
+#endif
             {
+#ifdef JP
+                mpr("巨大な刃が左右に揺れた！");
+#else
                 mpr("A huge blade swings out!");
+#endif
             }
 
             damage_taken = -1;  // just to be certain {dlb}
@@ -171,15 +215,29 @@ void mons_trap(struct monsters *monster)
         {
             if (monsterNearby)
             {
+#ifdef JP
+                strcpy(info, "巨大な刃が左右に揺れて");
+#else
                 strcpy(info, "A huge blade swings out");
+#endif
 
                 if (player_monster_visible( monster ))
                 {
+#ifdef JP
+
+                    strcat(info, ptr_monam( monster, DESC_PLAIN ));
+                    strcat(info, "に突き刺さった");
+#else
                     strcat(info, " and slices into ");
                     strcat(info, ptr_monam( monster, DESC_NOCAP_THE ));
+#endif
                 }
 
+#ifdef JP
+                strcat(info, "！");
+#else
                 strcat(info, "!");
+#endif
                 mpr(info);
             }
 
@@ -203,9 +261,17 @@ void mons_trap(struct monsters *monster)
         {
             if (one_chance_in(5))
             {
+#ifdef JP
+                mpr("ゾットの力があなたに向けて発動した！");
+#else
                 mpr("The power of Zot is invoked against you!");
+#endif
                 miscast_effect( SPTYP_RANDOM, 10 + random2(30),
+#ifdef JP
+                                75 + random2(100), 0, "ゾットの力" );
+#else
                                 75 + random2(100), 0, "the power of Zot" );
+#endif
                 return;         // early return {dlb}
             }
         }
@@ -215,9 +281,17 @@ void mons_trap(struct monsters *monster)
                 && !silenced(you.x_pos, you.y_pos))
         {
             if (monsterNearby)
+#ifdef JP
+                strcpy(info, "あなたは『ゾット』の怒声を耳にした！");
+#else
                 strcpy(info, "You hear a loud \"Zot\"!");
+#endif
             else
+#ifdef JP
+                strcpy(info, "あなたは遠くに『ゾット』の声を聞いた！");
+#else
                 strcpy(info, "You hear a distant \"Zot\"!");
+#endif
             mpr(info);
         }
 
@@ -282,11 +356,19 @@ void mons_trap(struct monsters *monster)
 
         if (monsterNearby)
         {
+#ifdef JP
+            snprintf( info, INFO_SIZE, "%sは%s%s%s！",
+                      beem.beam_name,
+                      ptr_monam( monster, DESC_NOCAP_THE ),
+                      (damage_taken >= 0) ? "に命中した" : "から外れた",
+                      (damage_taken == 0) ? "が、損傷を与えなかった" : "" );
+#else
             snprintf( info, INFO_SIZE, "A%s %s %s%s!",
-                      beem.beam_name, 
+                      beem.beam_name,
                       (damage_taken >= 0) ? "hits" : "misses",
                       ptr_monam( monster, DESC_NOCAP_THE ),
                       (damage_taken == 0) ? ", but does no damage" : "" );
+#endif
 
             mpr(info);
         }
@@ -340,7 +422,11 @@ void mons_cast(struct monsters *monster, struct bolt &pbolt, int spell_cast)
     int duration = 0;
 
 #if DEBUG_DIAGNOSTICS
+#ifdef JP
     snprintf( info, INFO_SIZE, "Mon #%d casts %s (#%d)", monster_index(monster),
+#else
+    snprintf( info, INFO_SIZE, "Mon #%d casts %s (#%d)", monster_index(monster),
+#endif
              mons_spell_name( spell_cast ), spell_cast );
 
     mpr( info, MSGCH_DIAGNOSTICS );
@@ -392,7 +478,7 @@ void mons_cast(struct monsters *monster, struct bolt &pbolt, int spell_cast)
                 }
             }
 
-            create_monster( mons, ENCH_ABJ_V, SAME_ATTITUDE(monster), 
+            create_monster( mons, ENCH_ABJ_V, SAME_ATTITUDE(monster),
                             monster->x, monster->y, monster->foe, 250 );
         }
         return;
@@ -419,8 +505,8 @@ void mons_cast(struct monsters *monster, struct bolt &pbolt, int spell_cast)
 
         for (sumcount = 0; sumcount < sumcount2; sumcount++)
         {
-            create_monster( MONS_RAKSHASA_FAKE, ENCH_ABJ_III, 
-                            SAME_ATTITUDE(monster), monster->x, monster->y, 
+            create_monster( MONS_RAKSHASA_FAKE, ENCH_ABJ_III,
+                            SAME_ATTITUDE(monster), monster->x, monster->y,
                             monster->foe, 250 );
         }
         return;
@@ -442,7 +528,7 @@ void mons_cast(struct monsters *monster, struct bolt &pbolt, int spell_cast)
         for (sumcount = 0; sumcount < sumcount2; sumcount++)
         {
             create_monster( summon_any_demon(DEMON_COMMON), duration,
-                            SAME_ATTITUDE(monster), monster->x, monster->y, 
+                            SAME_ATTITUDE(monster), monster->x, monster->y,
                             monster->foe, 250 );
         }
         return;
@@ -462,7 +548,7 @@ void mons_cast(struct monsters *monster, struct bolt &pbolt, int spell_cast)
         for (sumcount = 0; sumcount < sumcount2; sumcount++)
         {
             create_monster( summon_any_demon(DEMON_LESSER), duration,
-                            SAME_ATTITUDE(monster), monster->x, monster->y, 
+                            SAME_ATTITUDE(monster), monster->x, monster->y,
                             monster->foe, 250 );
         }
         return;
@@ -517,7 +603,11 @@ void mons_cast(struct monsters *monster, struct bolt &pbolt, int spell_cast)
         if (!monsterNearby || mons_friendly(monster))
             return;
 
+#ifdef JP
+        simple_monster_message(monster, "は地獄の力に呼びかけた！");
+#else
         simple_monster_message(monster, " calls on the powers of Hell!");
+#endif
 
         torment(monster->x, monster->y);
         return;
@@ -539,13 +629,13 @@ void mons_cast(struct monsters *monster, struct bolt &pbolt, int spell_cast)
         for (sumcount = 0; sumcount < sumcount2; sumcount++)
         {
             create_monster( summon_any_demon(DEMON_GREATER), duration,
-                            SAME_ATTITUDE(monster), monster->x, monster->y, 
+                            SAME_ATTITUDE(monster), monster->x, monster->y,
                             monster->foe, 250 );
         }
         return;
 
     case MS_CANTRIP:
-        // Monster spell of uselessness, just prints a message. 
+        // Monster spell of uselessness, just prints a message.
         // This spell exists so that some monsters with really strong
         // spells (ie orc priest) can be toned down a bit. -- bwr
         //
@@ -553,33 +643,65 @@ void mons_cast(struct monsters *monster, struct bolt &pbolt, int spell_cast)
         switch (random2(7))
         {
         case 0:
+#ifdef JP
+            simple_monster_message( monster, "は一瞬だけ明るく輝いた。",
+#else
             simple_monster_message( monster, " glows brightly for a moment.",
+#endif
                                     MSGCH_MONSTER_ENCHANT );
             break;
         case 1:
+#ifdef JP
+            mpr( "あなたは背筋が寒くなった。" );
+#else
             mpr( "You feel troubled." );
+#endif
             break;
         case 2:
+#ifdef JP
+            mpr( "あなたは邪悪なエネルギーの波動が傍らを通り抜けるのを感じた。" );
+#else
             mpr( "You feel a wave of unholy energy pass over you." );
+#endif
             break;
         case 3:
-            simple_monster_message( monster, " looks stronger.", 
+#ifdef JP
+            simple_monster_message( monster, "は強大に見える。",
+#else
+            simple_monster_message( monster, " looks stronger.",
+#endif
                                     MSGCH_MONSTER_ENCHANT );
             break;
         case 4:
+#ifdef JP
+            simple_monster_message( monster, "は少しだけ半透明になった。",
+#else
             simple_monster_message( monster, " becomes somewhat translucent.",
+#endif
                                     MSGCH_MONSTER_ENCHANT );
             break;
         case 5:
+#ifdef JP
+            simple_monster_message( monster, "の眼が爛々と輝きだした。",
+#else
             simple_monster_message( monster, "'s eyes start to glow.",
+#endif
                                     MSGCH_MONSTER_ENCHANT );
             break;
         case 6:
         default:
             if (one_chance_in(20))
+#ifdef JP
+                mpr( "何だったにせよ、あなたは抵抗した。" );
+#else
                 mpr( "You resist (whatever that was supposed to do)." );
+#endif
             else
+#ifdef JP
+                mpr( "あなたは抵抗した。" );
+#else
                 mpr( "You resist." );
+#endif
             break;
         }
         return;
@@ -669,11 +791,11 @@ void setup_mons_cast(struct monsters *monster, struct bolt &pbolt, int spell_cas
     pbolt.isBeam = theBeam.isBeam;
     pbolt.source_x = monster->x;
     pbolt.source_y = monster->y;
-    pbolt.isTracer = false; 
+    pbolt.isTracer = false;
 
     if (pbolt.beam_name[0] && pbolt.beam_name[0] != '0')
         pbolt.aux_source = pbolt.beam_name;
-    else 
+    else
         pbolt.aux_source = NULL;
 
     if (spell_cast == MS_HASTE
@@ -692,7 +814,11 @@ void monster_teleport(struct monsters *monster, bool instan)
     {
         if (mons_del_ench(monster, ENCH_TP_I, ENCH_TP_IV))
         {
+#ifdef JP
+            simple_monster_message(monster, "の存在は安定したようだ。");
+#else
             simple_monster_message(monster, " seems more stable.");
+#endif
         }
         else
             mons_add_ench(monster, (coinflip() ? ENCH_TP_III : ENCH_TP_IV ));
@@ -700,7 +826,11 @@ void monster_teleport(struct monsters *monster, bool instan)
         return;
     }
 
+#ifdef JP
+    simple_monster_message(monster, "は姿を消した！");
+#else
     simple_monster_message(monster, " disappears!");
+#endif
 
     // pick the monster up
     mgrd[monster->x][monster->y] = NON_MONSTER;
@@ -750,21 +880,41 @@ void setup_dragon(struct monsters *monster, struct bolt &pbolt)
     case MONS_DRAGON:
     case MONS_LINDWURM:
     case MONS_XTAHUA:
+#ifdef JP
+        strcat(pbolt.beam_name, "の炎の塊");
+#else
         strcat(pbolt.beam_name, "'s blast of flame");
+#endif
         pbolt.flavour = BEAM_FIRE;
         pbolt.colour = RED;
+#ifdef JP
+        pbolt.aux_source = "炎の塊";
+#else
         pbolt.aux_source = "blast of flame";
+#endif
         break;
 
     case MONS_ICE_DRAGON:
+#ifdef JP
+        strcat(pbolt.beam_name, "の冷気の塊");
+#else
         strcat(pbolt.beam_name, "'s blast of cold");
+#endif
         pbolt.flavour = BEAM_COLD;
         pbolt.colour = WHITE;
+#ifdef JP
+        pbolt.aux_source = "冷気の塊";
+#else
         pbolt.aux_source = "blast of cold";
+#endif
         break;
 
     default:
+#ifdef JP
         DEBUGSTR("Bad monster class in setup_dragon()");
+#else
+        DEBUGSTR("Bad monster class in setup_dragon()");
+#endif
     }
 
     pbolt.range = 4;
@@ -852,7 +1002,7 @@ bool mons_throw(struct monsters *monster, struct bolt &pbolt, int hand_used)
     int lnchClass = (weapon != NON_ITEM) ? mitm[weapon].base_type : -1;
     int lnchType  = (weapon != NON_ITEM) ? mitm[weapon].sub_type  :  0;
 
-    item_def item = mitm[hand_used];  // copy changed for venom launchers 
+    item_def item = mitm[hand_used];  // copy changed for venom launchers
     item.quantity = 1;
 
     pbolt.range = 9;
@@ -963,14 +1113,14 @@ bool mons_throw(struct monsters *monster, struct bolt &pbolt, int hand_used)
                 pbolt.hit++;
         }
 
-        // monsters no longer gain unfair advantages with weapons of fire/ice 
+        // monsters no longer gain unfair advantages with weapons of fire/ice
         // and incorrect ammo.  They now have same restriction as players.
 
         const int bow_brand = get_weapon_brand(mitm[monster->inv[MSLOT_WEAPON]]);
 
         const int ammo_brand = get_ammo_brand( item );
 
-        bool poison = (ammo_brand == SPMSL_POISONED 
+        bool poison = (ammo_brand == SPMSL_POISONED
                         || ammo_brand == SPMSL_POISONED_II);
 
         // POISON brand launchers poison ammo
@@ -985,12 +1135,24 @@ bool mons_throw(struct monsters *monster, struct bolt &pbolt, int hand_used)
             baseHit += 2;
             exDamBonus += 6;
             pbolt.flavour = BEAM_FIRE;
+#ifdef JP
+            strcpy(pbolt.beam_name, "");
+#else
             strcpy(pbolt.beam_name, "bolt of ");
+#endif
 
             if (poison)
+#ifdef JP
+                strcat(pbolt.beam_name, "毒の塗られた");
+#else
                 strcat(pbolt.beam_name, "poison ");
+#endif
 
+#ifdef JP
+            strcat(pbolt.beam_name, "炎の矢");
+#else
             strcat(pbolt.beam_name, "flame");
+#endif
             pbolt.colour = RED;
             pbolt.type = SYM_ZAP;
         }
@@ -1002,12 +1164,24 @@ bool mons_throw(struct monsters *monster, struct bolt &pbolt, int hand_used)
             baseHit += 2;
             exDamBonus += 6;
             pbolt.flavour = BEAM_COLD;
+#ifdef JP
+            strcpy(pbolt.beam_name, "");
+#else
             strcpy(pbolt.beam_name, "bolt of ");
+#endif
 
             if (poison)
+#ifdef JP
+                strcat(pbolt.beam_name, "毒の塗られた");
+#else
                 strcat(pbolt.beam_name, "poison ");
+#endif
 
+#ifdef JP
+            strcat(pbolt.beam_name, "冷気の矢");
+#else
             strcat(pbolt.beam_name, "frost");
+#endif
             pbolt.colour = WHITE;
             pbolt.type = SYM_ZAP;
         }
@@ -1027,8 +1201,30 @@ bool mons_throw(struct monsters *monster, struct bolt &pbolt, int hand_used)
     // stupid,  it will have baseHit of 0 and damage of 0.  Ah well.
     strcpy(info, ptr_monam( monster, DESC_CAP_THE) );
 
-    strcat(info, (launched) ? " shoots " : " throws ");
+#ifdef JP
+    strcat(info, "は");
+    if (strlen(pbolt.beam_name) > 0)
+    {
+        strcat(info, pbolt.beam_name);
+    }
+    else
+    {
+        // build shoot message
+        char str_pass[ ITEMNAME_SIZE ];
+        item_name( item, DESC_NOCAP_A, str_pass );
+        strcat(info, str_pass);
 
+        // build beam name
+        item_name( item, DESC_PLAIN, str_pass );
+        strcpy(pbolt.beam_name, str_pass);
+    }
+    strcat(info, (launched) ? "を撃った" : "を投げた");
+#else
+    strcat(info, (launched) ? " shoots " : " throws ");
+#endif
+
+#ifdef JP
+#else
     if (strlen(pbolt.beam_name) > 0)
     {
         strcat(info, "a ");
@@ -1045,25 +1241,51 @@ bool mons_throw(struct monsters *monster, struct bolt &pbolt, int hand_used)
         item_name( item, DESC_PLAIN, str_pass );
         strcpy(pbolt.beam_name, str_pass);
     }
+#endif
 
+#ifdef JP
+    strcat(info, "。");
+#else
     strcat(info, ".");
+#endif
     mpr(info);
 
 
-    if (launched) 
+    if (launched)
     {
+#ifdef JP
+        snprintf( throw_buff, sizeof(throw_buff), "%sが撃った%sが命中した",
+                  ptr_monam( monster, DESC_PLAIN ),
+                  pbolt.beam_name );
+        char aux_buff[80];
+        snprintf( aux_buff, sizeof(aux_buff), "%sの射撃",
+                  pbolt.beam_name );
+        pbolt.aux_source = aux_buff;
+#else
         snprintf( throw_buff, sizeof(throw_buff), "Shot with a%s %s by %s",
-                  (is_vowel(pbolt.beam_name[0]) ? "n" : ""), pbolt.beam_name, 
+                  (is_vowel(pbolt.beam_name[0]) ? "n" : ""), pbolt.beam_name,
                   ptr_monam( monster, DESC_NOCAP_A ) );
+#endif
     }
     else
     {
+#ifdef JP
+        snprintf( throw_buff, sizeof(throw_buff), "%sが投げた%sが命中した",
+                  ptr_monam( monster, DESC_PLAIN),
+                  pbolt.beam_name );
+        char aux_buff[80];
+        snprintf( aux_buff, sizeof(aux_buff), "%sの投擲",
+                  pbolt.beam_name );
+    pbolt.aux_source = aux_buff;
+    }
+#else
         snprintf( throw_buff, sizeof(throw_buff), "Hit by a%s %s thrown by %s",
-                  (is_vowel(pbolt.beam_name[0]) ? "n" : ""), pbolt.beam_name, 
+                  (is_vowel(pbolt.beam_name[0]) ? "n" : ""), pbolt.beam_name,
                   ptr_monam( monster, DESC_NOCAP_A ) );
     }
-
     pbolt.aux_source = throw_buff;
+#endif
+
 
     // add everything up.
     pbolt.hit = baseHit + random2avg(exHitBonus, 2) + ammoHitBonus;
@@ -1105,20 +1327,36 @@ void spore_goes_pop(struct monsters *monster)
     if (type == MONS_GIANT_SPORE)
     {
         beam.flavour = BEAM_SPORE;
+#ifdef JP
+        strcpy(beam.beam_name, "胞子の爆発");
+#else
         strcpy(beam.beam_name, "explosion of spores");
+#endif
         beam.colour = LIGHTGREY;
         beam.damage = dice_def( 3, 15 );
         beam.ex_size = 2;
+#ifdef JP
+        strcpy( info, "巨大胞子は爆発した！" );
+#else
         strcpy( info, "The giant spore explodes!" );
+#endif
     }
     else
     {
         beam.flavour = BEAM_ELECTRICITY;
+#ifdef JP
+        strcpy(beam.beam_name, "稲妻の放射");
+#else
         strcpy(beam.beam_name, "blast of lightning");
+#endif
         beam.colour = LIGHTCYAN;
         beam.damage = dice_def( 3, 20 );
         beam.ex_size = coinflip() ? 3 : 2;
+#ifdef JP
+        strcpy( info, "球雷が爆発した！" );
+#else
         strcpy( info, "The ball lightning explodes!" );
+#endif
     }
 
     if (mons_near(monster))
@@ -1150,7 +1388,11 @@ struct SBeam mons_spells( int spell_cast, int power )
     {
     case MS_MMISSILE:
         beam.colour = LIGHTMAGENTA;     //inv_colour [throw_2];
+#ifdef JP
+        beam.name = "魔法の矢";       // inv_name [throw_2]);
+#else
         beam.name = "magic dart";       // inv_name [throw_2]);
+#endif
         beam.range = 6;
         beam.rangeMax = 10;
         beam.damage = dice_def( 3, 4 + (power / 100) );
@@ -1163,7 +1405,11 @@ struct SBeam mons_spells( int spell_cast, int power )
 
     case MS_FLAME:
         beam.colour = RED;
+#ifdef JP
+        beam.name = "炎の塊";
+#else
         beam.name = "puff of flame";
+#endif
         beam.range = 6;
         beam.rangeMax = 10;
 
@@ -1181,7 +1427,11 @@ struct SBeam mons_spells( int spell_cast, int power )
 
     case MS_FROST:
         beam.colour = WHITE;
+#ifdef JP
+        beam.name = "冷気の塊";
+#else
         beam.name = "puff of frost";
+#endif
         beam.range = 6;
         beam.rangeMax = 10;
 
@@ -1197,7 +1447,11 @@ struct SBeam mons_spells( int spell_cast, int power )
         break;
 
     case MS_PARALYSIS:
+#ifdef JP
         beam.name = "0";
+#else
+        beam.name = "0";
+#endif
         beam.range = 5;
         beam.rangeMax = 9;
         beam.type = 0;
@@ -1207,7 +1461,11 @@ struct SBeam mons_spells( int spell_cast, int power )
         break;
 
     case MS_SLOW:
+#ifdef JP
         beam.name = "0";
+#else
+        beam.name = "0";
+#endif
         beam.range = 5;
         beam.rangeMax = 9;
         beam.type = 0;
@@ -1217,7 +1475,11 @@ struct SBeam mons_spells( int spell_cast, int power )
         break;
 
     case MS_HASTE:              // (self)
+#ifdef JP
         beam.name = "0";
+#else
+        beam.name = "0";
+#endif
         beam.range = 5;
         beam.rangeMax = 9;
         beam.type = 0;
@@ -1227,7 +1489,11 @@ struct SBeam mons_spells( int spell_cast, int power )
         break;
 
     case MS_CONFUSE:
+#ifdef JP
         beam.name = "0";
+#else
+        beam.name = "0";
+#endif
         beam.range = 5;
         beam.rangeMax = 9;
         beam.type = 0;
@@ -1237,7 +1503,11 @@ struct SBeam mons_spells( int spell_cast, int power )
         break;
 
     case MS_VENOM_BOLT:
+#ifdef JP
+        beam.name = "毒液の矢";
+#else
         beam.name = "bolt of poison";
+#endif
         beam.range = 7;
         beam.rangeMax = 16;
         beam.damage = dice_def( 3, 6 + power / 13 );
@@ -1250,7 +1520,11 @@ struct SBeam mons_spells( int spell_cast, int power )
         break;
 
     case MS_FIRE_BOLT:
+#ifdef JP
+        beam.name = "猛火の矢";
+#else
         beam.name = "bolt of fire";
+#endif
         beam.range = 4;
         beam.rangeMax = 13;
         beam.damage = dice_def( 3, 8 + power / 11 );
@@ -1263,7 +1537,11 @@ struct SBeam mons_spells( int spell_cast, int power )
         break;
 
     case MS_COLD_BOLT:
+#ifdef JP
+        beam.name = "凍結の矢";
+#else
         beam.name = "bolt of cold";
+#endif
         beam.range = 4;
         beam.rangeMax = 13;
         beam.damage = dice_def( 3, 8 + power / 11 );
@@ -1276,7 +1554,11 @@ struct SBeam mons_spells( int spell_cast, int power )
         break;
 
     case MS_LIGHTNING_BOLT:
+#ifdef JP
+        beam.name = "稲妻の矢";
+#else
         beam.name = "bolt of lightning";
+#endif
         beam.range = 7;
         beam.rangeMax = 16;
         beam.damage = dice_def( 3, 10 + power / 9 );
@@ -1289,7 +1571,11 @@ struct SBeam mons_spells( int spell_cast, int power )
         break;
 
     case MS_INVIS:
+#ifdef JP
         beam.name = "0";
+#else
+        beam.name = "0";
+#endif
         beam.range = 5;
         beam.rangeMax = 9;
         beam.type = 0;
@@ -1300,7 +1586,11 @@ struct SBeam mons_spells( int spell_cast, int power )
 
     case MS_FIREBALL:
         beam.colour = RED;
+#ifdef JP
+        beam.name = "ファイアボール";
+#else
         beam.name = "fireball";
+#endif
         beam.range = 6;
         beam.rangeMax = 10;
         beam.damage = dice_def( 3, 7 + power / 10 );
@@ -1312,7 +1602,11 @@ struct SBeam mons_spells( int spell_cast, int power )
         break;
 
     case MS_HEAL:
+#ifdef JP
         beam.name = "0";
+#else
+        beam.name = "0";
+#endif
         beam.range = 5;
         beam.rangeMax = 9;
         beam.type = 0;
@@ -1323,7 +1617,11 @@ struct SBeam mons_spells( int spell_cast, int power )
         break;
 
     case MS_TELEPORT:
+#ifdef JP
         beam.name = "0";
+#else
+        beam.name = "0";
+#endif
         beam.range = 5;
         beam.rangeMax = 9;
         beam.type = 0;
@@ -1333,7 +1631,11 @@ struct SBeam mons_spells( int spell_cast, int power )
         break;
 
     case MS_TELEPORT_OTHER:
+#ifdef JP
         beam.name = "0";
+#else
+        beam.name = "0";
+#endif
         beam.range = 5;
         beam.rangeMax = 9;
         beam.type = 0;
@@ -1347,7 +1649,11 @@ struct SBeam mons_spells( int spell_cast, int power )
         break;
 
     case MS_CRYSTAL_SPEAR:      // was splinters
+#ifdef JP
+        beam.name = "水晶の槍";
+#else
         beam.name = "crystal spear";
+#endif
         beam.range = 7;
         beam.rangeMax = 16;
         beam.damage = dice_def( 3, 12 + power / 10 );
@@ -1360,7 +1666,11 @@ struct SBeam mons_spells( int spell_cast, int power )
         break;
 
     case MS_DIG:
+#ifdef JP
         beam.name = "0";
+#else
+        beam.name = "0";
+#endif
         beam.range = 3;
         beam.rangeMax = 7 + random2(power) / 10;
         beam.type = 0;
@@ -1370,7 +1680,11 @@ struct SBeam mons_spells( int spell_cast, int power )
         break;
 
     case MS_NEGATIVE_BOLT:      // negative energy
+#ifdef JP
+        beam.name = "負のエネルギーの矢";
+#else
         beam.name = "bolt of negative energy";
+#endif
         beam.range = 7;
         beam.rangeMax = 16;
         beam.damage = dice_def( 3, 6 + power / 13 );
@@ -1386,7 +1700,11 @@ struct SBeam mons_spells( int spell_cast, int power )
 
     case MS_ORB_ENERGY: // mystic blast
         beam.colour = LIGHTMAGENTA;
+#ifdef JP
+        beam.name = "エネルギーの爆裂球";
+#else
         beam.name = "orb of energy";
+#endif
         beam.range = 6;
         beam.rangeMax = 10;
         beam.damage = dice_def( 3, 7 + (power / 14) );
@@ -1401,7 +1719,11 @@ struct SBeam mons_spells( int spell_cast, int power )
 
     case MS_STEAM_BALL:
         beam.colour = LIGHTGREY;
+#ifdef JP
+        beam.name = "蒸気の爆裂球";
+#else
         beam.name = "ball of steam";
+#endif
         beam.range = 6;
         beam.rangeMax = 10;
         beam.damage = dice_def( 3, 6 );
@@ -1416,7 +1738,11 @@ struct SBeam mons_spells( int spell_cast, int power )
     // 28 is animate dead
 
     case MS_PAIN:
+#ifdef JP
         beam.name = "0";
+#else
+        beam.name = "0";
+#endif
         beam.range = 7;
         beam.rangeMax = 14;
         beam.type = 0;
@@ -1432,7 +1758,11 @@ struct SBeam mons_spells( int spell_cast, int power )
 
     case MS_STICKY_FLAME:
         beam.colour = RED;
+#ifdef JP
+        beam.name = "焼夷の炎";
+#else
         beam.name = "sticky flame";
+#endif
         beam.range = 6;
         beam.rangeMax = 10;
         beam.damage = dice_def( 3, 3 + power / 50 );
@@ -1444,7 +1774,11 @@ struct SBeam mons_spells( int spell_cast, int power )
         break;
 
     case MS_POISON_BLAST:       // demon
+#ifdef JP
+        beam.name = "毒素の放射";
+#else
         beam.name = "blast of poison";
+#endif
         beam.range = 7;
         beam.rangeMax = 16;
         beam.damage = dice_def( 3, 3 + power / 25 );
@@ -1458,7 +1792,11 @@ struct SBeam mons_spells( int spell_cast, int power )
 
     case MS_PURPLE_BLAST:       // purple bang thing
         beam.colour = LIGHTMAGENTA;
+#ifdef JP
+        beam.name = "エネルギーの爆裂球";
+#else
         beam.name = "orb of energy";
+#endif
         beam.range = 6;
         beam.rangeMax = 10;
         beam.damage = dice_def( 3, 10 + power / 15 );
@@ -1471,7 +1809,11 @@ struct SBeam mons_spells( int spell_cast, int power )
 
     case MS_ENERGY_BOLT:        // eye of devastation
         beam.colour = YELLOW;
+#ifdef JP
+        beam.name = "エネルギーの矢";
+#else
         beam.name = "bolt of energy";
+#endif
         beam.range = 9;
         beam.rangeMax = 23;
         beam.damage = dice_def( 3, 20 );
@@ -1484,7 +1826,11 @@ struct SBeam mons_spells( int spell_cast, int power )
 
     case MS_STING:              // sting
         beam.colour = GREEN;
+#ifdef JP
+        beam.name = "毒針";
+#else
         beam.name = "sting";
+#endif
         beam.range = 8;
         beam.rangeMax = 12;
         beam.damage = dice_def( 1, 6 + power / 25 );
@@ -1497,7 +1843,11 @@ struct SBeam mons_spells( int spell_cast, int power )
 
     case MS_IRON_BOLT:
         beam.colour = LIGHTCYAN;
+#ifdef JP
+        beam.name = "鉄塊の矢";
+#else
         beam.name = "iron bolt";
+#endif
         beam.range = 4;
         beam.rangeMax = 8;
         beam.damage = dice_def( 3, 8 + (power / 9) );
@@ -1510,7 +1860,11 @@ struct SBeam mons_spells( int spell_cast, int power )
 
     case MS_STONE_ARROW:
         beam.colour = LIGHTGREY;
+#ifdef JP
+        beam.name = "石錐の矢";
+#else
         beam.name = "stone arrow";
+#endif
         beam.range = 8;
         beam.rangeMax = 12;
         beam.damage = dice_def( 3, 5 + (power / 10) );
@@ -1523,7 +1877,11 @@ struct SBeam mons_spells( int spell_cast, int power )
 
     case MS_POISON_SPLASH:
         beam.colour = GREEN;
+#ifdef JP
+        beam.name = "毒の飛沫";
+#else
         beam.name = "splash of poison";
+#endif
         beam.range = 5;
         beam.rangeMax = 10;
         beam.damage = dice_def( 1, 4 + power / 10 );
@@ -1535,7 +1893,11 @@ struct SBeam mons_spells( int spell_cast, int power )
         break;
 
     case MS_DISINTEGRATE:
+#ifdef JP
         beam.name = "0";
+#else
+        beam.name = "0";
+#endif
         beam.range = 7;
         beam.rangeMax = 14;
         beam.type = 0;
@@ -1548,7 +1910,11 @@ struct SBeam mons_spells( int spell_cast, int power )
         break;
 
     case MS_MARSH_GAS:          // swamp drake
+#ifdef JP
+        beam.name = "穢れた蒸気";
+#else
         beam.name = "foul vapour";
+#endif
         beam.range = 7;
         beam.rangeMax = 16;
         beam.damage = dice_def( 3, 2 + power / 25 );
@@ -1562,7 +1928,11 @@ struct SBeam mons_spells( int spell_cast, int power )
 
     case MS_QUICKSILVER_BOLT:   // Quicksilver dragon
         beam.colour = random_colour();
+#ifdef JP
+        beam.name = "エネルギーの矢";
+#else
         beam.name = "bolt of energy";
+#endif
         beam.range = 9;
         beam.rangeMax = 23;
         beam.damage = dice_def( 3, 25 );
@@ -1574,7 +1944,11 @@ struct SBeam mons_spells( int spell_cast, int power )
         break;
 
     case MS_HELLFIRE:           // fiend's hellfire
+#ifdef JP
+        beam.name = "地獄の業火";
+#else
         beam.name = "hellfire";
+#endif
         beam.colour = RED;
         beam.range = 4;
         beam.rangeMax = 13;
@@ -1587,7 +1961,11 @@ struct SBeam mons_spells( int spell_cast, int power )
         break;
 
     case MS_METAL_SPLINTERS:
+#ifdef JP
+        beam.name = "金属片の雨";
+#else
         beam.name = "spray of metal splinters";
+#endif
         beam.range = 7;
         beam.rangeMax = 16;
         beam.damage = dice_def( 3, 20 + power / 20 );
@@ -1600,7 +1978,11 @@ struct SBeam mons_spells( int spell_cast, int power )
         break;
 
     case MS_BANISHMENT:
+#ifdef JP
         beam.name = "0";
+#else
+        beam.name = "0";
+#endif
         beam.range = 5;
         beam.rangeMax = 9;
         beam.type = 0;
@@ -1610,7 +1992,11 @@ struct SBeam mons_spells( int spell_cast, int power )
         break;
 
     default:
+#ifdef JP
+        DEBUGSTR("知られざる呪文");
+#else
         DEBUGSTR("Unknown spell");
+#endif
     }
 
     return (beam);
@@ -1623,7 +2009,11 @@ static unsigned char monster_abjuration(int pow, bool test)
     struct monsters *monster = 0;       // NULL {dlb}
 
     if (!test)
+#ifdef JP
+        mpr("送還の呪文が発動した！");
+#else
         mpr("Send 'em back where they came from!");
+#endif
 
     for (int ab = 0; ab < MAX_MONSTERS; ab++)
     {
@@ -1655,7 +2045,11 @@ static unsigned char monster_abjuration(int pow, bool test)
             monster_die(monster, KILL_RESET, 0);
         else
         {
+#ifdef JP
+            simple_monster_message(monster, "は身震いした。");
+#else
             simple_monster_message(monster, " shudders.");
+#endif
             mons_del_ench(monster, ENCH_ABJ_I, ENCH_ABJ_VI);
             mons_add_ench(monster, abjLevel);
         }

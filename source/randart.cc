@@ -29,6 +29,18 @@
    mainly.
 */
 const char *rand_wpn_names[] = {
+#ifdef JP
+    "血流の",
+    "死の",
+    "惨殺の",
+    "苦痛の",
+    "悶死の",
+    "死と苦痛の",
+    "無限業罰の",
+    "永劫痛苦の",
+    "権能の",
+    "憤怒の",
+#else
     " of Blood",
     " of Death",
     " of Bloody Death",
@@ -39,7 +51,20 @@ const char *rand_wpn_names[] = {
     " of Eternal Torment",
     " of Power",
     " of Wrath",
+#endif
 /* 10: */
+#ifdef JP
+    "破滅の",
+    "かよわき慈悲の",
+    "黙示録の",
+    "道化師の",
+    "指輪の",
+    "愚者の",
+    "神々の",
+    "帝国の",
+    "破壊の",
+    "ハルマゲドンの",
+#else
     " of Doom",
     " of Tender Mercy",
     " of the Apocalypse",
@@ -50,7 +75,20 @@ const char *rand_wpn_names[] = {
     " of the Imperium",
     " of Destruction",
     " of Armageddon",
+#endif
 /* 20: */
+#ifdef JP
+    "無慈悲なる正義の",
+    "正義の怒りの",
+    "膂力の",
+    "宝珠の",
+    "マクレブの",
+    "トログの",
+    "ゾムの",
+    "古代の",
+    "魔法力の",
+    "ネメレクスの",
+#else
     " of Cruel Justice",
     " of Righteous Anger",
     " of Might",
@@ -61,7 +99,20 @@ const char *rand_wpn_names[] = {
     " of the Ancients",
     " of Mana",
     " of Nemelex Xobeh",
+#endif
 /* 30: */
+#ifdef JP
+    "魔道士の",
+    "大魔道士の",
+    "王の",
+    "女王の",
+    "天球の",
+    "円環の",
+    "血族の",
+    "闘争の",
+    "戦闘の",
+    "誉れの",
+#else
     " of the Magi",
     " of the Archmagi",
     " of the King",
@@ -72,7 +123,20 @@ const char *rand_wpn_names[] = {
     " of Conflict",
     " of Battle",
     " of Honour",
+#endif
 /* 40: */
+#ifdef JP
+    "胡蝶の",
+    "胡蜂の",
+    "蛙の",
+    "鼬の",
+    "野蛮人の",
+    "団子虫の",
+    "原罪の",
+    "復讐の",
+    "処刑の",
+    "調停の",
+#else
     " of the Butterfly",
     " of the Wasp",
     " of the Frog",
@@ -83,7 +147,20 @@ const char *rand_wpn_names[] = {
     " of Vengeance",
     " of Execution",
     " of Arbitration",
+#endif
 /* 50: */
+#ifdef JP
+    "探求者の",
+    "真実の",
+    "嘘の",
+    "なすびの",
+    "かぶらの",
+    "好機の",
+    "呪詛の",
+    "地獄の怒りの",
+    "不死者の",
+    "混沌の",
+#else
     " of the Seeker",
     " of Truth",
     " of Lies",
@@ -94,7 +171,20 @@ const char *rand_wpn_names[] = {
     " of Hell's Wrath",
     " of the Undead",
     " of Chaos",
+#endif
 /* 60: */
+#ifdef JP
+    "秩序の",
+    "生命の",
+    "旧世界の",
+    "新世界の",
+    "中つ国の",
+    "徘徊の",
+    "不愉快の",
+    "悲嘆の",
+    "残忍なる報復の",
+    "征服の",
+#else
     " of Law",
     " of Life",
     " of the Old World",
@@ -105,7 +195,20 @@ const char *rand_wpn_names[] = {
     " of Discomfort",
     " of Brutal Revenge",
     " of Triumph",
+#endif
 /* 70: */
+#ifdef JP
+    "解剖の",
+    "寸断の",
+    "戦慄の",
+    "恐怖の",
+    "傲慢の",
+    "火山の",
+    "血に飢えた",
+    "両断の",
+    "永遠調和の",
+    "平安の",
+#else
     " of Evisceration",
     " of Dismemberment",
     " of Terror",
@@ -116,7 +219,20 @@ const char *rand_wpn_names[] = {
     " of Division",
     " of Eternal Harmony",
     " of Peace",
+#endif
 /* 80: */
+#ifdef JP
+    "素早き死の",
+    "即死の",
+    "窮乏の",
+    "鯢の",
+    "ロブスターの",
+    "巻貝の",
+    "ペンギンの",
+    "角目鳥の",
+    "茸の",
+    "毒茸の",
+#else
     " of Quick Death",
     " of Instant Death",
     " of Misery",
@@ -127,7 +243,20 @@ const char *rand_wpn_names[] = {
     " of the Puffin",
     " of the Mushroom",
     " of the Toadstool",
+#endif
 /* 90: */
+#ifdef JP
+    "民草の",
+    "埃茸の",
+    "胞子の",
+    "最善の",
+    "パレート最適の",
+    "最大幸福の",
+    "無秩序の",
+    "旧き悪霊の",
+    "革命の",
+    "人民の",
+#else
     " of the Little People",
     " of the Puffball",
     " of Spores",
@@ -138,7 +267,20 @@ const char *rand_wpn_names[] = {
     " of Ancient Evil",
     " of the Revolution",
     " of the People",
+#endif
 /* 100: */
+#ifdef JP
+    "エルフ族の",
+    "ドワーフ族の",
+    "オーク族の",
+    "ヒト族の",
+    "汚泥の",
+    "竜神の",
+    "トロル族の",
+    "人喰い鬼の",
+    "公正なる再分配の",
+    "分限者の",
+#else
     " of the Elves",
     " of the Dwarves",
     " of the Orcs",
@@ -149,7 +291,20 @@ const char *rand_wpn_names[] = {
     " of the Ogres",
     " of Equitable Redistribution",
     " of Wealth",
+#endif
 /* 110: */
+#ifdef JP
+    "文無しの",
+    "再配分の",
+    "儚き平和の",
+    "強化の",
+    "美貌の",
+    "蛞蝓の",
+    "蝸牛の",
+    "巻貝の",
+    "体刑の",
+    "極刑の",
+#else
     " of Poverty",
     " of Reapportionment",
     " of Fragile Peace",
@@ -160,7 +315,20 @@ const char *rand_wpn_names[] = {
     " of the Gastropod",
     " of Corporal Punishment",
     " of Capital Punishment",
+#endif
 /* 120: */
+#ifdef JP
+    "黙示録の獣の",
+    "光芒の",
+    "暗黒の",
+    "陽光の",
+    "昼つ方の",
+    "夜闇の",
+    "夜さり方の",
+    "夕闇の",
+    "黄昏の",
+    "曉光の",
+#else
     " of the Beast",
     " of Light",
     " of Darkness",
@@ -171,7 +339,20 @@ const char *rand_wpn_names[] = {
     " of Twilight",
     " of the Twilight",
     " of Dawn",
+#endif
 /* 130: */
+#ifdef JP
+    "暁の",
+    "太陽の",
+    "月の",
+    "遠方世界の",
+    "見えざる領域の",
+    "パンデモニウムの",
+    "アビスの",
+    "因果の",
+    "獄舎の",
+    "十字軍の",
+#else
     " of the Dawn",
     " of the Sun",
     " of the Moon",
@@ -182,7 +363,20 @@ const char *rand_wpn_names[] = {
     " of the Nexus",
     " of the Gulag",
     " of the Crusades",
+#endif
 /* 140: */
+#ifdef JP
+    "肉迫の",
+    "損壊の",
+    "危難の",
+    "永遠の戦士の",
+    "永遠の戦の",
+    "邪悪の",
+    "滅多打ちの",
+    "膿漏の",
+    "悪疫の",
+    "災いの",
+#else
     " of Proximity",
     " of Wounding",
     " of Peril",
@@ -193,7 +387,20 @@ const char *rand_wpn_names[] = {
     " of Oozing Pus",
     " of Pestilence",
     " of Plague",
+#endif
 /* 150: */
+#ifdef JP
+    "否定の",
+    "救世主の",
+    "感染の",
+    "防御の",
+    "護りの",
+    "攻撃による防御の",
+    "功利の",
+    "条理の",
+    "不条理の",
+    "勇気の",
+#else
     " of Negation",
     " of the Saviour",
     " of Infection",
@@ -204,7 +411,20 @@ const char *rand_wpn_names[] = {
     " of Reason",
     " of Unreason",
     " of the Heart",
+#endif
 /* 160: */
+#ifdef JP
+    "攻勢の",
+    "麻の葉の",
+    "群葉の",
+    "冬の",
+    "夏の",
+    "秋の",
+    "春の",
+    "真夏の",
+    "真冬の",
+    "明けざる夜の",
+#else
     " of Offence",
     " of the Leaf",
     " of Leaves",
@@ -215,7 +435,20 @@ const char *rand_wpn_names[] = {
     " of Midsummer",
     " of Midwinter",
     " of Eternal Night",
+#endif
 /* 170: */
+#ifdef JP
+    "叫喚地獄の",
+    "蠢くものの",
+    "這い寄るものの",
+    "物体Ｘの",
+    "『件』の",
+    "海原の",
+    "森林の",
+    "木々の",
+    "大地の",
+    "森羅万象の",
+#else
     " of Shrieking Terror",
     " of the Lurker",
     " of the Crawling Thing",
@@ -226,7 +459,20 @@ const char *rand_wpn_names[] = {
     " of the Trees",
     " of Earth",
     " of the World",
+#endif
 /* 180: */
+#ifdef JP
+    "聖餐の",
+    "泡沫の",
+    "アメーバの",
+    "奇形の",
+    "罪悪の",
+    "無垢の",
+    "栄達の",
+    "零落の",
+    "妙音の",
+    "光明の",
+#else
     " of Bread",
     " of Yeast",
     " of the Amoeba",
@@ -237,7 +483,20 @@ const char *rand_wpn_names[] = {
     " of Descent",
     " of Music",
     " of Brilliance",
+#endif
 /* 190: */
+#ifdef JP
+    "嫌悪の",
+    "饗宴の",
+    "太陽光の",
+    "星芒の",
+    "星々の",
+    "塵芥の",
+    "雲界の",
+    "天空の",
+    "灰燼の",
+    "粘着の",
+#else
     " of Disgust",
     " of Feasting",
     " of Sunlight",
@@ -248,7 +507,20 @@ const char *rand_wpn_names[] = {
     " of the Sky",
     " of Ash",
     " of Slime",
+#endif
 /* 200: */
+#ifdef JP
+    "清澄の",
+    "絶えざる警戒の",
+    "決意の",
+    "蛾の",
+    "生贄の",
+    "堅忍の",
+    "平衡の",
+    "均衡の",
+    "不均衡の",
+    "調和の",
+#else
     " of Clarity",
     " of Eternal Vigilance",
     " of Purpose",
@@ -259,7 +531,20 @@ const char *rand_wpn_names[] = {
     " of Balance",
     " of Unbalance",
     " of Harmony",
+#endif
 /* 210: */
+#ifdef JP
+    "不調和の",
+    "火炎地獄の",
+    "終末点の",
+    "騰貴の",
+    "低落の",
+    "供給の",
+    "需要の",
+    "ＧＤＰの",
+    "不当利得の",
+    "不法留置の",
+#else
     " of Disharmony",
     " of the Inferno",
     " of the Omega Point",
@@ -270,7 +555,20 @@ const char *rand_wpn_names[] = {
     " of Gross Domestic Product",
     " of Unjust Enrichment",
     " of Detinue",
+#endif
 /* 220: */
+#ifdef JP
+    "転換の",
+    "アントンの",
+    "勅書の",
+    "挫折の",
+    "侵害の",
+    "違反の",
+    "終結の",
+    "根絶の",
+    "贖罪の",
+    "無主物の",
+#else
     " of Conversion",
     " of Anton Piller",
     " of Mandamus",
@@ -281,7 +579,20 @@ const char *rand_wpn_names[] = {
     " of Extermination",
     " of Satisfaction",
     " of Res Nullius",
+#endif
 /* 230: */
+#ifdef JP
+    "封土の",
+    "無主占有の",
+    "脈絡の",
+    "掟の",
+    "自由保有の",
+    "不法作為の",
+    "不作為の",
+    "過失の",
+    "刑罰の",
+    "汚名の",
+#else
     " of Fee Simple",
     " of Terra Nullius",
     " of Context",
@@ -292,7 +603,20 @@ const char *rand_wpn_names[] = {
     " of Negligence",
     " of Pains",
     " of Attainder",
+#endif
 /* 240: */
+#ifdef JP
+    "敏活の",
+    "休眠の",
+    "廃止の",
+    "放擲の",
+    "砂漠の",
+    "原生林の",
+    "物狂いの",
+    "不安の",
+    "偏心の",
+    "饗応の",
+#else
     " of Action",
     " of Inaction",
     " of Truncation",
@@ -303,7 +627,20 @@ const char *rand_wpn_names[] = {
     " of Neurosis",
     " of Fixation",
     " of the Open Hand",
+#endif
 /* 250: */
+#ifdef JP
+    "牙の",
+    "誠実の",
+    "不実の",
+    "神々の強制の",
+    "見えざる手の",
+    "自己決定の",
+    "自由の",
+    "隷属の",
+    "独裁の",
+    "緊迫の",
+#else
     " of the Tooth",
     " of Honesty",
     " of Dishonesty",
@@ -314,7 +651,20 @@ const char *rand_wpn_names[] = {
     " of Servitude",
     " of Domination",
     " of Tension",
+#endif
 /* 260: */
+#ifdef JP
+    "一なる神の",
+    "不敬の",
+    "不可知の",
+    "実存の",
+    "善き",
+    "相対の",
+    "絶対の",
+    "赦罪の",
+    "禁欲の",
+    "憎悪の",
+#else
     " of Monotheism",
     " of Atheism",
     " of Agnosticism",
@@ -325,7 +675,20 @@ const char *rand_wpn_names[] = {
     " of Absolution",
     " of Abstinence",
     " of Abomination",
+#endif
 /* 270: */
+#ifdef JP
+    "切除の",
+    "鬱血の",
+    "不可思議の",
+    "濁音の",
+    "薄明の",
+    "光輝の",
+    "不道徳の",
+    "無道徳の",
+    "精密手術の",
+    "正教の",
+#else
     " of Mutilation",
     " of Stasis",
     " of Wonder",
@@ -336,7 +699,20 @@ const char *rand_wpn_names[] = {
     " of Amorality",
     " of Precise Incision",
     " of Orthodoxy",
+#endif
 /* 280: */
+#ifdef JP
+    "信義の",
+    "虚偽の",
+    "占い師の",
+    "風水師の",
+    "預言者の",
+    "打擲の",
+    "革新の",
+    "硫黄の",
+    "卵の",
+    "天体の",
+#else
     " of Faith",
     " of Untruth",
     " of the Augurer",
@@ -347,7 +723,20 @@ const char *rand_wpn_names[] = {
     " of Sulphur",
     " of the Egg",
     " of the Globe",
+#endif
 /* 290: */
+#ifdef JP
+    "蝋燭の",
+    "燭台の",
+    "吸血鬼の",
+    "オーク族の",
+    "ホビット族の",
+    "世の果ての",
+    "蒼天の",
+    "茜空の",
+    "橙空の",
+    "紫空の",
+#else
     " of the Candle",
     " of the Candelabrum",
     " of the Vampires",
@@ -358,7 +747,20 @@ const char *rand_wpn_names[] = {
     " of Red Skies",
     " of Orange Skies",
     " of Purple Skies",
+#endif
 /* 300: */
+#ifdef JP
+    "滑舌の",
+    "理性の",
+    "蜘蛛の",
+    "八つ目鰻の",
+    "原初の",
+    "終末の",
+    "断絶の",
+    "追放の",
+    "哀悼の",
+    "死のとば口の",
+#else
     " of Articulation",
     " of the Mind",
     " of the Spider",
@@ -369,7 +771,20 @@ const char *rand_wpn_names[] = {
     " of Sequestration",
     " of Mourning",
     " of Death's Door",
+#endif
 /* 310: */
+#ifdef JP
+    "鍵の",
+    "地震の",
+    "失敗の",
+    "成功の",
+    "強迫の",
+    "蚊の",
+    "虻の",
+    "青蝿の",
+    "海亀の",
+    "陸亀の",
+#else
     " of the Key",
     " of Earthquakes",
     " of Failure",
@@ -380,7 +795,20 @@ const char *rand_wpn_names[] = {
     " of the Blowfly",
     " of the Turtle",
     " of the Tortoise",
+#endif
 /* 320: */
+#ifdef JP
+    "黄泉の",
+    "墓標の",
+    "服従の",
+    "支配の",
+    "伝令の",
+    "結晶の",
+    "重力の",
+    "浮力の",
+    "泥濘の",
+    "不意討ちの",
+#else
     " of the Pit",
     " of the Grave",
     " of Submission",
@@ -391,7 +819,20 @@ const char *rand_wpn_names[] = {
     " of Levity",
     " of the Slorg",
     " of Surprise",
+#endif
 /* 330: */
+#ifdef JP
+    "迷路の",
+    "迷宮の",
+    "神の調停の",
+    "循環の",
+    "糸疣の",
+    "蠍の",
+    "悪魔族の",
+    "天賦の",
+    "血玉髄の",
+    "グロントルの",     //Grontolがどうしても分からなかったのでカタカナ。
+#else
     " of the Maze",
     " of the Labyrinth",
     " of Divine Intervention",
@@ -402,7 +843,20 @@ const char *rand_wpn_names[] = {
     " of the Genius",
     " of Bloodstone",
     " of Grontol",
+#endif
 /* 340: */
+#ifdef JP
+    "『グリムトゥース』",
+    "『ウィドウメイカー』",
+    "『ウィドワメイカー』",
+    "『命の破滅』",
+    "『介添人』",
+    "『追放者』",
+    "『拷問吏』",
+    "『秘密兵器』",
+    "『絞首刑』",
+    "『八頭体』",
+#else
     " \"Grim Tooth\"",
     " \"Widowmaker\"",
     " \"Widowermaker\"",
@@ -413,7 +867,20 @@ const char *rand_wpn_names[] = {
     " \"Secret Weapon\"",
     " \"String\"",
     " \"Stringbean\"",
+#endif
 /* 350: */
+#ifdef JP
+    "『ブロブ』",
+    "『グロブルス』",
+    "『ハルク』",
+    "『皺くちゃ婆ア』",
+    "『星月夜』",
+    "『巨人の爪楊枝』",
+    "『優柔不断』",
+    "『おべっか使い』",
+    "『鎧袖一触』",
+    "『不平不満』",
+#else
     " \"Blob\"",
     " \"Globulus\"",
     " \"Hulk\"",
@@ -424,7 +891,20 @@ const char *rand_wpn_names[] = {
     " \"Backscratcher\"",
     " \"Brush\"",
     " \"Murmur\"",
+#endif
 /* 360: */
+#ifdef JP
+    "『石棺』",
+    "『調和』",
+    "『龍の舌』",
+    "『調停者』",
+    "『グラム』",
+    "『グロム』",
+    "『グリム』",
+    "『グルム』",
+    "『虱潰し』",
+    "『オムレット』",
+#else
     " \"Sarcophage\"",
     " \"Concordance\"",
     " \"Dragon's Tongue\"",
@@ -435,7 +915,20 @@ const char *rand_wpn_names[] = {
     " \"Grum\"",
     " \"Rummage\"",
     " \"Omelette\"",
+#endif
 /* 370: */
+#ifdef JP
+    "『未熟者』",
+    "『なすび』",
+    "『Z』",
+    "『X』",
+    "『Q』",
+    "『Ox』",
+    "『臨終喘鳴』",
+    "『告げ口屋』",
+    "『淫売野郎』",
+    "『袖の下』",
+#else
     " \"Egg\"",
     " \"Aubergine\"",
     " \"Z\"",
@@ -446,7 +939,20 @@ const char *rand_wpn_names[] = {
     " \"Tattletale\"",
     " \"Fish\"",
     " \"Bung\"",
+#endif
 /* 380: */
+#ifdef JP
+    "『アルカナ』",
+    "『死の泥饅頭』",
+    "『魂の輪廻』",
+    "『最後通牒』",
+    "『蚯蚓』",
+    "『虫けら』",
+    "『虫けらの逆襲』",
+    "『ゾムの恩寵』",
+    "『大正解』",
+    "『レビ記』",
+#else
     " \"Arcanum\"",
     " \"Mud Pie of Death\"",
     " \"Transmigrator\"",
@@ -457,8 +963,21 @@ const char *rand_wpn_names[] = {
     " \"Xom's Favour\"",
     " \"Bingo\"",
     " \"Leviticus\"",
+#endif
 // Not yet possible...
 /* 390: */
+#ifdef JP
+    "『快楽殺人者の』",
+    " of ",
+    " of ",
+    " of ",
+    " of ",
+    " of ",
+    " of ",
+    " of ",
+    " of ",
+    " of ",
+#else
     " of Joyful Slaughter",
     " of ",
     " of ",
@@ -469,6 +988,7 @@ const char *rand_wpn_names[] = {
     " of ",
     " of ",
     " of ",
+#endif
 
 /* 390: */
     "\"\"",
@@ -483,6 +1003,7 @@ const char *rand_wpn_names[] = {
     "\"\"",
 
 /* 340: */
+#ifdef JP
     " of ",
     " of ",
     " of ",
@@ -493,6 +1014,18 @@ const char *rand_wpn_names[] = {
     " of ",
     " of ",
     " of ",
+#else
+    " of ",
+    " of ",
+    " of ",
+    " of ",
+    " of ",
+    " of ",
+    " of ",
+    " of ",
+    " of ",
+    " of ",
+#endif
 
 /* 200: */
     "",
@@ -509,6 +1042,18 @@ const char *rand_wpn_names[] = {
 
 const char *rand_armour_names[] = {
 /* 0: */
+#ifdef JP
+    "遮蔽の",
+    "恩寵の",
+    "不浸透の",
+    "御回りの",
+    "生命の",
+    "防御の",
+    "戯言の",
+    "絶えざる警戒の",
+    "戯謔の",
+    "歓喜の",
+#else
     " of Shielding",
     " of Grace",
     " of Impermeability",
@@ -519,7 +1064,20 @@ const char *rand_armour_names[] = {
     " of Eternal Vigilance",
     " of Fun",
     " of Joy",
+#endif
 /* 10: */
+#ifdef JP
+    "死のとば口の",
+    "門の",
+    "警護の",
+    "完全性の",
+    "全体調和の",
+    "調和の",
+    "不可触民の",
+    "賤民の",
+    "卑賤の",
+    "汚濁の",
+#else
     " of Death's Door",
     " of the Gate",
     " of Watchfulness",
@@ -530,7 +1088,20 @@ const char *rand_armour_names[] = {
     " of Grot",
     " of Grottiness",
     " of Filth",
+#endif
 /* 20: */
+#ifdef JP
+    "不思議の",
+    "不思議な力の",
+    "力の",
+    "ヴラド公の",
+    "霊の実の",
+    "無敵の",
+    "隠れん坊の",
+    "臆病者の",
+    "救世主の",
+    "柔軟の",
+#else
     " of Wonder",
     " of Wondrous Power",
     " of Power",
@@ -541,7 +1112,20 @@ const char *rand_armour_names[] = {
     " of the Mouse",
     " of the Saviour",
     " of Plasticity",
+#endif
 /* 30: */
+#ifdef JP
+    "禿頭の",
+    "戦慄の",
+    "アルカナの",
+    "死への抗戦の",
+    "無痛覚の",
+    "守護者の",
+    "神聖不可侵の",
+    "海亀の",
+    "陸亀の",
+    "鎧鼠の",
+#else
     " of Baldness",
     " of Terror",
     " of the Arcane",
@@ -552,7 +1136,20 @@ const char *rand_armour_names[] = {
     " of the Tortoise",
     " of the Turtle",
     " of the Armadillo",
+#endif
 /* 40: */
+#ifdef JP
+    "針土竜の",
+    "鎧われし者の",
+    "超自然の",
+    "激情の",
+    "利運の",
+    "損害の",
+    "保険の",
+    "賠償の",
+    "制約の",
+    "排斥の",
+#else
     " of the Echidna",
     " of the Armoured One",
     " of Weirdness",
@@ -563,7 +1160,20 @@ const char *rand_armour_names[] = {
     " of Indemnity",
     " of Limitation",
     " of Exclusion",
+#endif
 /* 50: */
+#ifdef JP
+    "斥力の",
+    "語られざる秘密の",
+    "大地の",
+    "雉鳩の",
+    "有限責任の",
+    "責務の",
+    "ハジャムの",
+    "栄光の",
+    "維持の",
+    "恒存の",
+#else
     " of Repulsion",
     " of Untold Secrets",
     " of the Earth",
@@ -574,7 +1184,20 @@ const char *rand_armour_names[] = {
     " of Glory",
     " of Preservation",
     " of Conservation",
+#endif
 /* 60: */
+#ifdef JP
+    "保護拘束の",
+    "黙秘の",
+    "旧悪の",
+    "鈍物の",
+    "野蛮の",
+    "強靭の",
+    "空間の",
+    "真空の",
+    "加圧の",
+    "減圧の",
+#else
     " of Protective Custody",
     " of the Clam",
     " of the Barnacle",
@@ -585,8 +1208,21 @@ const char *rand_armour_names[] = {
     " of the Vacuum",
     " of Compression",
     " of Decompression",
+#endif
 
 /* 70: */
+#ifdef JP
+    "ヘチマの",
+    " of ",
+    " of ",
+    " of ",
+    " of ",
+    " of ",
+    " of ",
+    " of ",
+    " of ",
+    " of ",
+#else
     " of the Loofah",
     " of ",
     " of ",
@@ -597,8 +1233,120 @@ const char *rand_armour_names[] = {
     " of ",
     " of ",
     " of ",
+#endif
 // Sarcophagus
 };
+
+#ifdef JP
+    //50
+    const char *rand_pre_names[] = {
+    "紅き",      //色彩
+    "緋色の",
+    "蒼き",
+    "紺碧の",
+    "深緑の",
+    "白き",
+    "白亜の",
+    "黒き",
+    "漆黒の",
+    "灰色の",
+    "水晶の",    //材質
+    "翡翠の",
+    "琥珀の",
+    "金剛の",
+    "鋼鉄の",
+    "白銀の",
+    "黄金の",
+    "血塗れの",  //状態・性質
+    "旧き",
+    "昏き",
+    "猛き",
+    "冷酷なる",
+    "残忍なる",
+    "静かなる",
+    "絶望の",
+    "苦悩の",
+    "彷徨える",
+    "待たれたる",
+    "眠れる",
+    "輝ける",
+    "光の",      //属性・場所
+    "星辰の",
+    "冥界の",
+    "黄泉の",
+    "地獄の",
+    "混沌の",
+    "暗黒の",
+    "天界の",
+    "黙示録の",
+    "宵闇の",
+    "運命の",
+    "封印の",
+    "異界の",
+    "予言の",
+    "凶運の",
+    "東方の",
+    "西方の",
+    "死の",
+    "死せる",
+    "不死の",
+    };
+
+    //50
+    const char *rand_suf_names[] = {
+    "瞳",    //肉体の一部など
+    "単眼",
+    "牙",
+    "顎門",
+    "爪",
+    "心臓",
+    "翼",
+    "双翼",
+    "蜘蛛",  //生物など
+    "蛇",
+    "鷹",
+    "隼",
+    "猟犬",
+    "狼",
+    "獅子",
+    "虎",
+    "豹",
+    "王",    //役割など
+    "公子",
+    "盟主",
+    "道化",
+    "聖者",
+    "咎人",
+    "護り",
+    "護り手",
+    "語り部",
+    "徴",    //モノなど
+    "紋章",
+    "徽章",
+    "刻印",
+    "碑文",
+    "遺物",
+    "鎖",
+    "咆哮",
+    "旋律",
+    "頌歌",
+    "凱旋歌",
+    "悪疫",
+    "聖餐",
+    "言霊",  //意思や儀式など
+    "祈祷",
+    "誓願",
+    "祝福",
+    "呪詛",
+    "兇状",
+    "処罰",
+    "審判",
+    "告示",
+    "秘蹟",
+    "宣誓",
+    };
+#endif
+
 
 // Remember: disallow unrandart creation in abyss/pan
 
@@ -692,7 +1440,7 @@ bool is_unrandom_artefact( const item_def &item )
 bool is_fixed_artefact( const item_def &item )
 {
     if (!is_random_artefact( item )
-        && item.base_type == OBJ_WEAPONS 
+        && item.base_type == OBJ_WEAPONS
         && item.special >= SPWPN_SINGING_SWORD)
     {
         return (true);
@@ -746,10 +1494,10 @@ static long calc_seed( const item_def &item )
     return (item.special & RANDART_SEED_MASK);
 }
 
-void randart_wpn_properties( const item_def &item, 
+void randart_wpn_properties( const item_def &item,
                              FixedVector< char, RA_PROPERTIES > &proprt )
 {
-    ASSERT( is_random_artefact( item ) ); 
+    ASSERT( is_random_artefact( item ) );
 
     const int aclass = item.base_type;
     const int atype  = item.sub_type;
@@ -828,7 +1576,7 @@ void randart_wpn_properties( const item_def &item,
 
                 proprt[RAP_BRAND] = (tmp >= 18) ? SPWPN_SPEED :
                                     (tmp >= 14) ? SPWPN_PROTECTION :
-                                    (tmp >= 10) ? SPWPN_VENOM                   
+                                    (tmp >= 10) ? SPWPN_VENOM
                                                 : SPWPN_FLAME + (tmp % 2);
             }
         }
@@ -874,7 +1622,7 @@ void randart_wpn_properties( const item_def &item,
         goto skip_mods;
 
     /* AC mod - not for armours or rings of protection */
-    if (random5(4 + power_level) == 0 
+    if (random5(4 + power_level) == 0
         && aclass != OBJ_ARMOUR
         && (aclass != OBJ_JEWELLERY || atype != RING_PROTECTION))
     {
@@ -888,7 +1636,7 @@ void randart_wpn_properties( const item_def &item,
     }
 
     /* ev mod - not for rings of evasion */
-    if (random5(4 + power_level) == 0  
+    if (random5(4 + power_level) == 0
         && (aclass != OBJ_JEWELLERY || atype != RING_EVASION))
     {
         proprt[RAP_EVASION] = 1 + random5(3) + random5(3) + random5(3);
@@ -940,7 +1688,7 @@ void randart_wpn_properties( const item_def &item,
     }
 
   skip_mods:
-    if (random5(15) < power_level 
+    if (random5(15) < power_level
         || aclass == OBJ_WEAPONS
         || (aclass == OBJ_JEWELLERY && atype == RING_SLAYING))
     {
@@ -1019,7 +1767,7 @@ void randart_wpn_properties( const item_def &item,
         power_level++;
     }
 
-/* res_poison */
+    /* res_poison */
     if (random5(5 + power_level) == 0
         && (aclass != OBJ_JEWELLERY || atype != RING_POISON_RESISTANCE)
         && (aclass != OBJ_ARMOUR
@@ -1051,7 +1799,7 @@ void randart_wpn_properties( const item_def &item,
 
     /* see_invis */
     if (random5(4 + power_level) == 0
-        && (aclass != OBJ_JEWELLERY || atype != RING_INVISIBILITY))
+        && (aclass != OBJ_JEWELLERY || atype != RING_SEE_INVISIBLE))
     {
         proprt[RAP_EYESIGHT] = 1;
         power_level++;
@@ -1183,12 +1931,12 @@ void randart_wpn_properties( const item_def &item,
  */
 
 finished_curses:
-    if (random5(10) == 0 
-        && (aclass != OBJ_ARMOUR 
-            || atype != ARM_CLOAK 
+    if (random5(10) == 0
+        && (aclass != OBJ_ARMOUR
+            || atype != ARM_CLOAK
             || !cmp_equip_race( item, ISFLAG_ELVEN ))
-        && (aclass != OBJ_ARMOUR 
-            || atype != ARM_BOOTS 
+        && (aclass != OBJ_ARMOUR
+            || atype != ARM_BOOTS
             || !cmp_equip_race( item, ISFLAG_ELVEN )
         && get_armour_ego_type( item ) != SPARM_STEALTH))
     {
@@ -1197,7 +1945,7 @@ finished_curses:
 
         if (random5(4) == 0)
         {
-            proprt[RAP_STEALTH] = -proprt[RAP_STEALTH] - random5(20);    
+            proprt[RAP_STEALTH] = -proprt[RAP_STEALTH] - random5(20);
             power_level--;
         }
     }
@@ -1234,7 +1982,11 @@ const char *randart_name( const item_def &item )
     art_n = (char *) malloc(sizeof(char) * 80);
 
     if (art_n == NULL)
+#ifdef JP
+        return ("Malloc失敗のエラーです。");
+#else
         return ("Malloc Failed Error");
+#endif
 
     strcpy(art_n, "");
 
@@ -1247,6 +1999,29 @@ const char *randart_name( const item_def &item )
     {
         switch (random5(21))
         {
+#ifdef JP
+        case  0: strcat(art_n, "明るく輝く"); break;
+        case  1: strcat(art_n, "ルーンが刻まれた"); break;
+        case  2: strcat(art_n, "煙を上げる"); break;
+        case  3: strcat(art_n, "血に染まった"); break;
+        case  4: strcat(art_n, "捻じ曲がった"); break;
+        case  5: strcat(art_n, "チカチカ光る"); break;
+        case  6: strcat(art_n, "歪んだ"); break;
+        case  7: strcat(art_n, "水晶の"); break;
+        case  8: strcat(art_n, "宝石で飾られた"); break;
+        case  9: strcat(art_n, "透明な"); break;
+        case 10: strcat(art_n, "装飾された"); break;
+        case 11: strcat(art_n, "穴だらけの"); break;
+        case 12: strcat(art_n, "ぬるぬるした"); break;
+        case 13: strcat(art_n, "磨き上げられた"); break;
+        case 14: strcat(art_n, "豪華な"); break;
+        case 15: strcat(art_n, "粗末な"); break;
+        case 16: strcat(art_n, "古ぼけた"); break;
+        case 17: strcat(art_n, "膿のついた"); break;
+        case 18: strcat(art_n, "弱く輝く"); break;
+        case 19: strcat(art_n, "蒸気を上げる"); break;
+        case 20: strcat(art_n, "光る"); break;
+#else
         case  0: strcat(art_n, "brightly glowing "); break;
         case  1: strcat(art_n, "runed "); break;
         case  2: strcat(art_n, "smoking "); break;
@@ -1268,6 +2043,7 @@ const char *randart_name( const item_def &item )
         case 18: strcat(art_n, "faintly glowing "); break;
         case 19: strcat(art_n, "steaming "); break;
         case 20: strcat(art_n, "shiny "); break;
+#endif
         }
 
         char st_p3[ITEMNAME_SIZE];
@@ -1279,31 +2055,77 @@ const char *randart_name( const item_def &item )
     }
 
     char st_p[ITEMNAME_SIZE];
+#ifdef JP
+    //if (random5(5) >= 2)
+    if (random5(2) == 0)
+    {
+        standard_name_weap( item.sub_type, st_p );
+        strcpy(art_n, "" );
 
+//日本語版ではアーティファクト修飾詞の語順を操作
+        int rand_name_no;
+        rand_name_no = random5(390);
+//340番までは「○○の剣」それ以降は「剣『○○』」にする。
+        if ( rand_name_no < 340 )
+        {
+        strcat(art_n, rand_wpn_names[rand_name_no]);
+        strcat(art_n, st_p);
+        }
+        else
+        {
+        strcat(art_n, st_p);
+        strcat(art_n, rand_wpn_names[rand_name_no]);
+        }
+    }
+#else
     if (random5(2) == 0)
     {
         standard_name_weap( item.sub_type, st_p );
         strcat(art_n, st_p);
         strcat(art_n, rand_wpn_names[random5(390)]);
     }
+#endif
     else
     {
         char st_p2[ITEMNAME_SIZE];
-
+        strcpy(st_p2, "" );
+#ifdef JP
+        strcpy( st_p, rand_pre_names[ random5(50) ] );
+        strcat( st_p, rand_suf_names[ random5(50) ] );
+#else
         make_name(random5(250), random5(250), random5(250), 3, st_p);
+#endif
         standard_name_weap( item.sub_type, st_p2 );
-        strcat(art_n, st_p2);
+        strcpy(art_n, "" );
 
-        if (random5(3) == 0)
+        if (random5(3) == 5) //(random5(3) == 0)
         {
+#ifdef JP
+            strcat(art_n, "『");
+            strcat(art_n, st_p);
+            strcat(art_n, "』");
+            strcat(art_n, "の");
+            strcat(art_n, st_p2);
+#else
             strcat(art_n, " of ");
             strcat(art_n, st_p);
+#endif
+
         }
         else
         {
+            strcat(art_n, st_p2);
+#ifdef JP
+            strcat(art_n, "『");
+#else
             strcat(art_n, " \"");
+#endif
             strcat(art_n, st_p);
+#ifdef JP
+            strcat(art_n, "』");
+#else
             strcat(art_n, "\"");
+#endif
         }
     }
 
@@ -1329,7 +2151,11 @@ const char *randart_armour_name( const item_def &item )
 
     if (art_n == NULL)
     {
+#ifdef JP
+        return ("Malloc失敗のエラーです。");
+#else
         return ("Malloc Failed Error");
+#endif
     }
 
     strcpy(art_n, "");
@@ -1343,6 +2169,29 @@ const char *randart_armour_name( const item_def &item )
     {
         switch (random5(21))
         {
+#ifdef JP
+        case  0: strcat(art_n, "明るく輝く"); break;
+        case  1: strcat(art_n, "ルーンが刻まれた"); break;
+        case  2: strcat(art_n, "煙を上げる"); break;
+        case  3: strcat(art_n, "血に染まった"); break;
+        case  4: strcat(art_n, "捻じ曲がった"); break;
+        case  5: strcat(art_n, "チカチカ光る"); break;
+        case  6: strcat(art_n, "歪んだ"); break;
+        case  7: strcat(art_n, "ルーンに埋め尽された"); break;
+        case  8: strcat(art_n, "宝石で飾られた"); break;
+        case  9: strcat(art_n, "透明な"); break;
+        case 10: strcat(art_n, "装飾された"); break;
+        case 11: strcat(art_n, "穴だらけの"); break;
+        case 12: strcat(art_n, "ぬるぬるした"); break;
+        case 13: strcat(art_n, "磨き上げられた"); break;
+        case 14: strcat(art_n, "豪華な"); break;
+        case 15: strcat(art_n, "粗末な"); break;
+        case 16: strcat(art_n, "古ぼけた"); break;
+        case 17: strcat(art_n, "膿のついた"); break;
+        case 18: strcat(art_n, "弱く輝く"); break;
+        case 19: strcat(art_n, "蒸気を上げる"); break;
+        case 20: strcat(art_n, "光る"); break;
+#else
         case  0: strcat(art_n, "brightly glowing "); break;
         case  1: strcat(art_n, "runed "); break;
         case  2: strcat(art_n, "smoking "); break;
@@ -1364,6 +2213,7 @@ const char *randart_armour_name( const item_def &item )
         case 18: strcat(art_n, "faintly glowing "); break;
         case 19: strcat(art_n, "steaming "); break;
         case 20: strcat(art_n, "shiny "); break;
+#endif
         }
         char st_p3[ITEMNAME_SIZE];
 
@@ -1378,26 +2228,57 @@ const char *randart_armour_name( const item_def &item )
     if (random5(2) == 0)
     {
         standard_name_armour(item, st_p);
-        strcat(art_n, st_p);
+#ifdef JP
+//日本語版ではアーティファクト修飾詞の語順を入れ替える
+        strcpy(art_n, "" );
         strcat(art_n, rand_armour_names[random5(71)]);
+        strcat(art_n, st_p );
+#else
+        strcpy(art_n, st_p);
+        strcat(art_n, rand_armour_names[random5(71)]);
+#endif
     }
     else
     {
         char st_p2[ITEMNAME_SIZE];
-
+        strcpy(st_p2, "" );
+#ifdef JP
+        strcpy( st_p, rand_pre_names[ random5(50) ] );
+        strcat( st_p, rand_suf_names[ random5(50) ] );
+#else
         make_name(random5(250), random5(250), random5(250), 3, st_p);
+#endif
         standard_name_armour(item, st_p2);
-        strcat(art_n, st_p2);
-        if (random5(3) == 0)
+        strcpy(art_n, "" );
+
+        if (random5(3) == 5) //(random5(3) == 0)
         {
+#ifdef JP
+            strcat(art_n, "『");
+            strcat(art_n, st_p);
+            strcat(art_n, "』");
+            strcat(art_n, "の");
+            strcat(art_n, st_p2);
+#else
             strcat(art_n, " of ");
             strcat(art_n, st_p);
+#endif
+
         }
         else
         {
+            strcat(art_n, st_p2);
+#ifdef JP
+            strcat(art_n, "『");
+#else
             strcat(art_n, " \"");
+#endif
             strcat(art_n, st_p);
+#ifdef JP
+            strcat(art_n, "』");
+#else
             strcat(art_n, "\"");
+#endif
         }
     }
 
@@ -1421,12 +2302,18 @@ const char *randart_ring_name( const item_def &item )
     }
 
     char st_p[ITEMNAME_SIZE];
-
+#ifdef JP
+    char chors[ITEMNAME_SIZE];
+#endif
     free(art_n);
     art_n = (char *) malloc(sizeof(char) * 80);
 
     if (art_n == NULL)
+#ifdef JP
+        return ("Malloc失敗のエラーです。");
+#else
         return ("Malloc Failed Error");
+#endif
 
     strcpy(art_n, "");
 
@@ -1439,6 +2326,29 @@ const char *randart_ring_name( const item_def &item )
     {
         temp_rand = random5(21);
 
+#ifdef JP
+        strcat(art_n,  (temp_rand == 0)  ? "明るく輝く" :
+                       (temp_rand == 1)  ? "ルーンが刻まれた" :
+                       (temp_rand == 2)  ? "煙を上げる" :
+                       (temp_rand == 3)  ? "ルビーの" :
+                       (temp_rand == 4)  ? "捻じ曲がった" :
+                       (temp_rand == 5)  ? "チカチカ光る" :
+                       (temp_rand == 6)  ? "歪んだ" :
+                       (temp_rand == 7)  ? "水晶の" :
+                       (temp_rand == 8)  ? "ダイアモンドの" :
+                       (temp_rand == 9)  ? "透明な" :
+                       (temp_rand == 10) ? "装飾された" :
+                       (temp_rand == 11) ? "穴だらけの" :
+                       (temp_rand == 12) ? "ぬるぬるした" :
+                       (temp_rand == 13) ? "磨き上げられた" :
+                       (temp_rand == 14) ? "豪華な" :
+                       (temp_rand == 15) ? "粗末な" :
+                       (temp_rand == 16) ? "古ぼけた" :
+                       (temp_rand == 17) ? "エメラルドの" :
+                       (temp_rand == 18) ? "弱く輝く" :
+                       (temp_rand == 19) ? "蒸気を上げる"
+                                         : "光る");
+#else
         strcat(art_n,  (temp_rand == 0)  ? "brightly glowing" :
                        (temp_rand == 1)  ? "runed" :
                        (temp_rand == 2)  ? "smoking" :
@@ -1460,43 +2370,83 @@ const char *randart_ring_name( const item_def &item )
                        (temp_rand == 18) ? "faintly glowing" :
                        (temp_rand == 19) ? "steaming"
                                          : "shiny");
+#endif
 
+#ifdef JP
+        strcat(art_n, (item.sub_type < AMU_RAGE) ? "指輪" : "護符");
+#else
         strcat(art_n, " ");
         strcat(art_n, (item.sub_type < AMU_RAGE) ? "ring" : "amulet");
-
+#endif
         srand(randstore);
-
         return (art_n);
     }
 
     if (random5(5) == 0)
     {
-        strcat(art_n, (item.sub_type < AMU_RAGE) ? "ring" : "amulet");
+        strcpy(art_n, "" );
+#ifdef JP
+        strcpy(st_p, (item.sub_type < AMU_RAGE) ? "指輪" : "護符");
+#else
+        strcpy(st_p, (item.sub_type < AMU_RAGE) ? "ring" : "amulet");
+#endif
+#ifdef JP
+//日本語版ではアーティファクト修飾詞の語順を入れ替える
+        strcpy(art_n, rand_armour_names[random5(71)]);
+        strcat(art_n, st_p );
+#else
+        strcpy(art_n, st_p );
         strcat(art_n, rand_armour_names[random5(71)]);
+#endif
     }
+//ここから呪文風のランダム名
     else
     {
+        char st_p2[ITEMNAME_SIZE];
+        strcpy(st_p2, "" );
+#ifdef JP
+        strcpy( st_p, rand_pre_names[ random5(50) ] );
+        strcat( st_p, rand_suf_names[ random5(50) ] );
+        strcpy( st_p2, (item.sub_type < AMU_RAGE) ? "指輪" : "護符");
+#else
         make_name(random5(250), random5(250), random5(250), 3, st_p);
+        strcat(st_p2, (item.sub_type < AMU_RAGE) ? "ring" : "amulet");
+#endif
+        strcpy(art_n, "" );
 
-        strcat(art_n, (item.sub_type < AMU_RAGE) ? "ring" : "amulet");
-
-        if (random5(3) == 0)
+        if (random5(3) == 5) //(random5(3) == 0)
         {
+#ifdef JP
+            strcat(art_n, "『");
+            strcat(art_n, st_p);
+            strcat(art_n, "』");
+            strcat(art_n, "の");
+            strcat(art_n, st_p2);
+#else
             strcat(art_n, " of ");
             strcat(art_n, st_p);
+#endif
         }
         else
         {
+            strcat(art_n, st_p2);
+#ifdef JP
+            strcat(art_n, "『");
+#else
             strcat(art_n, " \"");
+#endif
             strcat(art_n, st_p);
+#ifdef JP
+            strcat(art_n, "』");
+#else
             strcat(art_n, "\"");
+#endif
         }
     }
-
     srand(randstore);
-
     return (art_n);
-}                               // end randart_ring_name()
+}
+// end randart_ring_name()
 
 static struct unrandart_entry *seekunrandart( const item_def &item )
 {
@@ -1504,9 +2454,9 @@ static struct unrandart_entry *seekunrandart( const item_def &item )
 
     while (x < NO_UNRANDARTS)
     {
-        if (unranddata[x].ura_cl == item.base_type 
+        if (unranddata[x].ura_cl == item.base_type
             && unranddata[x].ura_ty == item.sub_type
-            && unranddata[x].ura_pl == item.plus 
+            && unranddata[x].ura_pl == item.plus
             && unranddata[x].ura_pl2 == item.plus2)
         {
             return (&unranddata[x]);
@@ -1517,6 +2467,58 @@ static struct unrandart_entry *seekunrandart( const item_def &item )
 
     return (&unranddata[0]);  // Dummy object
 }                               // end seekunrandart()
+#if 1
+int find_unrandart_index2(const item_def &item)
+{
+    static int cache_head = -1;
+    static int cache_next[NO_UNRANDARTS];
+
+    int x, prev;
+
+    /* Init Cache */
+    if (cache_head == -1)
+    {
+        cache_head = 0;
+        for (x = 0; x <NO_UNRANDARTS-1; x++)
+        {
+            cache_next[x] = x + 1;
+        }
+        cache_next[NO_UNRANDARTS-1] = -1;
+    }
+
+    /* Search Cache */
+    x = cache_head;
+    prev = -1;
+
+    while(x != -1)
+    {
+        int next = cache_next[x];
+
+        if (unranddata[x].ura_cl == item.base_type
+            && unranddata[x].ura_ty == item.sub_type
+            && unranddata[x].ura_pl == item.plus
+            && unranddata[x].ura_pl2 == item.plus2)
+        {
+            if (x != cache_head)
+            {
+                cache_next[x] = cache_head;
+                cache_head = x;
+                cache_next[prev] = next;
+            }
+            return (x);
+        }
+        prev = x;
+        x = next;
+    }
+
+    return (-1);
+}
+
+int find_unrandart_index(int item_number)
+{
+  return find_unrandart_index2(mitm[item_number]);
+}
+#else
 
 int find_unrandart_index(int item_number)
 {
@@ -1535,6 +2537,7 @@ int find_unrandart_index(int item_number)
 
     return (-1);
 }
+#endif
 
 int find_okay_unrandart(unsigned char aclass, unsigned char atype)
 {
@@ -1543,7 +2546,7 @@ int find_okay_unrandart(unsigned char aclass, unsigned char atype)
 
     for (x = 0, count = 0; x < NO_UNRANDARTS; x++)
     {
-        if (unranddata[x].ura_cl == aclass 
+        if (unranddata[x].ura_cl == aclass
             && does_unrandart_exist(x) == 0
             && (atype == OBJ_RANDOM || unranddata[x].ura_ty == atype))
         {
@@ -1566,7 +2569,7 @@ bool make_item_fixed_artefact( item_def &item, bool in_abyss, int which )
     if (!which)
     {
         // using old behaviour... try only once. -- bwr
-        force = false;  
+        force = false;
 
         which = SPWPN_SINGING_SWORD + random2(12);
         if (which >= SPWPN_SWORD_OF_CEREBOV)
@@ -1575,7 +2578,7 @@ bool make_item_fixed_artefact( item_def &item, bool in_abyss, int which )
 
     int status = get_unique_item_status( OBJ_WEAPONS, which );
 
-    if ((status == UNIQ_EXISTS 
+    if ((status == UNIQ_EXISTS
             || (in_abyss && status == UNIQ_NOT_EXISTS)
             || (!in_abyss && status == UNIQ_LOST_IN_ABYSS))
         && !force)
@@ -1695,7 +2698,11 @@ bool make_item_fixed_artefact( item_def &item, bool in_abyss, int which )
         break;
 
     default:
+#ifdef JP
+        DEBUGSTR( "非合法に改造されたアーティファクトを製造します！" );
+#else
         DEBUGSTR( "Trying to create illegal fixed artefact!" );
+#endif
         return (false);
     }
 
@@ -1703,7 +2710,7 @@ bool make_item_fixed_artefact( item_def &item, bool in_abyss, int which )
     item.special = which;
     item.quantity = 1;
 
-    // Items originally generated in the abyss and not found will be 
+    // Items originally generated in the abyss and not found will be
     // shifted to "lost in abyss", and will only be found there. -- bwr
     set_unique_item_status( OBJ_WEAPONS, which, UNIQ_EXISTS );
 
@@ -1712,7 +2719,7 @@ bool make_item_fixed_artefact( item_def &item, bool in_abyss, int which )
 
 bool make_item_randart( item_def &item )
 {
-    if (item.base_type != OBJ_WEAPONS 
+    if (item.base_type != OBJ_WEAPONS
         && item.base_type != OBJ_ARMOUR
         && item.base_type != OBJ_JEWELLERY)
     {
@@ -1734,7 +2741,7 @@ bool make_item_unrandart( item_def &item, int unrand_index )
     item.plus2     = unranddata[unrand_index].ura_pl2;
     item.colour    = unranddata[unrand_index].ura_col;
 
-    item.flags |= ISFLAG_UNRANDART; 
+    item.flags |= ISFLAG_UNRANDART;
     item.special = unranddata[ unrand_index ].prpty[ RAP_BRAND ];
 
     if (unranddata[ unrand_index ].prpty[ RAP_CURSED ])
@@ -1753,12 +2760,71 @@ const char *unrandart_descrip( char which_descrip, const item_def &item )
 
     return ((which_descrip == 0) ? unrand->spec_descrip1 :
             (which_descrip == 1) ? unrand->spec_descrip2 :
+#ifdef JP
+            (which_descrip == 2) ? unrand->spec_descrip3 : "未判明。");
+#else
             (which_descrip == 2) ? unrand->spec_descrip3 : "Unknown.");
+#endif
 
 }                               // end unrandart_descrip()
 
 void standard_name_weap(unsigned char item_typ, char glorg[ITEMNAME_SIZE])
 {
+#ifdef JP
+//装備の名前は8文字におさめたい。トライデントと悪魔の三叉戟の整合性は我慢。
+    strcpy(glorg,  (item_typ == WPN_CLUB) ? "棍棒" :
+                   (item_typ == WPN_MACE) ? "メイス" :
+                   (item_typ == WPN_FLAIL) ? "フレイル" :
+                   (item_typ == WPN_KNIFE) ? "ナイフ" :
+                   (item_typ == WPN_DAGGER) ? "ダガー" :
+                   (item_typ == WPN_MORNINGSTAR) ? "モーニングスター" :
+                   (item_typ == WPN_SHORT_SWORD) ? "ショートソード" :
+                   (item_typ == WPN_LONG_SWORD) ? "ロングソード" :
+                   (item_typ == WPN_GREAT_SWORD) ? "グレートソード" :
+                   (item_typ == WPN_SCIMITAR) ? "シミター" :
+                   (item_typ == WPN_HAND_AXE) ? "ハンドアックス" :
+                   (item_typ == WPN_BATTLEAXE) ? "バトルアックス" :
+                   (item_typ == WPN_SPEAR) ? "スピア" :
+                   (item_typ == WPN_TRIDENT) ? "トライデント" :
+                   (item_typ == WPN_HALBERD) ? "ハルバード" :
+                   (item_typ == WPN_SLING) ? "スリング" :
+                   (item_typ == WPN_BOW) ? "弓" :
+                   (item_typ == WPN_BLOWGUN) ? "吹き矢筒" :
+                   (item_typ == WPN_CROSSBOW) ? "クロスボウ" :
+                   (item_typ == WPN_HAND_CROSSBOW) ? "小型クロスボウ" :
+                   (item_typ == WPN_GLAIVE) ? "グレイブ" :
+                   (item_typ == WPN_QUARTERSTAFF) ? "六尺棒" :
+                   (item_typ == WPN_SCYTHE) ? "大鎌" :
+                   (item_typ == WPN_EVENINGSTAR) ? "イブニングスター" :
+                   (item_typ == WPN_QUICK_BLADE) ? "クイックブレード" :
+                   (item_typ == WPN_KATANA) ? "カタナ" :
+                   (item_typ == WPN_EXECUTIONERS_AXE) ? "処刑人の斧" :
+                   (item_typ == WPN_DOUBLE_SWORD) ? "ダブルソード" :
+                   (item_typ == WPN_TRIPLE_SWORD) ? "トリプルソード" :
+                   (item_typ == WPN_HAMMER) ? "ハンマー" :
+                   (item_typ == WPN_ANCUS) ? "アンクス" :
+                   (item_typ == WPN_WHIP) ? "鞭" :
+                   (item_typ == WPN_SABRE) ? "サーベル" :
+                   (item_typ == WPN_DEMON_BLADE) ? "悪魔の刃" :
+                   (item_typ == WPN_DEMON_WHIP) ? "悪魔の鞭" :
+                   (item_typ == WPN_DEMON_TRIDENT) ? "悪魔の三叉戟" :
+                   (item_typ == WPN_BROAD_AXE) ? "ブロードアックス" :
+                   (item_typ == WPN_WAR_AXE) ? "ウォーアックス" :
+                   (item_typ == WPN_SPIKED_FLAIL) ? "釘つきフレイル" :
+                   (item_typ == WPN_GREAT_MACE) ? "大型メイス" :
+                   (item_typ == WPN_GREAT_FLAIL) ? "大型フレイル" :
+                   (item_typ == WPN_FALCHION) ? "ファルシオン" :
+
+           (item_typ == WPN_GIANT_CLUB)
+                           ? (SysEnv.board_with_nail ? "角材"
+                                                     : "巨大棍棒") :
+
+           (item_typ == WPN_GIANT_SPIKED_CLUB)
+                           ? (SysEnv.board_with_nail ? "釘つき角材"
+                                                     : "釘つき巨大棍棒")
+
+                                   : "unknown weapon");
+#else
     strcpy(glorg,  (item_typ == WPN_CLUB) ? "club" :
                    (item_typ == WPN_MACE) ? "mace" :
                    (item_typ == WPN_FLAIL) ? "flail" :
@@ -1802,73 +2868,125 @@ void standard_name_weap(unsigned char item_typ, char glorg[ITEMNAME_SIZE])
                    (item_typ == WPN_GREAT_FLAIL) ? "great flail" :
                    (item_typ == WPN_FALCHION) ? "falchion" :
 
-           (item_typ == WPN_GIANT_CLUB) 
-                           ? (SysEnv.board_with_nail ? "two-by-four" 
+           (item_typ == WPN_GIANT_CLUB)
+                           ? (SysEnv.board_with_nail ? "two-by-four"
                                                      : "giant club") :
 
-           (item_typ == WPN_GIANT_SPIKED_CLUB) 
-                           ? (SysEnv.board_with_nail ? "board with nail" 
+           (item_typ == WPN_GIANT_SPIKED_CLUB)
+                           ? (SysEnv.board_with_nail ? "board with nail"
                                                      : "giant spiked club")
 
                                    : "unknown weapon");
+#endif
 }                               // end standard_name_weap()
 
 void standard_name_armour( const item_def &item, char glorg[ITEMNAME_SIZE] )
 {
-    short helm_type; 
+    short helm_type;
 
     glorg[0] = '\0';
 
     switch (item.sub_type)
     {
     case ARM_ROBE:
+#ifdef JP
+        strcat(glorg, "ローブ");
+#else
         strcat(glorg, "robe");
+#endif
         break;
 
     case ARM_LEATHER_ARMOUR:
+#ifdef JP
+        strcat(glorg, "レザーアーマー");
+#else
         strcat(glorg, "leather armour");
+#endif
         break;
 
     case ARM_RING_MAIL:
+#ifdef JP
+        strcat(glorg, "リングメイル");
+#else
         strcat(glorg, "ring mail");
+#endif
         break;
 
     case ARM_SCALE_MAIL:
+#ifdef JP
+        strcat(glorg, "スケイルメイル");
+#else
         strcat(glorg, "scale mail");
+#endif
         break;
 
     case ARM_CHAIN_MAIL:
+#ifdef JP
+        strcat(glorg, "鎖かたびら");
+#else
         strcat(glorg, "chain mail");
+#endif
         break;
 
     case ARM_SPLINT_MAIL:
+#ifdef JP
+        strcat(glorg, "スプリントメイル");
+#else
         strcat(glorg, "splint mail");
+#endif
         break;
 
     case ARM_BANDED_MAIL:
+#ifdef JP
+        strcat(glorg, "バンディドメイル");
+#else
         strcat(glorg, "banded mail");
+#endif
         break;
 
     case ARM_PLATE_MAIL:
+#ifdef JP
+        strcat(glorg, "プレートメイル");
+#else
         strcat(glorg, "plate mail");
+#endif
         break;
 
     case ARM_SHIELD:
+#ifdef JP
+        strcat(glorg, "盾");
+#else
         strcat(glorg, "shield");
+#endif
         break;
 
     case ARM_CLOAK:
+#ifdef JP
+        strcat(glorg, "クローク");
+#else
         strcat(glorg, "cloak");
+#endif
         break;
 
     case ARM_HELMET:
         if (cmp_helmet_type( item, THELM_HELM )
                     || cmp_helmet_type( item, THELM_HELMET ))
-        {   
+        {
             short dhelm = get_helmet_desc( item );
 
             if (dhelm != THELM_DESC_PLAIN)
-            {   
+            {
+#ifdef JP
+                strcat( glorg,
+                        (dhelm == THELM_DESC_WINGED)   ? "羽飾り" :
+                        (dhelm == THELM_DESC_HORNED)   ? "角つき" :
+                        (dhelm == THELM_DESC_CRESTED)  ? "天頂飾り" :
+                        (dhelm == THELM_DESC_PLUMED)   ? "飾りつき" :
+                        (dhelm == THELM_DESC_SPIKED)   ? "棘つき" :
+                        (dhelm == THELM_DESC_VISORED)  ? "庇しつき" :
+                        (dhelm == THELM_DESC_JEWELLED) ? "宝飾"
+                                                       : "バグの" );
+#else
                 strcat( glorg,
                         (dhelm == THELM_DESC_WINGED)   ? "winged " :
                         (dhelm == THELM_DESC_HORNED)   ? "horned " :
@@ -1878,111 +2996,224 @@ void standard_name_armour( const item_def &item, char glorg[ITEMNAME_SIZE] )
                         (dhelm == THELM_DESC_VISORED)  ? "visored " :
                         (dhelm == THELM_DESC_JEWELLED) ? "jeweled "
                                                        : "buggy " );
+#endif
             }
         }
 
         helm_type = get_helmet_type( item );
         if (helm_type == THELM_HELM)
+#ifdef JP
+            strcat(glorg, "兜");
+#else
             strcat(glorg, "helm");
+#endif
         else if (helm_type == THELM_CAP)
+#ifdef JP
+            strcat(glorg, "帽子");
+#else
             strcat(glorg, "cap");
+#endif
         else if (helm_type == THELM_WIZARD_HAT)
+#ifdef JP
+            strcat(glorg, "魔法帽");
+#else
             strcat(glorg, "wizard's hat");
-        else 
+#endif
+        else
+#ifdef JP
+            strcat(glorg, "鉄兜");
+#else
             strcat(glorg, "helmet");
+#endif
         break;
 
     case ARM_GLOVES:
+#ifdef JP
+        strcat(glorg, "グローブ");
+#else
         strcat(glorg, "gloves");
+#endif
         break;
 
     case ARM_BOOTS:
         if (item.plus2 == TBOOT_NAGA_BARDING)
+#ifdef JP
+            strcat(glorg, "ナーガの具装");
+#else
             strcat(glorg, "naga barding");
+#endif
         else if (item.plus2 == TBOOT_CENTAUR_BARDING)
+#ifdef JP
+            strcat(glorg, "セントールの馬甲");
+#else
             strcat(glorg, "centaur barding");
+#endif
         else
+#ifdef JP
+            strcat(glorg, "ブーツ");
+#else
             strcat(glorg, "boots");
+#endif
         break;
 
     case ARM_BUCKLER:
+#ifdef JP
+        strcat(glorg, "バックラー");
+#else
         strcat(glorg, "buckler");
+#endif
         break;
 
     case ARM_LARGE_SHIELD:
+#ifdef JP
+        strcat(glorg, "大盾");
+#else
         strcat(glorg, "large shield");
+#endif
         break;
 
     case ARM_DRAGON_HIDE:
+#ifdef JP
+        strcat(glorg, "ドラゴンの皮");
+#else
         strcat(glorg, "dragon hide");
+#endif
         break;
 
     case ARM_TROLL_HIDE:
+#ifdef JP
+        strcat(glorg, "トロルの皮");
+#else
         strcat(glorg, "troll hide");
+#endif
         break;
 
     case ARM_CRYSTAL_PLATE_MAIL:
+#ifdef JP
+        strcat(glorg, "クリスタルメイル");
+#else
         strcat(glorg, "crystal plate mail");
+#endif
         break;
 
     case ARM_DRAGON_ARMOUR:
+#ifdef JP
+        strcat(glorg, "ドラゴンの鎧");
+#else
         strcat(glorg, "dragon armour");
+#endif
         break;
 
     case ARM_TROLL_LEATHER_ARMOUR:
+#ifdef JP
+        strcat(glorg, "トロル革の鎧");
+#else
         strcat(glorg, "troll leather armour");
+#endif
         break;
 
     case ARM_ICE_DRAGON_HIDE:
+#ifdef JP
+        strcat(glorg, "アイスドラゴンの皮");
+#else
         strcat(glorg, "ice dragon hide");
+#endif
         break;
 
     case ARM_ICE_DRAGON_ARMOUR:
+#ifdef JP
+        strcat(glorg, "アイスドラゴンの鎧");
+#else
         strcat(glorg, "ice dragon armour");
+#endif
         break;
 
     case ARM_STEAM_DRAGON_HIDE:
+#ifdef JP
+        strcat(glorg, "蒸気ドラゴンの皮");
+#else
         strcat(glorg, "steam dragon hide");
+#endif
         break;
 
     case ARM_STEAM_DRAGON_ARMOUR:
+#ifdef JP
+        strcat(glorg, "蒸気ドラゴンの鎧");
+#else
         strcat(glorg, "steam dragon armour");
+#endif
         break;
 
     case ARM_MOTTLED_DRAGON_HIDE:
+#ifdef JP
+        strcat(glorg, "斑紋ドラゴンの皮");
+#else
         strcat(glorg, "mottled dragon hide");
+#endif
         break;
 
     case ARM_MOTTLED_DRAGON_ARMOUR:
+#ifdef JP
+        strcat(glorg, "斑紋ドラゴンの鎧");
+#else
         strcat(glorg, "mottled dragon armour");
+#endif
         break;
 
     case ARM_STORM_DRAGON_HIDE:
+#ifdef JP
+        strcat(glorg, "ストームドラゴンの皮");
+#else
         strcat(glorg, "storm dragon hide");
+#endif
         break;
 
     case ARM_STORM_DRAGON_ARMOUR:
+#ifdef JP
+        strcat(glorg, "ストームドラゴンの鎧");
+#else
         strcat(glorg, "storm dragon armour");
+#endif
         break;
 
     case ARM_GOLD_DRAGON_HIDE:
+#ifdef JP
+        strcat(glorg, "ゴールドドラゴンの皮");
+#else
         strcat(glorg, "gold dragon hide");
+#endif
         break;
 
     case ARM_GOLD_DRAGON_ARMOUR:
+#ifdef JP
+        strcat(glorg, "ゴールドドラゴンの鎧");
+#else
         strcat(glorg, "gold dragon armour");
+#endif
         break;
 
     case ARM_ANIMAL_SKIN:
+#ifdef JP
+        strcat(glorg, "獣の皮");
+#else
         strcat(glorg, "animal skin");
+#endif
         break;
 
     case ARM_SWAMP_DRAGON_HIDE:
+#ifdef JP
+        strcat(glorg, "沼ドラゴンの皮");
+#else
         strcat(glorg, "swamp dragon hide");
+#endif
         break;
 
     case ARM_SWAMP_DRAGON_ARMOUR:
+#ifdef JP
+        strcat(glorg, "沼ドラゴンの鎧");
+#else
         strcat(glorg, "swamp dragon armour");
+#endif
         break;
     }
 }                               // end standard_name_armour()

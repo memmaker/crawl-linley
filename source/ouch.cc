@@ -54,6 +54,10 @@
 #include <sys/stat.h>
 #endif
 
+#ifdef __MINGW32__
+#include <io.h>
+#endif
+
 #include "externs.h"
 
 #include "chardump.h"
@@ -74,6 +78,11 @@
 #include "stuff.h"
 #include "view.h"
 
+#ifdef WINDOWS
+#include "winclass.h"
+extern WinClass    *win_main;
+extern quit_wingame();
+#endif
 
 void end_game( struct scorefile_entry &se );
 void item_corrode( char itco );
@@ -85,17 +94,25 @@ int check_your_resists(int hurted, int flavour)
     int resist;
 
 #if DEBUG_DIAGNOSTICS
+#ifdef JP
     snprintf( info, INFO_SIZE, "checking resistance: flavour=%d", flavour );
+#else
+    snprintf( info, INFO_SIZE, "checking resistance: flavour=%d", flavour );
+#endif
     mpr( info, MSGCH_DIAGNOSTICS );
 #endif
 
-    if (flavour == BEAM_FIRE || flavour == BEAM_LAVA 
+    if (flavour == BEAM_FIRE || flavour == BEAM_LAVA
         || flavour == BEAM_HELLFIRE || flavour == BEAM_EXPLOSION
         || flavour == BEAM_FRAG)
     {
         if (you.duration[DUR_CONDENSATION_SHIELD] > 0)
         {
+#ifdef JP
+            mpr( "あなたの氷の盾は砕け散ってしまった！", MSGCH_DURATION );
+#else
             mpr( "Your icy shield dissipates!", MSGCH_DURATION );
+#endif
             you.duration[DUR_CONDENSATION_SHIELD] = 0;
             you.redraw_armour_class = 1;
         }
@@ -112,7 +129,11 @@ int check_your_resists(int hurted, int flavour)
         }
         else if (resist < 0)
         {
+#ifdef JP
+            mpr("あなたは激しく燃えあがった！");
+#else
             mpr("It burns terribly!");
+#endif
             hurted *= 15;
             hurted /= 10;
         }
@@ -127,7 +148,11 @@ int check_your_resists(int hurted, int flavour)
         }
         else if (resist < 0)
         {
+#ifdef JP
+            mpr("あなたはひどく冷気がこたえた！");
+#else
             mpr("You feel a terrible chill!");
+#endif
             hurted *= 15;
             hurted /= 10;
         }
@@ -167,11 +192,15 @@ int check_your_resists(int hurted, int flavour)
             poison_player( 6 + random2(3), true );
         else
         {
+#ifdef JP
+            mpr("あなたにはある程度耐性がある。");
+#else
             mpr("You partially resist.");
+#endif
             hurted /= 2;
 
             if (!you.is_undead)
-                poison_player( coinflip() ? 2 : 3, true ); 
+                poison_player( coinflip() ? 2 : 3, true );
         }
         break;
 
@@ -191,12 +220,20 @@ int check_your_resists(int hurted, int flavour)
 
         if (resist > 0)
         {
+#ifdef JP
+            mpr("あなたにはある程度耐性がある。");
+#else
             mpr("You partially resist.");
+#endif
             hurted /= 2;
         }
         else if (resist < 0)
         {
+#ifdef JP
+            mpr("あなたは凍気を耐え難く感じた！");
+#else
             mpr("You feel a painful chill!");
+#endif
             hurted *= 13;
             hurted /= 10;
         }
@@ -207,12 +244,20 @@ int check_your_resists(int hurted, int flavour)
 
         if (resist > 1)
         {
+#ifdef JP
+            mpr("あなたにはある程度耐性がある。");
+#else
             mpr("You partially resist.");
+#endif
             hurted /= (1 + resist);
         }
         else if (resist < 0)
         {
+#ifdef JP
+            mpr("あなたは激しく燃えあがった！");
+#else
             mpr("It burns terribly!");
+#endif
             hurted *= 15;
             hurted /= 10;
         }
@@ -231,7 +276,7 @@ void splash_with_acid( char acid_strength )
     char splc = 0;
     int  dam = 0;
 
-    const bool wearing_cloak = (you.equip[EQ_CLOAK] == -1);     
+    const bool wearing_cloak = (you.equip[EQ_CLOAK] == -1);
 
     for (splc = EQ_CLOAK; splc <= EQ_BODY_ARMOUR; splc++)
     {
@@ -249,7 +294,11 @@ void splash_with_acid( char acid_strength )
 
     if (dam)
     {
+#ifdef JP
+        mpr( "強酸があなたを焦がす！" );
+#else
         mpr( "The acid burns!" );
+#endif
         ouch( dam, 0, KILLED_BY_ACID );
     }
 }                               // end splash_with_acid()
@@ -263,10 +312,14 @@ void weapon_acid( char acid_strength )
 
     if (hand_thing == -1)
     {
+#ifdef JP
+        snprintf( info, INFO_SIZE, "あなたの%sは酸に焦がされた！", your_hand(true) );
+#else
         snprintf( info, INFO_SIZE, "Your %s burn!", your_hand(true) );
+#endif
         mpr( info );
 
-        ouch( roll_dice( 1, acid_strength ), 0, KILLED_BY_ACID );  
+        ouch( roll_dice( 1, acid_strength ), 0, KILLED_BY_ACID );
     }
     else if (random2(20) <= acid_strength)
     {
@@ -279,14 +332,18 @@ void item_corrode( char itco )
     int chance_corr = 0;        // no idea what its full range is {dlb}
     bool it_resists = false;    // code simplifier {dlb}
     bool suppress_msg = false;  // code simplifier {dlb}
-    int how_rusty = ((you.inv[itco].base_type == OBJ_WEAPONS) 
+    int how_rusty = ((you.inv[itco].base_type == OBJ_WEAPONS)
                                 ? you.inv[itco].plus2 : you.inv[itco].plus);
 
     // early return for "oRC and cloak/preservation {dlb}:
     if (wearing_amulet(AMU_RESIST_CORROSION) && !one_chance_in(10))
     {
 #if DEBUG_DIAGNOSTICS
+#ifdef JP
         mpr( "Amulet protects.", MSGCH_DIAGNOSTICS );
+#else
+        mpr( "Amulet protects.", MSGCH_DIAGNOSTICS );
+#endif
 #endif
         return;
     }
@@ -314,13 +371,13 @@ void item_corrode( char itco )
         break;
 
     case OBJ_WEAPONS:
-        if (is_fixed_artefact(you.inv[itco]) 
+        if (is_fixed_artefact(you.inv[itco])
             || is_random_artefact(you.inv[itco]))
         {
             it_resists = true;
             suppress_msg = true;
         }
-        else if (cmp_equip_race( you.inv[itco], ISFLAG_DWARVEN ) 
+        else if (cmp_equip_race( you.inv[itco], ISFLAG_DWARVEN )
                 && !one_chance_in(5))
         {
             it_resists = true;
@@ -367,7 +424,11 @@ void item_corrode( char itco )
         char str_pass[ ITEMNAME_SIZE ];
         in_name(itco, DESC_CAP_YOUR, str_pass);
         strcpy(info, str_pass);
+#ifdef JP
+        strcat(info, (it_resists) ? "は酸に耐えた。" : "は酸で腐蝕した！");
+#else
         strcat(info, (it_resists) ? " resists." : " is eaten away!");
+#endif
         mpr(info);
     }
 
@@ -399,7 +460,11 @@ void scrolls_burn(char burn_strength, char target_class)
     if (wearing_amulet(AMU_CONSERVATION) && !one_chance_in(10))
     {
 #if DEBUG_DIAGNOSTICS
+#ifdef JP
         mpr( "Amulet conserves.", MSGCH_DIAGNOSTICS );
+#else
+        mpr( "Amulet conserves.", MSGCH_DIAGNOSTICS );
+#endif
 #endif
         return;
     }
@@ -429,20 +494,44 @@ void scrolls_burn(char burn_strength, char target_class)
     if (burn_no == 1)
     {
         if (target_class == OBJ_SCROLLS)
+#ifdef JP
+            mpr("あなたの持っている巻物に火がついた！");
+#else
             mpr("A scroll you are carrying catches fire!");
+#endif
         else if (target_class == OBJ_POTIONS)
+#ifdef JP
+            mpr("あなたの持っている薬瓶が凍って砕けてしまった！");
+#else
             mpr("A potion you are carrying freezes and shatters!");
+#endif
         else if (target_class == OBJ_FOOD)
+#ifdef JP
+            mpr("あなたの食料が胞子に包まれてしまった！");
+#else
             mpr("Some of your food is covered with spores!");
+#endif
     }
     else if (burn_no > 1)
     {
         if (target_class == OBJ_SCROLLS)
+#ifdef JP
+            mpr("あなたの持っている巻物の幾つかに火がついた！");
+#else
             mpr("Some of the scrolls you are carrying catch fire!");
+#endif
         else if (target_class == OBJ_POTIONS)
+#ifdef JP
+            mpr("あなたの持っている薬瓶の幾つかが凍って砕けてしまった！");
+#else
             mpr("Some of the potions you are carrying freeze and shatter!");
+#endif
         else if (target_class == OBJ_FOOD)
+#ifdef JP
+            mpr("あなたの食料の幾つかが胞子に包まれてしまった！");
+#else
             mpr("Some of your food is covered with spores!");
+#endif
     }
     /* burn_no could be 0 */
 }
@@ -458,7 +547,11 @@ void lose_level(void)
     you.experience = exp_needed( you.experience_level + 1 ) - 1;
     you.experience_level--;
 
-    snprintf( info, INFO_SIZE, "You are now a level %d %s!", 
+#ifdef JP
+    snprintf( info, INFO_SIZE, "あなたは今やレベル%dの%sだ！",
+#else
+    snprintf( info, INFO_SIZE, "You are now a level %d %s!",
+#endif
              you.experience_level, you.class_name );
     mpr( info, MSGCH_WARN );
 
@@ -484,13 +577,21 @@ void drain_exp(void)
         && (you.religion == GOD_ZIN || you.religion == GOD_SHINING_ONE)
         && random2(150) < you.piety)
     {
+#ifdef JP
+        simple_god_message("があなたの生命の力を護った！");
+#else
         simple_god_message(" protects your life force!");
+#endif
         return;
     }
 
     if (protection >= 3 || you.is_undead)
     {
+#ifdef JP
+        mpr("あなたには完全な耐性がある。");
+#else
         mpr("You fully resist.");
+#endif
         return;
     }
 
@@ -511,13 +612,21 @@ void drain_exp(void)
 
     if (protection > 0)
     {
+#ifdef JP
+        mpr("あなたにはある程度耐性がある。");
+#else
         mpr("You partially resist.");
+#endif
         exp_drained -= (protection * exp_drained) / 3;
     }
 
     if (exp_drained > 0)
     {
+#ifdef JP
+        mpr("あなたは衰弱させられたのを感じた。");
+#else
         mpr("You feel drained.");
+#endif
         you.experience -= exp_drained;
         you.exp_available -= exp_drained;
 
@@ -525,7 +634,11 @@ void drain_exp(void)
             you.exp_available = 0;
 
 #if DEBUG_DIAGNOSTICS
+#ifdef JP
         snprintf( info, INFO_SIZE, "You lose %ld experience points.",
+#else
+        snprintf( info, INFO_SIZE, "You lose %ld experience points.",
+#endif
                   exp_drained );
         mpr( info, MSGCH_DIAGNOSTICS );
 #endif
@@ -543,6 +656,9 @@ void ouch( int dam, int death_source, char death_type, const char *aux )
     int d = 0;
     int e = 0;
 
+    if (you.running < 0)
+        you.running = 0;
+
     if (you.deaths_door && death_type != KILLED_BY_LAVA
                                     && death_type != KILLED_BY_WATER)
     {
@@ -552,10 +668,14 @@ void ouch( int dam, int death_source, char death_type, const char *aux )
     // assumed bug for high damage amounts
     if (dam > 300)
     {
-        snprintf( info, INFO_SIZE, 
+        snprintf( info, INFO_SIZE,
+#ifdef JP
                   "Potential bug: Unexpectedly high damage = %d", dam );
+#else
+                  "Potential bug: Unexpectedly high damage = %d", dam );
+#endif
         mpr( info, MSGCH_DANGER );
-        return;                 
+        return;
     }
 
     if (you_are_delayed())
@@ -571,7 +691,11 @@ void ouch( int dam, int death_source, char death_type, const char *aux )
             if (random2(you.hp_max) > you.hp && dam > random2(you.hp)
                                                     && one_chance_in(5))
             {
+#ifdef JP
+                simple_god_message( "があなたを損傷から護った！" );
+#else
                 simple_god_message( " protects you from harm!" );
+#endif
                 return;
             }
             break;
@@ -584,7 +708,11 @@ void ouch( int dam, int death_source, char death_type, const char *aux )
             if (dam >= you.hp && you.duration[DUR_PRAYER]
                                                 && random2(you.piety) >= 30)
             {
+#ifdef JP
+                simple_god_message( "があなたを損傷から護った！" );
+#else
                 simple_god_message( " protects you from harm!" );
+#endif
                 return;
             }
             break;
@@ -596,12 +724,20 @@ void ouch( int dam, int death_source, char death_type, const char *aux )
         // Even if we have low HP messages off, we'll still give a
         // big hit warning (in this case, a hit for half our HPs) -- bwr
         if (dam > 0 && you.hp_max <= dam * 2)
+#ifdef JP
+            mpr( "っ!  これは本当に痛い！", MSGCH_DANGER );
+#else
             mpr( "Ouch!  That really hurt!", MSGCH_DANGER );
+#endif
 
         if (you.hp > 0 && Options.hp_warning
             && you.hp <= (you.hp_max * Options.hp_warning) / 100)
         {
+#ifdef JP
+            mpr( "* * * 低ヒットポイント警告 * * *", MSGCH_DANGER );
+#else
             mpr( "* * * LOW HITPOINT WARNING * * *", MSGCH_DANGER );
+#endif
         }
 
         if (you.hp > 0)
@@ -609,7 +745,7 @@ void ouch( int dam, int death_source, char death_type, const char *aux )
     }
 
 #ifdef WIZARD
-    if (death_type != KILLED_BY_QUITTING 
+    if (death_type != KILLED_BY_QUITTING
         && death_type != KILLED_BY_WINNING
         && death_type != KILLED_BY_LEAVING)
     {
@@ -618,18 +754,31 @@ void ouch( int dam, int death_source, char death_type, const char *aux )
 #ifdef USE_OPTIONAL_WIZARD_DEATH
 
 #if DEBUG_DIAGNOSTICS
+#ifdef JP
             snprintf( info, INFO_SIZE, "Damage: %d; Hit points: %d", dam, you.hp );
+#else
+            snprintf( info, INFO_SIZE, "Damage: %d; Hit points: %d", dam, you.hp );
+#endif
             mpr( info, MSGCH_DIAGNOSTICS );
 #endif // DEBUG_DIAGNOSTICS
 
+#ifdef JP
+            if (!yesno("死にますか？", false))
+#else
             if (!yesno("Die?", false))
+#endif
             {
                 set_hp(you.hp_max, false);
                 return;
             }
 #else  // !def USE_OPTIONAL_WIZARD_DEATH
+#ifdef JP
             mpr("Since you're a debugger, I'll let you live.");
             mpr("Be more careful next time, okay?");
+#else
+            mpr("Since you're a debugger, I'll let you live.");
+            mpr("Be more careful next time, okay?");
+#endif
 
             set_hp(you.hp_max, false);
             return;
@@ -704,8 +853,8 @@ void ouch( int dam, int death_source, char death_type, const char *aux )
             }
         }
 
-        // Bonus for exploring different areas, not for collecting a 
-        // huge stack of demonic runes in Pandemonium (gold value 
+        // Bonus for exploring different areas, not for collecting a
+        // huge stack of demonic runes in Pandemonium (gold value
         // is enough for those). -- bwr
         if (se.num_diff_runes >= 3)
             points += ((se.num_diff_runes + 2) * (se.num_diff_runes + 2) * 1000);
@@ -729,7 +878,7 @@ void ouch( int dam, int death_source, char death_type, const char *aux )
 
     // for death by monster
 
-    // Set the default aux data value... 
+    // Set the default aux data value...
     // If aux is passed in (ie for a trap), we'll default to that.
     if (aux == NULL)
         se.auxkilldata[0] = '\0';
@@ -739,13 +888,13 @@ void ouch( int dam, int death_source, char death_type, const char *aux )
         se.auxkilldata[ ITEMNAME_SIZE - 1 ] = '\0';
     }
 
-    if ((death_type == KILLED_BY_MONSTER || death_type == KILLED_BY_BEAM)  
+    if ((death_type == KILLED_BY_MONSTER || death_type == KILLED_BY_BEAM)
         && death_source >= 0 && death_source < MAX_MONSTERS)
     {
         struct monsters *monster = &menv[death_source];
 
-        if (monster->type > 0 || monster->type <= NUM_MONSTERS) 
-        { 
+        if (monster->type > 0 || monster->type <= NUM_MONSTERS)
+        {
             se.death_source = monster->type;
             se.mon_num = monster->number;
 
@@ -755,7 +904,7 @@ void ouch( int dam, int death_source, char death_type, const char *aux )
             // medium scorefile formats.
             // It still isn't used in monam for anything but flying weapons
             // though
-            if (death_type == KILLED_BY_MONSTER 
+            if (death_type == KILLED_BY_MONSTER
                 && monster->inv[MSLOT_WEAPON] != NON_ITEM)
             {
 #if HISCORE_WEAPON_DETAIL
@@ -766,7 +915,7 @@ void ouch( int dam, int death_source, char death_type, const char *aux )
                 unset_ident_flags( mitm[monster->inv[MSLOT_WEAPON]],
                                    ISFLAG_IDENT_MASK );
 
-                set_ident_flags( mitm[monster->inv[MSLOT_WEAPON]], 
+                set_ident_flags( mitm[monster->inv[MSLOT_WEAPON]],
                                  ISFLAG_KNOW_TYPE );
 
                 // clear "runed" description text to make shorter yet
@@ -775,16 +924,16 @@ void ouch( int dam, int death_source, char death_type, const char *aux )
 
                 // Setting this is redundant for dancing weapons, however
                 // we do care about the above indentification. -- bwr
-                if (monster->type != MONS_DANCING_WEAPON) 
+                if (monster->type != MONS_DANCING_WEAPON)
                 {
                     it_name( monster->inv[MSLOT_WEAPON], DESC_NOCAP_A, info );
                     strncpy( se.auxkilldata, info, ITEMNAME_SIZE );
                     se.auxkilldata[ ITEMNAME_SIZE - 1 ] = '\0';
                 }
             }
-            
-            strcpy( info, 
-                    monam( monster->number, monster->type, true, DESC_NOCAP_A, 
+
+            strcpy( info,
+                    monam( monster->number, monster->type, true, DESC_NOCAP_A,
                            monster->inv[MSLOT_WEAPON] ) );
 
             strncpy( se.death_source_name, info, 40 );
@@ -852,7 +1001,7 @@ void ouch( int dam, int death_source, char death_type, const char *aux )
 
     if (you.real_time != -1)
         se.real_time = you.real_time + (se.death_time - you.start_time);
-    else 
+    else
         se.real_time = -1;
 
     se.num_turns = you.num_turns;
@@ -888,6 +1037,10 @@ void end_game( struct scorefile_entry &se )
     int i;
     char del_file[300];         // massive overkill!
     bool dead = true;
+
+#ifdef USE_TILE
+    set_keyin_mode(KEYIN_MODE_END);
+#endif
 
     if (se.death_type == KILLED_BY_LEAVING ||
         se.death_type == KILLED_BY_WINNING)
@@ -930,15 +1083,38 @@ void end_game( struct scorefile_entry &se )
 
     // last, but not least, delete player .sav file
     strcpy(del_file, info);
+
+    char st_file[300];
+    strcpy(st_file, del_file);
+    char kl_file[300];
+    char tc_file[300];
+    strcpy(kl_file, st_file);
+    strcpy(tc_file, st_file);
+
     strcat(del_file, ".sav");
     unlink(del_file);
+
+    // Delete record of stashes
+    strcat(st_file, ".st");
+    unlink(st_file);
+
+    strcat(kl_file, ".kil");
+    unlink(kl_file);
+
+    strcat(tc_file, ".tc");
+    unlink(tc_file);
 
     // death message
     if (dead)
     {
+#ifdef JP
+        mpr("あなたは死にました……。");      // insert player name here? {dlb}
+#else
         mpr("You die...");      // insert player name here? {dlb}
+#endif
         viewwindow(1, false);   // don't do this for leaving/winning characters
     }
+
     more();
 
     for (i = 0; i < ENDOFPACK; i++)
@@ -948,7 +1124,7 @@ void end_game( struct scorefile_entry &se )
     {
         if (you.inv[i].base_type != 0)
         {
-            set_ident_type( you.inv[i].base_type, 
+            set_ident_type( you.inv[i].base_type,
                             you.inv[i].sub_type, ID_KNOWN_TYPE );
         }
     }
@@ -957,11 +1133,19 @@ void end_game( struct scorefile_entry &se )
     clrscr();
 
     if (!dump_char( "morgue.txt", !dead ))
+#ifdef JP
+        mpr("キャラクターダンプは失敗した！ ご愁傷様。");
+#else
         mpr("Char dump unsuccessful! Sorry about that.");
+#endif
 #if DEBUG_DIAGNOSTICS
     //jmf: switched logic and moved "success" message to debug-only
     else
+#ifdef JP
+        mpr("キャラクターダンプは成功した！ (morgue.txt).");
+#else
         mpr("Char dump successful! (morgue.txt).");
+#endif
 #endif // DEBUG
 
     more();
@@ -972,10 +1156,19 @@ void end_game( struct scorefile_entry &se )
 #endif
 
     clrscr();
+#ifdef JP
+    cprintf( "さようなら、" );
+#else
     cprintf( "Goodbye, " );
+#endif
     cprintf( you.your_name );
+#ifdef JP
+    cprintf( "。" );
+    cprintf( EOL EOL "    " ); // Space padding where # would go in list format
+#else
     cprintf( "." );
     cprintf( EOL EOL "    " ); // Space padding where # would go in list format
+#endif
 
     char scorebuff[ HIGHSCORE_SIZE ];
 
@@ -985,12 +1178,35 @@ void end_game( struct scorefile_entry &se )
     scorebuff[ HIGHSCORE_SIZE - 1 ] = '\0';
     cprintf( scorebuff );
 
+#ifdef JP
+    cprintf( EOL "スコアランキング" EOL );
+#else
     cprintf( EOL "Best Crawlers -" EOL );
+#endif
 
     // "- 5" gives us an extra line in case the description wraps on a line.
     hiscores_print_list( get_number_of_lines() - lines - 5 );
 
     // just to pause, actual value returned does not matter {dlb}
     get_ch();
+
+#if defined(WIN32CONSOLE) || defined(WINDOWS)
+//キャラクター名をファイルに書き込み
+    FILE *fp;
+
+    if ( (fp = fopen("latest.nam", "w+")) == NULL )
+    {
+    }
+    else
+    {
+        fprintf(fp, "YourName=%s\n", you.your_name);
+        fclose(fp);
+    }
+#endif
+
+#ifdef WINDOWS
+    quit_wingame();
+#else
     end(0);
+#endif
 }

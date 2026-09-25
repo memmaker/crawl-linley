@@ -94,6 +94,12 @@
 #include "version.h"
 #include "wpn-misc.h"
 
+#ifdef WINDOWS
+#include "winclass.h"
+extern WinClass        *win_main;
+extern TileRegionClass *region_tile;
+extern TextRegionClass *region_stat;
+#endif
 
 #define MIN_START_STAT       1
 
@@ -143,7 +149,7 @@ int give_first_conjuration_book()
         // choose randomly based on the species weighting, again
         // ignoring air/earth which are secondary in these books.  -- bwr
         if (random2( species_skills( SK_ICE_MAGIC, you.species ) )
-                < random2( species_skills( SK_FIRE_MAGIC, you.species ) )) 
+                < random2( species_skills( SK_FIRE_MAGIC, you.species ) ))
         {
             book = BOOK_CONJURATIONS_II;
         }
@@ -207,7 +213,7 @@ static bool check_saved_game(void)
     // Create the file name base
     char name_buff[kFileNameLen];
 
-    snprintf( name_buff, sizeof(name_buff), 
+    snprintf( name_buff, sizeof(name_buff),
               SAVE_DIR_PATH "%s%d", you.your_name, (int) getuid() );
 
     char zip_buff[kFileNameLen];
@@ -222,7 +228,11 @@ static bool check_saved_game(void)
     handle = fopen(zip_buff, "rb+");
     if (handle != NULL)
     {
+#ifdef JP
+        cprintf(EOL "ゲームをロードしています。" EOL);
+#else
         cprintf(EOL "Loading game..." EOL);
+#endif
 
         // Create command
         char cmd_buff[1024];
@@ -231,7 +241,11 @@ static bool check_saved_game(void)
 
         if (system( cmd_buff ) != 0)
         {
+#ifdef JP
             cprintf( EOL "Warning: Zip command (LOAD_UNPACKAGE_CMD) returned non-zero value!" EOL );
+#else
+            cprintf( EOL "Warning: Zip command (LOAD_UNPACKAGE_CMD) returned non-zero value!" EOL );
+#endif
         }
 
         fclose(handle);
@@ -293,18 +307,58 @@ bool new_game(void)
         you.your_name[ kNameLen - 1 ] = '\0';
     }
 
+#if defined(USE_X11) && defined(USE_TILE)
+    if (Options.use_tile) TileDrawTitle();
+    gotoxy(1,18);
+    mpr_on(MODE_MPR);
+#endif
+#if defined(WINDOWS) && defined(USE_TILE)
+    if (Options.use_tile)
+    {
+        region_stat->flag = false;
+        region_tile->ox = (win_main->wx - region_tile->mx)*0.4;
+        TileDrawTitle();
+        gotoxy(1,18);
+        mpr_on(MODE_MPR);
+    }
+#endif
+
     openingScreen();
     enterPlayerName(true);
+
+#if defined(WINDOWS) && defined(USE_TILE)
+    if (Options.use_tile)
+    {
+        region_stat->flag = true;
+        region_tile->ox = 0;
+    }
+#endif
+
+#ifdef USE_TILE
+    if (Options.use_tile)
+    {
+        clrscr();
+        mpr_on(MODE_CRT);
+        gotoxy(1,1);
+    }
+#endif
 
     if (you.your_name[0] != '\0')
     {
         if (check_saved_game())
         {
-            textcolor( BROWN );
+#ifdef JP
+            cprintf( EOL "おかえりなさい、" );
+#else
             cprintf( EOL "Welcome back, " );
+#endif
             textcolor( YELLOW );
             cprintf( you.your_name );
+#ifdef JP
+            cprintf( "！" );
+#else
             cprintf( "!" );
+#endif
             textcolor( LIGHTGREY );
 
             return (false);
@@ -337,9 +391,15 @@ bool new_game(void)
         char spec_buff[80];
         strncpy(spec_buff, species_name(you.species, you.experience_level), 80);
 
-        snprintf( info, INFO_SIZE, "You are a%s %s %s." EOL, 
+#ifdef JP
+        snprintf( info, INFO_SIZE, "あなたは%sの%sだ。" EOL,
+                  spec_buff,
+                  you.class_name );
+#else
+        snprintf( info, INFO_SIZE, "You are a%s %s %s." EOL,
                   (is_vowel( spec_buff[0] )) ? "n" : "", spec_buff,
                   you.class_name );
+#endif
 
         cprintf( info );
 
@@ -347,15 +407,27 @@ bool new_game(void)
 
         if (check_saved_game())
         {
+#ifdef JP
+            cprintf(EOL "本当に前のゲームに上書きしてもいいですか？");
+#else
             cprintf(EOL "Do you really want to overwrite your old game?");
+#endif
             char c = getch();
             if (!(c == 'Y' || c == 'y'))
             {
                 textcolor( BROWN );
+#ifdef JP
+                cprintf(EOL EOL "おかえりなさい、");
+#else
                 cprintf(EOL EOL "Welcome back, ");
+#endif
                 textcolor( YELLOW );
                 cprintf(you.your_name);
+#ifdef JP
+                cprintf("！");
+#else
                 cprintf("!");
+#endif
                 textcolor( LIGHTGREY );
 
                 return (false);
@@ -661,7 +733,7 @@ bool new_game(void)
         const int sp_diff = species_skills( i, you.species );
         you.skills[i] = 0;
 
-        for (int lvl = 1; lvl <= 8; lvl++) 
+        for (int lvl = 1; lvl <= 8; lvl++)
         {
             if (you.skill_points[i] > (skill_exp_needed(lvl+1) * sp_diff) / 100)
                 you.skills[i] = lvl;
@@ -676,7 +748,7 @@ bool new_game(void)
     {
         if (you.inv[i].base_type != OBJ_WEAPONS)
         {
-            set_ident_type( you.inv[i].base_type, 
+            set_ident_type( you.inv[i].base_type,
                             you.inv[i].sub_type, ID_KNOWN_TYPE );
         }
 
@@ -695,7 +767,7 @@ bool new_game(void)
 
     // make sure the starting player is fully charged up
     set_hp( you.hp_max, false );
-    set_mp( you.max_magic_points, false ); 
+    set_mp( you.max_magic_points, false );
 
     give_basic_spells(you.char_class);
     give_basic_knowledge(you.char_class);
@@ -1381,7 +1453,11 @@ void choose_weapon( void )
         clrscr();
 
         textcolor( CYAN );
+#ifdef JP
+        cprintf(EOL " あなたは武器を選ぶことができる:" EOL);
+#else
         cprintf(EOL " You have a choice of weapons:" EOL);
+#endif
         textcolor( LIGHTGREY );
 
         for(int i=0; i<num_choices; i++)
@@ -1389,26 +1465,41 @@ void choose_weapon( void )
             int x = effective_stat_bonus(startwep[i]);
             standard_name_weap(startwep[i], wepName);
 
+#ifdef JP
+            snprintf( info, INFO_SIZE, "%c - %s%s" EOL, 'a' + i, wepName,
+                      (x <= -4) ? " (不向き)" : "" );
+#else
             snprintf( info, INFO_SIZE, "%c - %s%s" EOL, 'a' + i, wepName,
                       (x <= -4) ? " (not ideal)" : "" );
+#endif
 
             cprintf(info);
         }
 
+#ifdef JP
+        cprintf(EOL "? - ランダムに選ぶ" EOL);
+#else
         cprintf(EOL "? - Random" EOL);
-
+#endif
+            textcolor( CYAN );
+#ifdef JP
+            cprintf(EOL "どの武器にしますか？ ");
+#else
+            cprintf(EOL "Which weapon? ");
+#endif
+            textcolor( LIGHTGREY );
         do
         {
-            textcolor( CYAN );
-            cprintf(EOL "Which weapon? ");
-            textcolor( LIGHTGREY );
-
             keyin = get_ch();
         }
-        while (keyin != '?' && (keyin < 'a' || keyin > ('a' + num_choices)));
+        while (keyin != '?' && (keyin < 'a' || keyin >= ('a' + num_choices)));
 
         if (keyin != '?' && effective_stat_bonus(startwep[keyin-'a']) > -4)
+#ifdef JP
+            cprintf(EOL "賢明な選択だ。 " EOL);
+#else
             cprintf(EOL "A fine choice. " EOL);
+#endif
     }
 
     if (Options.random_pick || Options.weapon == WPN_RANDOM || keyin == '?')
@@ -1623,8 +1714,8 @@ void species_stat_init(unsigned char which_species)
     int ib = 0; // intelligence base
     int db = 0; // dexterity base
 
-    // Note: The stats in in this list aren't intended to sum the same 
-    // for all races.  The fact that Mummies and Ghouls are really low 
+    // Note: The stats in in this list aren't intended to sum the same
+    // for all races.  The fact that Mummies and Ghouls are really low
     // is considered acceptable (Mummies don't have to eat, and Ghouls
     // are supposted to be a really hard race).  Also note that Demigods
     // and Demonspawn get seven more random points added later. -- bwr
@@ -1861,7 +1952,6 @@ void give_basic_spells(int which_job)
 
 ************************************************************************ */
 
-
 // eventually, this should be something more grand {dlb}
 void openingScreen(void)
 {
@@ -1876,15 +1966,29 @@ void openingScreen(void)
        cprintf(", ");
     }
 ********************************************** */
-
     textcolor( YELLOW );
-    cprintf("Hello, welcome to Dungeon Crawl " VERSION "!");
-    textcolor( BROWN );
-    cprintf(EOL "(c) Copyright 1997-2002 Linley Henzell");
-    cprintf(EOL "Please consult crawl.txt for instructions and legal details."
-            EOL);
+#ifdef JP
+    cprintf("Dungeon Crawl " VERSION " へようこそ！");
     textcolor( LIGHTGREY );
-
+    cprintf(EOL "Dungeon Crawl:(c) Copyright 1997-2002 Linley Henzell");
+    cprintf(EOL "日本語版     :(c) Copyright 2003-2004 ぬるぽ堂, shimitei, 板倉充洋, Darshan");
+#ifdef USE_TILE
+    cprintf(EOL "タイル版     :(c) Copyright 2003-2004 板倉充洋, Denzi, Alex, ぬるぽ堂");
+#endif //USE_TILE
+    cprintf(EOL "使用説明と著作権についての詳細はj_crawl.txtを参照してください。"
+           EOL);
+#else //JP
+    cprintf("Hello, welcome to Dungeon Crawl " VERSION "!");
+    textcolor( LIGHTGREY );
+    cprintf(EOL "Dungeon Crawl:(c) Copyright 1997-2002 Linley Henzell");
+    cprintf(EOL "Patches      :(c) Copyright 2003-2004 Darshan Shaligram");
+#ifdef USE_TILE
+    cprintf(EOL "Tile Version :(c) Copyright 2003-2004 M.Itakura, Denzi, Alex Korol, Nullpodoh");
+#endif //USE_TILE
+    cprintf(EOL "Please consult crawl.txt for instructions and legal details."
+           EOL);
+#endif //JP
+    textcolor( LIGHTGREY );
     return;
 }                               // end openingScreen()
 
@@ -1911,16 +2015,68 @@ void enterPlayerName(bool blankOK)
         {
             textcolor( CYAN );
             if (blankOK && first_time)
+#ifdef JP
+                cprintf(EOL "名前を入力して<Enter>を押してください。種族と職業はこの後で選択します。"EOL);
+#else
                 cprintf(EOL "Press <Enter> to answer this after race and class are chosen."EOL);
+#endif
 
             first_time = false;
 
+#ifdef JP
+            cprintf(EOL "あなたの名前は？ ");
+#else
             cprintf(EOL "What is your name today? ");
+#endif
+
+#if defined(WIN32CONSOLE) || defined(WINDOWS)
+    //前回の名前をファイルから読みこみ
+    FILE *fp;
+    char name_latest[200];
+    name_latest[0] = '\0';
+    if ( (fp = fopen("latest.nam", "r")) == NULL || Options.enter_latest_name == false)
+    {
+    }
+    else
+    {
+        fscanf(fp, "YourName=%s\n", &name_latest);
+        fclose(fp);
+        if (name_latest[0] != '\0')
+#ifdef JP
+            cprintf("(無記入:%s) ", name_latest);
+#else
+            cprintf("(blank:%s)" , name_latest);
+#endif
+    }
+#endif
             textcolor( LIGHTGREY );
             get_input_line( name_entered, sizeof( name_entered ) );
-            
+
+#ifdef USE_TILE
+            if (Options.use_tile)
+            {
+                clrscr();
+                mpr_on(MODE_CRT);
+                gotoxy(1,1);
+            }
+#endif
+
+
+#if defined(WIN32CONSOLE) || defined(WINDOWS)
+            if ( (name_entered[0] == '\0')&&(name_latest[0] != '\0') )
+            {
+                strncpy( you.your_name, name_latest, kNameLen );
+                you.your_name[ kNameLen - 1 ] = '\0';
+            }
+            else
+            {
+                strncpy( you.your_name, name_entered, kNameLen );
+                you.your_name[ kNameLen - 1 ] = '\0';
+            }
+#else
             strncpy( you.your_name, name_entered, kNameLen );
             you.your_name[ kNameLen - 1 ] = '\0';
+#endif
         }
 
         // verification begins here {dlb}:
@@ -1929,7 +2085,11 @@ void enterPlayerName(bool blankOK)
             if (blankOK)
                 return;
 
+#ifdef JP
+            cprintf(EOL "そんな愚かしい名前はだめです！" EOL);
+#else
             cprintf(EOL "That's a silly name!" EOL);
+#endif
             acceptable_name = false;
         }
 
@@ -1943,7 +2103,11 @@ void enterPlayerName(bool blankOK)
         // as level files for a character named "bones".  -- bwr
         else if (stricmp(you.your_name, "bones") == 0)
         {
+#ifdef JP
+            cprintf(EOL "そんな愚かしい名前はだめです！" EOL);
+#else
             cprintf(EOL "That's a silly name!" EOL);
+#endif
             acceptable_name = false;
         }
 #endif
@@ -1962,7 +2126,11 @@ bool verifyPlayerName(void)
     // quick check for CON -- blows up real good under DOS/Windows
     if (stricmp(you.your_name, "con") == 0)
     {
+#ifdef JP
+        cprintf(EOL "残念ながら、その名前だとあなたのOSが頭痛を起してしまいます。" EOL);
+#else
         cprintf(EOL "Sorry, that name gives your OS a headache." EOL);
+#endif
         return (false);
     }
 
@@ -1972,10 +2140,18 @@ bool verifyPlayerName(void)
         switch (william_tanksley_asked_for_this)
         {
             case 2:
+#ifdef JP
+                cprintf(EOL "やあウィリアム！ Omega製作の進捗状況はどうだい？" EOL);
+#else
                 cprintf(EOL "Hello, William!  How is work on Omega going?" EOL);
+#endif
                 break;
             case 1:
+#ifdef JP
+                cprintf(EOL "こら、その名前はヤバイですよ。" EOL);
+#else
                 cprintf(EOL "Look, it's just not a legal name." EOL);
+#endif
                 break;
             case 0:
                 strcpy(you.your_name, "William");
@@ -1994,29 +2170,45 @@ bool verifyPlayerName(void)
         // the only bad character on Macs is the path seperator
         if (you.your_name[i] == ':')
         {
+#ifdef JP
+            cprintf(EOL "コロンは勘弁してください。" EOL);
+#else
             cprintf(EOL "No colons, please." EOL);
+#endif
             return (false);
         }
 #else
         // Note that this includes systems which may be using the
-        // packaging system.  The packaging system is very simple 
+        // packaging system.  The packaging system is very simple
         // and doesn't take the time to escape every characters that
-        // might be a problem for some random shell or OS... so we 
+        // might be a problem for some random shell or OS... so we
         // play it very conservative here.  -- bwr
+//!!!!
+//#ifdef WIN32CONSOLE
+//#else
         if (!isalnum( you.your_name[i] ) && you.your_name[i] != '_')
         {
+#ifdef JP
+            cprintf( EOL "アルファベットとアンダースコアのみでお願いします。" EOL );
+#else
             cprintf( EOL "Alpha-numerics and underscores only, please." EOL );
+#endif
             return (false);
         }
+//#endif
 #endif
     }
 
 #ifdef SAVE_DIR_PATH
-    // Until we have a better way to handle the fact that this could lead 
+    // Until we have a better way to handle the fact that this could lead
     // to some confusion with where the name ends and the uid begins. -- bwr
     if (isdigit( you.your_name[ len - 1 ] ))
     {
+#ifdef JP
+        cprintf( EOL "申し訳ないですが、数字で終わる名前は駄目です。" EOL );
+#else
         cprintf( EOL "Sorry, your name cannot end with a digit." EOL );
+#endif
         return (false);
     }
 #endif
@@ -2436,12 +2628,12 @@ static void create_wanderer( void )
         // Could only have learned spells in common schools...
         const int school_list[5] =
             { SK_CONJURATIONS,
-		       SK_ENCHANTMENTS, SK_ENCHANTMENTS,
-		       SK_TRANSLOCATIONS, SK_NECROMANCY };
+               SK_ENCHANTMENTS, SK_ENCHANTMENTS,
+               SK_TRANSLOCATIONS, SK_NECROMANCY };
 
-	    //jmf: Two of those spells are gone due to their munchkinicity.
-	    //     crush() and arc() are like having good melee capability.
-	    //     Therefore giving them to "harder" class makes less-than-
+        //jmf: Two of those spells are gone due to their munchkinicity.
+        //     crush() and arc() are like having good melee capability.
+        //     Therefore giving them to "harder" class makes less-than-
         //     zero sense, and they're now gone.
         const int spell_list[5] =
            { SPELL_MAGIC_DART,
@@ -2587,12 +2779,39 @@ spec_query:
         clrscr();
 
         textcolor( WHITE );
+#ifdef JP
+        if (strlen(you.your_name) > 0)
+        {
+            cprintf("『%s』？ ", you.your_name);
+        }
+        cprintf("あなたは新参の者に違いない！" EOL EOL);
+#else
         cprintf("You must be new here!" EOL EOL);
+#endif
 
         textcolor( CYAN );
+#ifdef JP
+        cprintf("以下の種族から選択:" EOL EOL);
+#else
         cprintf("You can be:" EOL EOL);
+#endif
         textcolor( LIGHTGREY );
 
+#ifdef JP
+        cprintf("a - 人間                      b - エルフ" EOL);
+        cprintf("c - ハイエルフ                d - 灰色エルフ" EOL);
+        cprintf("e - 闇エルフ                  f - 泥エルフ" EOL);
+        cprintf("g - 丘ドワーフ                h - 山岳ドワーフ" EOL);
+        cprintf("i - ホビット                  j - 丘オーク" EOL);
+        cprintf("k - コボルド                  l - ミイラ" EOL);
+        cprintf("m - ナーガ                    n - ノーム" EOL);
+        cprintf("o - オーガ                    p - トロル" EOL);
+        cprintf("q - オーガメイジ              r - ドラコニアン" EOL);
+        cprintf("s - セントール                t - 神々の末裔" EOL);
+        cprintf("u - スプリガン                v - ミノタウロス" EOL);
+        cprintf("w - 悪魔の血族                x - グール" EOL);
+        cprintf("y - ケンク                    z - 水棲の民" EOL);
+#else
         cprintf("a - Human                     b - Elf" EOL);
         cprintf("c - High Elf                  d - Grey Elf" EOL);
         cprintf("e - Deep Elf                  f - Sludge Elf" EOL);
@@ -2606,13 +2825,23 @@ spec_query:
         cprintf("u - Spriggan                  v - Minotaur" EOL);
         cprintf("w - Demonspawn                x - Ghoul" EOL);
         cprintf("y - Kenku                     z - Merfolk" EOL);
+#endif
 
         textcolor( BROWN );
+#ifdef JP
+        cprintf(EOL "? - ランダムな種族            * - ランダムなキャラクター" EOL);
+        cprintf(    "X - Quit" EOL);
+#else
         cprintf(EOL "? - Random Species            * - Random Character" EOL);
         cprintf(    "X - Quit" EOL);
+#endif
 
         textcolor( CYAN );
+#ifdef JP
+        cprintf(EOL "種族を選択してください。 ");
+#else
         cprintf(EOL "Which one? ");
+#endif
         textcolor( LIGHTGREY );
 
         printed = true;
@@ -2723,7 +2952,11 @@ spec_query:
         you.species = SP_MERFOLK;
         break;
     case 'X':
+#ifdef JP
+        cprintf(EOL "さようなら！");
+#else
         cprintf(EOL "Goodbye!");
+#endif
         end(0);
         break;
     default:
@@ -2757,6 +2990,22 @@ job_query:
     {
         clrscr();
 
+#ifdef JP
+        textcolor( LIGHTGREY );
+        cprintf(EOL EOL);
+        cprintf("ようこそ、");
+        textcolor( YELLOW );
+        cprintf(species_name(you.species,you.experience_level));
+        if (strlen(you.your_name) > 0)
+        {
+            cprintf("の『%s』" EOL EOL, you.your_name);
+        }
+        else
+        {
+            textcolor( LIGHTGREY );
+            cprintf("よ。" EOL EOL);
+        }
+#else
         textcolor( BROWN );
         cprintf(EOL EOL);
         cprintf("Welcome, ");
@@ -2768,9 +3017,14 @@ job_query:
         }
         cprintf(species_name(you.species,you.experience_level));
         cprintf("." EOL EOL);
+#endif
 
         textcolor( CYAN );
+#ifdef JP
+        cprintf("あなたは以下の職業を選ぶことが可能です :" EOL);
+#else
         cprintf("You can be any of the following :" EOL);
+#endif
         textcolor( LIGHTGREY );
 
         j = 0;               // used within for loop to determine newline {dlb}
@@ -2796,10 +3050,18 @@ job_query:
             cprintf(EOL);
 
         textcolor( BROWN );
+#ifdef JP
+        cprintf(EOL "? - ランダム; x - 種族の選択に戻る; X - ゲームの終了" EOL);
+#else
         cprintf(EOL "? - Random; x - Back to species selection; X - Quit" EOL);
+#endif
 
         textcolor( CYAN );
+#ifdef JP
+        cprintf(EOL "どの職業を選びますか？ ");
+#else
         cprintf(EOL "What kind of character are you? ");
+#endif
         textcolor( LIGHTGREY );
 
         printed = true;
@@ -2901,7 +3163,11 @@ job_query:
     }
     else if (keyn == 'X')
     {
+#ifdef JP
+        cprintf(EOL "さようなら！");
+#else
         cprintf(EOL "Goodbye!");
+#endif
         end(0);
     }
     else
@@ -2958,6 +3224,18 @@ void give_items_skills()
             you.inv[1].colour = BROWN;
 
             if (you.species == SP_OGRE)
+#ifdef V_FIX
+            {
+                to_hit_bonus = - ( random2(2) );
+                you.inv[0].quantity  = 1;
+                you.inv[0].base_type = OBJ_WEAPONS;
+                you.inv[0].sub_type  = WPN_MACE;
+                you.inv[0].plus      = to_hit_bonus;
+                you.inv[0].plus2     = - ( 1 + to_hit_bonus );
+                you.inv[0].special   = 0;
+                you.inv[0].colour    = LIGHTCYAN;
+            }
+#else
             {
                 you.inv[0].quantity = 1;
                 you.inv[0].base_type = OBJ_WEAPONS;
@@ -2965,8 +3243,8 @@ void give_items_skills()
                 you.inv[0].plus = 0;
                 you.inv[0].special = 0;
                 you.inv[0].colour = BROWN;
-
             }
+#endif
             else if (you.species == SP_TROLL)
             {
                 you.inv[0].quantity = 0;
@@ -3005,6 +3283,19 @@ void give_items_skills()
                 you.inv[2].special = 0;
                 you.inv[2].colour = LIGHTCYAN;
             }
+#ifdef V_FIX
+            if (you.species == SP_GHOUL)
+            {
+                to_hit_bonus = - ( random2(2) );
+                you.inv[0].quantity  = 1;
+                you.inv[0].base_type = OBJ_WEAPONS;
+                you.inv[0].sub_type  = WPN_DAGGER;
+                you.inv[0].plus      = to_hit_bonus;
+                you.inv[0].plus2     = - ( 1 + to_hit_bonus );
+                you.inv[0].special   = 0;
+                you.inv[0].colour    = BROWN;
+            }
+#endif
         }
         else if (you.species == SP_KOBOLD)
         {
@@ -3045,6 +3336,11 @@ void give_items_skills()
         if (you.species != SP_TROLL)
             you.equip[EQ_WEAPON] = 0;
 
+#ifdef V_FIX
+        if (you.species == SP_GHOUL)
+            you.equip[EQ_WEAPON] = -1;
+#endif
+
         you.equip[EQ_BODY_ARMOUR] = 1;
 
         if (you.species != SP_KOBOLD && you.species != SP_OGRE
@@ -3070,12 +3366,21 @@ void give_items_skills()
         {
             if (you.species == SP_TROLL)  //jmf: these guys get no weapon!
                 you.skills[SK_UNARMED_COMBAT] += 3;
-            else 
+            else
                 you.skills[SK_FIGHTING] += 2;
 
             // BWR sez Ogres & Trolls should probably start w/ Dodge 2 -- GDL
             you.skills[SK_DODGING] = 3;
         }
+#ifdef V_FIX
+        else if (you.species == SP_GHOUL)
+        {
+            // fake monk
+            you.skills[SK_UNARMED_COMBAT] = 2;
+            you.skills[SK_DODGING] = 2;
+            you.skills[SK_STEALTH] = 2;
+        }
+#endif
         else
         {
             // Players get dodging or armour skill depending on their
@@ -3163,7 +3468,7 @@ void give_items_skills()
 
         if (player_genus(GENPC_DWARVEN))
             you.skills[SK_MACES_FLAILS] = 1;
-        else 
+        else
             you.skills[SK_SHORT_BLADES] = 1;
 
         you.skills[SK_STAVES] = 1;
@@ -3213,11 +3518,20 @@ void give_items_skills()
             clrscr();
 
             textcolor( CYAN );
+#ifdef JP
+            cprintf(EOL " あなたはどの神に仕えることを望みますか？" EOL);
+#else
             cprintf(EOL " Which god do you wish to serve?" EOL);
+#endif
 
             textcolor( LIGHTGREY );
+#ifdef JP
+            cprintf("a - ジン (正統な司祭が仕える神)" EOL);
+            cprintf("b - イレデレンヌル (死の司祭が仕える神)" EOL);
+#else
             cprintf("a - Zin (for traditional priests)" EOL);
             cprintf("b - Yredelemnul (for priests of death)" EOL);
+#endif
 
           getkey:
             keyn = get_ch();
@@ -3505,6 +3819,19 @@ void give_items_skills()
 
         // WEAPONS
         if (you.species == SP_OGRE)
+#ifdef V_FIX
+        {
+            to_hit_bonus = - ( random2(2) );
+            you.inv[0].quantity  = 1;
+            you.inv[0].base_type = OBJ_WEAPONS;
+            you.inv[0].sub_type  = WPN_MACE;
+            you.inv[0].plus      = to_hit_bonus;
+            you.inv[0].plus2     = - ( 1 + to_hit_bonus );
+            you.inv[0].special   = 0;
+            you.inv[0].colour    = LIGHTCYAN;
+            you.equip[EQ_WEAPON] = 0;
+        }
+#else
         {
             you.inv[0].quantity = 1;
             you.inv[0].base_type = OBJ_WEAPONS;
@@ -3515,6 +3842,7 @@ void give_items_skills()
             you.inv[0].colour = LIGHTCYAN;
             you.equip[EQ_WEAPON] = 0;
         }
+#endif
         else if (you.species == SP_TROLL)
         {
             you.equip[EQ_WEAPON] = -1;
@@ -3771,6 +4099,11 @@ void give_items_skills()
 
             you.skills[SK_ENCHANTMENTS] = 4;
 
+#ifdef V_FIX
+            you.inv[0].sub_type = WPN_SHORT_SWORD;
+            you.inv[0].plus     = 0;
+            you.inv[0].plus2    = 0;
+#endif
             // gets some darts - this class is difficult to start off with
             you.inv[3].base_type = OBJ_MISSILES;
             you.inv[3].sub_type = MI_DART;
@@ -3856,6 +4189,16 @@ void give_items_skills()
         {
             you.inv[0].sub_type = WPN_QUARTERSTAFF;
             you.inv[0].colour = BROWN;
+#ifdef V_FIX
+            if (you.char_class == JOB_ENCHANTER)
+            {
+                you.inv[0].base_type = OBJ_STAVES;
+                you.inv[0].sub_type  = STAFF_STRIKING;
+                you.inv[0].colour    = BROWN;
+                you.inv[0].plus      = 0;
+                you.inv[0].plus2     = 0;
+            }
+#endif
         }
         else if (player_genus(GENPC_DWARVEN))
         {
@@ -3866,7 +4209,7 @@ void give_items_skills()
         you.inv[2].quantity = 1;
         you.inv[2].special = 0;
 
-        switch (you.char_class) 
+        switch (you.char_class)
         {
         case JOB_FIRE_ELEMENTALIST:  tmp = RED;                 break;
         case JOB_ICE_ELEMENTALIST:   tmp = LIGHTCYAN;           break;
@@ -4145,11 +4488,20 @@ void give_items_skills()
             clrscr();
 
             textcolor( CYAN );
+#ifdef JP
+            cprintf(EOL " あなたは死の力をどこから汲み出しますか？" EOL);
+#else
             cprintf(EOL " From where do you draw your power?" EOL);
+#endif
 
             textcolor( LIGHTGREY );
+#ifdef JP
+            cprintf("a - 死霊術" EOL);
+            cprintf("b - 邪神イレデレンヌル" EOL);
+#else
             cprintf("a - Necromantic magic" EOL);
             cprintf("b - the god Yredelemnul" EOL);
+#endif
 
           getkey1:
             keyn = get_ch();
@@ -4157,7 +4509,11 @@ void give_items_skills()
             switch (keyn)
             {
             case 'a':
+#ifdef JP
+                cprintf(EOL "大変よろしい。");
+#else
                 cprintf(EOL "Very well.");
+#endif
                 choice = DK_NECROMANCY;
                 break;
             case 'b':
@@ -4239,11 +4595,20 @@ void give_items_skills()
             clrscr();
 
             textcolor( CYAN );
+#ifdef JP
+            cprintf(EOL " あなたはどちらのカオスの神に仕えることを望みますか？" EOL);
+#else
             cprintf(EOL " Which god of chaos do you wish to serve?" EOL);
+#endif
 
             textcolor( LIGHTGREY );
+#ifdef JP
+            cprintf("a - 混沌のゾム" EOL);
+            cprintf("b - 破壊者マクレブ" EOL);
+#else
             cprintf("a - Xom of Chaos" EOL);
             cprintf("b - Makhleb the Destroyer" EOL);
+#endif
 
           getkey2:
 

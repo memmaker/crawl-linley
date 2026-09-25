@@ -13,7 +13,8 @@
 #define FILES_H
 
 #include "FixAry.h"
-
+#include <stdio.h>
+#include <string>
 
 // referenced in files - newgame - ouch - overmap:
 #define MAX_LEVELS 50
@@ -63,5 +64,24 @@ void save_ghost( bool force = false );
  * *********************************************************************** */
 void make_filename( char *buf, const char *prefix, int level, int where,
                     bool isLabyrinth, bool isGhost );
+
+//void load_ghost(void);
+
+
+void writeShort(FILE *file, short s);
+
+short readShort(FILE *file);
+
+void writeByte(FILE *file, unsigned char byte);
+
+unsigned char readByte(FILE *file);
+
+void writeString(FILE* file, const std::string &s);
+
+std::string readString(FILE *file);
+
+void writeLong(FILE* file, long num);
+
+long readLong(FILE *file);
 
 #endif

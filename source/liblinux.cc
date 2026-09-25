@@ -291,9 +291,9 @@ void init_key_to_command()
     key_to_command_table[ CONTROL('D') ] = CMD_NO_CMD;
 #endif
 
-    key_to_command_table[ CONTROL('E') ] = CMD_NO_CMD;
-    key_to_command_table[ CONTROL('F') ] = CMD_NO_CMD;
-    key_to_command_table[ CONTROL('G') ] = CMD_NO_CMD;
+    key_to_command_table[ CONTROL('E') ] = CMD_FORGET_STASH;
+    key_to_command_table[ CONTROL('F') ] = CMD_FIX_WAYPOINT;
+    key_to_command_table[ CONTROL('G') ] = CMD_INTERLEVEL_TRAVEL;
     key_to_command_table[ CONTROL('H') ] = CMD_OPEN_DOOR_LEFT;
     key_to_command_table[ CONTROL('I') ] = CMD_NO_CMD;
     key_to_command_table[ CONTROL('J') ] = CMD_OPEN_DOOR_DOWN;
@@ -301,11 +301,11 @@ void init_key_to_command()
     key_to_command_table[ CONTROL('L') ] = CMD_OPEN_DOOR_RIGHT;
     key_to_command_table[ CONTROL('M') ] = CMD_NO_CMD;
     key_to_command_table[ CONTROL('N') ] = CMD_OPEN_DOOR_DOWN_RIGHT;
-    key_to_command_table[ CONTROL('O') ] = CMD_NO_CMD;
+    key_to_command_table[ CONTROL('O') ] = CMD_EXPLORE;
     key_to_command_table[ CONTROL('P') ] = CMD_REPLAY_MESSAGES;
     key_to_command_table[ CONTROL('Q') ] = CMD_NO_CMD;
     key_to_command_table[ CONTROL('R') ] = CMD_REDRAW_SCREEN;
-    key_to_command_table[ CONTROL('S') ] = CMD_NO_CMD;
+    key_to_command_table[ CONTROL('S') ] = CMD_MARK_STASH;
     key_to_command_table[ CONTROL('T') ] = CMD_NO_CMD;
     key_to_command_table[ CONTROL('U') ] = CMD_OPEN_DOOR_UP_LEFT;
     key_to_command_table[ CONTROL('V') ] = CMD_NO_CMD;
@@ -523,12 +523,23 @@ int cprintf(const char *format,...)
 
 int putch(unsigned char chr)
 {
+    int code = chr;
     if (chr == 0)
-        chr = ' ';
+        code = ' ';
+    else
+    if (chr < 32)
+        code = acs_map[chr - 2 + 'a'];
 
-    return (addch(chr));
+    return (addch(code));
 }
 
+#ifdef JP
+void writeWChar(unsigned char *ch)
+{
+    putch(ch[0]);
+    putch(ch[1]);
+}
+#endif
 
 char getche()
 {
@@ -697,6 +708,33 @@ void textbackground(int col)
     attrset( COLOR_PAIR(pair) | flags | character_set );
 }
 
+#if 1 //JP
+void textcolor_cake(int col)
+{
+    const int bgcol[16]={
+        BLACK,
+        BLUE,
+        GREEN,
+        CYAN,
+        RED,
+        MAGENTA,
+        BROWN,
+        LIGHTGREY,
+
+        LIGHTGREY,
+        BLUE,
+        GREEN,
+        CYAN,
+        RED,
+        MAGENTA,
+        BROWN,
+        LIGHTGREY
+    };        
+
+    textbackground( bgcol[col] );
+    textcolor( col );
+}
+#endif
 
 int gotoxy(int x, int y)
 {

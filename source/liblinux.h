@@ -38,6 +38,14 @@ void lincurses_startup(void);
 void textbackground(int bg);
 void textcolor(int col);
 
+#if 1 //JP
+void textcolor_cake(int col);
+#endif
+#ifdef JP
+void writeWChar(unsigned char *ch);
+#endif
+
+
 #ifndef _LIBLINUX_IMPLEMENTATION
 /* Some stuff from curses, to remove compiling warnings.. */
 extern "C"

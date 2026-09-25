@@ -24,6 +24,7 @@
 #include "files.h"
 
 #include <string.h>
+#include <string>
 #include <stdlib.h>
 #include <stdio.h>
 #include <ctype.h>
@@ -52,6 +53,10 @@
 #include <sys/stat.h>
 #endif
 
+#ifdef __MINGW32__
+#include <io.h>
+#endif
+
 #include "externs.h"
 
 #include "cloud.h"
@@ -67,8 +72,10 @@
 #include "player.h"
 #include "randart.h"
 #include "skills2.h"
+#include "stash.h"
 #include "stuff.h"
 #include "tags.h"
+#include "travel.h"
 #include "wpn-misc.h"
 
 void save_level(int level_saved, bool was_a_labyrinth, char where_were_you);
@@ -203,6 +210,7 @@ void make_filename( char *buf, const char *prefix, int level, int where,
     char suffix[4], lvl[5];
     char finalprefix[kFileNameLen];
 
+    //if (level < 0) level = 0; //
     strcpy(suffix, (level < 10) ? "0" : "");
     itoa(level, lvl, 10);
     strcat(suffix, lvl);
@@ -231,9 +239,17 @@ void make_filename( char *buf, const char *prefix, int level, int where,
     }
 #endif
 
+#ifdef JP /* 訳不用？ */
     strcat(buf, ".");
+#else
+    strcat(buf, ".");
+#endif
     if (isLabyrinth)
+#ifdef JP /* 訳不用？ */
         strcat(buf, "lab");     // temporary level
+#else
+        strcat(buf, "lab");     // temporary level
+#endif
     else
         strcat(buf, suffix);
 }
@@ -357,7 +373,11 @@ void load( unsigned char stair_taken, int load_mode, bool was_a_labyrinth,
                 if (fmenv->type == MONS_PLAYER_GHOST
                     && fmenv->hit_points < fmenv->max_hit_points / 2)
                 {
+#ifdef JP /* 訳不用？ */
+                    mpr("亡霊は影の中に消え去った。");
+#else
                     mpr("The ghost fades into the shadows.");
+#endif
                     monster_teleport(fmenv, true);
                     continue;
                 }
@@ -367,7 +387,11 @@ void load( unsigned char stair_taken, int load_mode, bool was_a_labyrinth,
                     continue;
 
 #if DEBUG_DIAGNOSTICS
+#ifdef JP /* 訳不用？ */
                 snprintf( info, INFO_SIZE, "%s is following.", 
+#else
+                snprintf( info, INFO_SIZE, "%s is following.", 
+#endif
                           ptr_monam( fmenv, DESC_CAP_THE ) );
                 mpr( info, MSGCH_DIAGNOSTICS );
 #endif
@@ -466,7 +490,11 @@ void load( unsigned char stair_taken, int load_mode, bool was_a_labyrinth,
 
         if (!determine_level_version( levelFile, majorVersion, minorVersion ))
         {
+#ifdef JP /* 訳不用？ */
             perror("\nLevel file appears to be invalid.\n");
+#else
+            perror("\nLevel file appears to be invalid.\n");
+#endif
             end(-1);
         }
 
@@ -475,7 +503,11 @@ void load( unsigned char stair_taken, int load_mode, bool was_a_labyrinth,
         // sanity check - EOF
         if (!feof( levelFile ))
         {
+#ifdef JP /* 訳不用？ */
             snprintf( info, INFO_SIZE, "\nIncomplete read of \"%s\" - aborting.\n", cha_fil);
+#else
+            snprintf( info, INFO_SIZE, "\nIncomplete read of \"%s\" - aborting.\n", cha_fil);
+#endif
             perror(info);
             end(-1);
         }
@@ -486,6 +518,15 @@ void load( unsigned char stair_taken, int load_mode, bool was_a_labyrinth,
         link_items();
         redraw_all();
     }
+
+#ifdef USE_TILE
+    if (Options.use_tile)    
+    {
+        TileGhostInit(ghost);
+        if (you.level_type == LEVEL_PANDEMONIUM)
+            TilePandemInit(ghost);
+    }
+#endif
 
     // closes all the gates if you're on the way out
     for (i = 0; i < GXM; i++)
@@ -677,10 +718,10 @@ found_stair:
     // This should fix the "monster occuring under the player" bug?
     if (mgrd[you.x_pos][you.y_pos] != NON_MONSTER)
         monster_teleport(&menv[mgrd[you.x_pos][you.y_pos]], true);
-
+    /*
     if (you.level_type == LEVEL_LABYRINTH || you.level_type == LEVEL_ABYSS)
         grd[you.x_pos][you.y_pos] = DNGN_FLOOR;
-
+    */
     following = 0;
     fmenv = -1;
 
@@ -848,7 +889,11 @@ found_stair:
         val -= (stepdown_value( check_stealth(), 50, 50, 150, 150 ) / 10);
 
 #if DEBUG_DIAGNOSTICS
+#ifdef JP /* 訳不用？ */
         snprintf( info, INFO_SIZE, "arrival time: %d", val );
+#else
+        snprintf( info, INFO_SIZE, "arrival time: %d", val );
+#endif
         mpr( info, MSGCH_DIAGNOSTICS ); 
 #endif
 
@@ -881,9 +926,17 @@ void save_level(int level_saved, bool was_a_labyrinth, char where_were_you)
 
     if (saveFile == NULL)
     {
+#ifdef JP /* 訳不用？ */
         strcpy(info, "Unable to open \"");
+#else
+        strcpy(info, "Unable to open \"");
+#endif
         strcat(info, cha_fil );
+#ifdef JP /* 訳不用？ */
         strcat(info, "\" for writing!");
+#else
+        strcat(info, "\" for writing!");
+#endif
         perror(info);
         end(-1);
     }
@@ -910,6 +963,9 @@ void save_level(int level_saved, bool was_a_labyrinth, char where_were_you)
 void save_game(bool leave_game)
 {
     char charFile[kFileNameSize];
+    char stashFile[kFileNameSize + 4];
+    char killFile[kFileNameSize + 4];
+    char travelCacheFile[kFileNameSize + 4];
 
 #ifdef SAVE_PACKAGE_CMD
     char cmd_buff[1024];
@@ -921,26 +977,82 @@ void save_game(bool leave_game)
     snprintf( cmd_buff, sizeof(cmd_buff), 
               SAVE_PACKAGE_CMD, name_buff, name_buff );
 
+    strcpy(stashFile, name_buff);
+    strcpy(killFile, name_buff);
+    strcpy(travelCacheFile, name_buff);
     snprintf( charFile, sizeof(charFile), 
               "%s.sav", name_buff );
 
 #else
     strncpy(charFile, you.your_name, kFileNameLen);
     charFile[kFileNameLen] = 0;
+
+    strcpy(stashFile, charFile);
+    strcpy(killFile, charFile);
+    strcpy(travelCacheFile, charFile);
     strcat(charFile, ".sav");
 
 #ifdef DOS
     strupr(charFile);
+    strupr(stashFile);
+    strupr(killFile);
+    strupr(travelCacheFile);
 #endif
 #endif
+
+    strcat(stashFile, ".st");
+    strcat(killFile, ".kil");
+    strcat(travelCacheFile, ".tc");
+
+#ifdef STASH_TRACKING
+    FILE *stashf = fopen(stashFile, "wb");
+    if (stashf) {
+        stashes.save(stashf);
+        fclose(stashf);
+
+#ifdef SHARED_FILES_CHMOD_PRIVATE
+        // change mode (unices)
+        chmod(stashFile, SHARED_FILES_CHMOD_PRIVATE);
+#endif
+    }
+#endif // STASH_TRACKING
+
+    FILE *travelf = fopen(travelCacheFile, "wb");
+    if (travelf) {
+        travel_cache.save(travelf);
+        fclose(travelf);
+#ifdef SHARED_FILES_CHMOD_PRIVATE
+        // change mode (unices)
+        chmod(travelCacheFile, SHARED_FILES_CHMOD_PRIVATE);
+#endif
+    }
+
+    FILE *killf = fopen(killFile, "wb");
+    if (killf) {
+        you.kills.save(killf);
+        fclose(killf);
+
+#ifdef SHARED_FILES_CHMOD_PRIVATE
+        // change mode (unices)
+        chmod(killFile, SHARED_FILES_CHMOD_PRIVATE);
+#endif
+    }
 
     FILE *saveFile = fopen(charFile, "wb");
 
     if (saveFile == NULL)
     {
+#ifdef JP /* 訳不用？ */
         strcpy(info, "Unable to open \"");
+#else
+        strcpy(info, "Unable to open \"");
+#endif
         strcat(info, charFile );
+#ifdef JP /* 訳不用？ */
         strcat(info, "\" for writing!");
+#else
+        strcat(info, "\" for writing!");
+#endif
         perror(info);
         end(-1);
     }
@@ -948,8 +1060,9 @@ void save_game(bool leave_game)
     // 4.0 initial genesis of saved format
     // 4.1 changes to make the item structure more sane  
     // 4.2 spell and ability tables
+    // 4.3 added you.magic_contamination (05/03/05)
 
-    write_tagged_file( saveFile, 4, 2, TAGTYPE_PLAYER );
+    write_tagged_file( saveFile, 4, 3, TAGTYPE_PLAYER );
 
     fclose(saveFile);
 
@@ -975,7 +1088,11 @@ void save_game(bool leave_game)
 #ifdef SAVE_PACKAGE_CMD
     if (system( cmd_buff ) != 0)
     {
+#ifdef JP /* 訳不用？ */
         cprintf( EOL "Warning: Zip command (SAVE_PACKAGE_CMD) returned non-zero value!" EOL );
+#else
+        cprintf( EOL "Warning: Zip command (SAVE_PACKAGE_CMD) returned non-zero value!" EOL );
+#endif
     }
 
 #ifdef SHARED_FILES_CHMOD_PRIVATE
@@ -986,9 +1103,31 @@ void save_game(bool leave_game)
 
 #endif
 
-    cprintf( "See you soon, %s!" EOL , you.your_name );
+#if defined(WIN32CONSOLE) || defined(WINDOWS)
+//キャラクター名をファイルに書き込み
+    FILE *fp;
 
+    if ( (fp = fopen("latest.nam", "w+")) == NULL )
+    {
+    }
+    else
+    {
+        fprintf(fp, "YourName=%s\n", you.your_name);
+        fclose(fp);
+    }
+#endif
+
+#ifdef JP /* 訳不用？ */
+    cprintf( "See you soon, %s!" EOL , you.your_name );
+#else
+    cprintf( "See you soon, %s!" EOL , you.your_name );
+#endif
+
+#ifdef WINDOWS
+    //Windowsでの終了処理はWindowsのメッセージループに任せる
+#else
     end(0);
+#endif
 }                               // end save_game()
 
 void load_ghost(void)
@@ -1011,7 +1150,11 @@ void load_ghost(void)
     {
         fclose(gfile);
 #if DEBUG_DIAGNOSTICS
+#ifdef JP /* 訳不用？ */
         snprintf( info, INFO_SIZE, "Ghost file \"%s\" seems to be invalid.",
+#else
+        snprintf( info, INFO_SIZE, "Ghost file \"%s\" seems to be invalid.",
+#endif
             cha_fil);
         mpr( info, MSGCH_DIAGNOSTICS );
         more();
@@ -1026,7 +1169,11 @@ void load_ghost(void)
     {
         fclose(gfile);
 #if DEBUG_DIAGNOSTICS
+#ifdef JP /* 訳不用？ */
         snprintf( info, INFO_SIZE, "Incomplete read of \"%s\".", cha_fil);
+#else
+        snprintf( info, INFO_SIZE, "Incomplete read of \"%s\".", cha_fil);
+#endif
         mpr( info, MSGCH_DIAGNOSTICS );
         more();
 #endif
@@ -1036,7 +1183,11 @@ void load_ghost(void)
     fclose(gfile);
 
 #if DEBUG_DIAGNOSTICS
+#ifdef JP /* 訳不用？ */
         mpr( "Loaded ghost.", MSGCH_DIAGNOSTICS );
+#else
+        mpr( "Loaded ghost.", MSGCH_DIAGNOSTICS );
+#endif
 #endif
 
     // remove bones file - ghosts are hardly permanent.
@@ -1096,7 +1247,9 @@ void load_ghost(void)
 void restore_game(void)
 {
     char char_f[kFileNameSize];
-
+    char stash_f[kFileNameSize];
+    char kill_f[kFileNameSize];
+    char travel_f[kFileNameSize];
 #ifdef SAVE_DIR_PATH
     snprintf( char_f, sizeof(char_f), 
               SAVE_DIR_PATH "%s%d", you.your_name, (int) getuid() );
@@ -1105,19 +1258,36 @@ void restore_game(void)
     char_f[kFileNameLen] = 0;
 #endif
 
+    strcpy(stash_f, char_f);
+    strcpy(kill_f, stash_f);
+    strcpy(travel_f, char_f);
+    strcat(stash_f, ".st");
+    strcat(kill_f, ".kil");
+    strcat(travel_f, ".tc");
     strcat(char_f, ".sav");
 
 #ifdef DOS
     strupr(char_f);
+    strupr(stash_f);
+    strupr(kill_f);
+    strupr(travel_f);
 #endif
 
     FILE *restoreFile = fopen(char_f, "rb");
 
     if (restoreFile == NULL)
     {
+#ifdef JP /* 訳不用？ */
         strcpy(info, "Unable to open \"");
+#else
+        strcpy(info, "Unable to open \"");
+#endif
         strcat(info, char_f );
+#ifdef JP /* 訳不用？ */
         strcat(info, "\" for reading!");
+#else
+        strcat(info, "\" for reading!");
+#endif
         perror(info);
         end(-1);
     }
@@ -1127,7 +1297,11 @@ void restore_game(void)
 
     if (!determine_version(restoreFile, majorVersion, minorVersion))
     {
+#ifdef JP /* 訳不用？ */
         perror("\nSavefile appears to be invalid.\n");
+#else
+        perror("\nSavefile appears to be invalid.\n");
+#endif
         end(-1);
     }
 
@@ -1136,12 +1310,36 @@ void restore_game(void)
     // sanity check - EOF
     if (!feof(restoreFile))
     {
+#ifdef JP /* 訳不用？ */
         snprintf( info, INFO_SIZE, "\nIncomplete read of \"%s\" - aborting.\n", char_f);
+#else
+        snprintf( info, INFO_SIZE, "\nIncomplete read of \"%s\" - aborting.\n", char_f);
+#endif
         perror(info);
         end(-1);
     }
 
     fclose(restoreFile);
+
+#ifdef STASH_TRACKING
+    FILE *stashFile = fopen(stash_f, "rb");
+    if (stashFile) {
+        stashes.load(stashFile);
+        fclose(stashFile);
+    }
+#endif
+
+    FILE *travelFile = fopen(travel_f, "rb");
+    if (travelFile) {
+        travel_cache.load(travelFile);
+        fclose(travelFile);
+    }
+
+    FILE *killFile = fopen(kill_f, "rb");
+    if (killFile) {
+        you.kills.load(killFile);
+        fclose(killFile);
+    }
 }
 
 static bool determine_version( FILE *restoreFile, 
@@ -1178,7 +1376,11 @@ static void restore_version( FILE *restoreFile,
     // savefile versions.
     if (majorVersion < 4)
     {
+#ifdef JP /* 訳不用？ */
         snprintf( info, INFO_SIZE, "\nSorry, this release cannot read a v%d.%d savefile.\n",
+#else
+        snprintf( info, INFO_SIZE, "\nSorry, this release cannot read a v%d.%d savefile.\n",
+#endif
             majorVersion, minorVersion);
         perror(info);
         end(-1);
@@ -1253,7 +1455,11 @@ static void restore_level_version( FILE *levelFile,
     // savefile versions.
     if (majorVersion < 4)
     {
+#ifdef JP /* 訳不用？ */
         snprintf( info, INFO_SIZE, "\nSorry, this release cannot read a v%d.%d level file.\n",
+#else
+        snprintf( info, INFO_SIZE, "\nSorry, this release cannot read a v%d.%d level file.\n",
+#endif
             majorVersion, minorVersion);
         perror(info);
         end(-1);
@@ -1418,7 +1624,11 @@ void save_ghost( bool force )
 
     if (gfile == NULL)
     {
+#ifdef JP /* 訳不用？ */
         strcpy(info, "Error creating ghost file: ");
+#else
+        strcpy(info, "Error creating ghost file: ");
+#endif
         strcat(info, cha_fil);
         mpr(info);
         more();
@@ -1432,7 +1642,11 @@ void save_ghost( bool force )
     fclose(gfile);
 
 #if DEBUG_DIAGNOSTICS
+#ifdef JP /* 訳不用？ */
     mpr( "Saved ghost.", MSGCH_DIAGNOSTICS );
+#else
+    mpr( "Saved ghost.", MSGCH_DIAGNOSTICS );
+#endif
 #endif
 
 #ifdef SHARED_FILES_CHMOD_PUBLIC
@@ -1861,3 +2075,61 @@ void generate_random_demon(void)
             ghost.values[GVAL_SPELL_5] = MS_DIG;
     }
 }                               // end generate_random_demon()
+
+// Largest string we'll save
+#define STR_CAP 1000
+
+using std::string;
+
+void writeShort(FILE *file, short s) {
+    char data[2];
+    // High byte first - network order
+    data[0] = (char)((s >> 8) & 0xFF);
+    data[1] = (char)(s & 0xFF);
+
+    write2(file, data, sizeof(data));
+}
+
+short readShort(FILE *file) {
+    unsigned char data[2];
+    read2(file, (char *) data, 2);
+
+    // High byte first
+    return (((short) data[0]) << 8) | (short) data[1];
+}
+
+void writeByte(FILE *file, unsigned char byte) {
+    write2(file, (char *) &byte, sizeof byte);
+}
+
+unsigned char readByte(FILE *file) {
+    unsigned char byte;
+    read2(file, (char *) &byte, sizeof byte);
+    return byte;
+}
+
+void writeString(FILE* file, const string &s) {
+    int length = s.length();
+    if (length > STR_CAP) length = STR_CAP;
+    writeShort(file, length);
+    write2(file, s.c_str(), length);
+}
+
+string readString(FILE *file) {
+    char buf[STR_CAP + 1];
+    short length = readShort(file);
+    if (length)
+        read2(file, buf, length);
+    buf[length] = '\0';
+    return string(buf);
+}
+
+void writeLong(FILE* file, long num) {
+    // High word first, network order
+    writeShort(file, (short) ((num >> 16) & 0xFFFFL));
+    writeShort(file, (short) (num & 0xFFFFL));
+}
+
+long readLong(FILE *file) {
+    return ((long) readShort(file)) << 16 | (long) readShort(file);
+}

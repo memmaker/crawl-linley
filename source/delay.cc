@@ -66,14 +66,22 @@ void stop_delay( void )
     {
     case DELAY_BUTCHER:
         // Corpse keeps track of work in plus2 field, see handle_delay() -- bwr
+#ifdef JP 
+        mpr( "あなたは死体を捌く手を止めた。" );
+#else
         mpr( "You stop butchering the corpse." );
+#endif
         you.delay_queue.pop();
         break;
 
     case DELAY_MEMORIZE:        
         // Losing work here is okay... having to start from 
         // scratch is a reasonable behaviour. -- bwr
+#ifdef JP 
+        mpr( "あなたの学習は中断させられた。" );
+#else
         mpr( "Your memorization is interrupted." );
+#endif
         you.delay_queue.pop();
         break;
 
@@ -82,7 +90,11 @@ void stop_delay( void )
         // the player to "attune to the rock".  If changed, the
         // the delay should be increased to reduce the power of
         // this spell. -- bwr
+#ifdef JP 
+        mpr( "あなたの瞑想は中断させられた。" );
+#else
         mpr( "Your meditation is interrupted." );
+#endif
         you.delay_queue.pop();
         break;
 
@@ -177,7 +189,11 @@ void handle_delay( void )
         if (delay.duration > 0)
         {
 #if DEBUG_DIAGNOSTICS
+#ifdef JP 
             snprintf( info, INFO_SIZE, "Delay type: %d   duration: %d", 
+#else
+            snprintf( info, INFO_SIZE, "Delay type: %d   duration: %d", 
+#endif
                       delay.type, delay.duration ); 
 
             mpr( info, MSGCH_DIAGNOSTICS );
@@ -199,7 +215,11 @@ void handle_delay( void )
                 set_ident_flags( you.inv[ delay.parm1 ], ISFLAG_EQ_ARMOUR_MASK );
 
                 in_name( delay.parm1, DESC_NOCAP_YOUR, str_pass ); 
+#ifdef JP 
+                snprintf( info, INFO_SIZE, "あなたは%sを身につけるのを終えた。", str_pass );
+#else
                 snprintf( info, INFO_SIZE, "You finish putting on %s.", str_pass );
+#endif
                 mpr(info);
 
                 if (you.inv[ delay.parm1 ].sub_type < ARM_SHIELD
@@ -209,7 +229,11 @@ void handle_delay( void )
 
                     if (you.duration[DUR_ICY_ARMOUR] != 0)
                     {
+#ifdef JP 
+                        mpr( "あなたの氷の鎧は溶け去ってしまった。", MSGCH_DURATION );
+#else
                         mpr( "Your icy armour melts away.", MSGCH_DURATION );
+#endif
                         you.redraw_armour_class = 1;
                         you.duration[DUR_ICY_ARMOUR] = 0;
                     }
@@ -223,7 +247,11 @@ void handle_delay( void )
                     case ARM_SHIELD:
                         if (you.duration[DUR_CONDENSATION_SHIELD])
                         {
+#ifdef JP 
+                            mpr( "あなたの氷の盾は気化してしまった。", MSGCH_DURATION );
+#else
                             mpr( "Your icy shield evaporates.", MSGCH_DURATION );
+#endif
                             you.duration[DUR_CONDENSATION_SHIELD] = 0;
                         }
                         you.equip[EQ_SHIELD] = delay.parm1;
@@ -249,31 +277,59 @@ void handle_delay( void )
                     switch (ego)
                     {
                     case SPARM_RUNNING:
+#ifdef JP 
+                        strcpy(info, "あなたは");
+#else
                         strcpy(info, "You feel quick");
+#endif
                         strcat(info, (you.species == SP_NAGA
+#ifdef JP 
+                                || you.species == SP_CENTAUR) ? "脚が速くなったようだ。" : "足が速くなったようだ。");
+#else
                                 || you.species == SP_CENTAUR) ? "." : " on your feet.");
+#endif
                         mpr(info);
                         break;
 
                     case SPARM_FIRE_RESISTANCE:
+#ifdef JP 
+                        mpr("あなたは火への耐性を帯びた。");
+#else
                         mpr("You feel resistant to fire.");
+#endif
                         break;
 
                     case SPARM_COLD_RESISTANCE:
+#ifdef JP 
+                        mpr("あなたは冷気への耐性を帯びた。");
+#else
                         mpr("You feel resistant to cold.");
+#endif
                         break;
 
                     case SPARM_POISON_RESISTANCE:
+#ifdef JP 
+                        mpr("あなたはより健全になったようだ。");
+#else
                         mpr("You feel healthy.");
+#endif
                         break;
 
                     case SPARM_SEE_INVISIBLE:
+#ifdef JP 
+                        mpr("あなたは鋭敏になったようだ。");
+#else
                         mpr("You feel perceptive.");
+#endif
                         break;
 
                     case SPARM_DARKNESS:
                         if (!you.invis)
+#ifdef JP 
+                            mpr("あなたは一瞬透明になった。");
+#else
                             mpr("You become transparent for a moment.");
+#endif
                         break;
 
                     case SPARM_STRENGTH:
@@ -289,40 +345,76 @@ void handle_delay( void )
                         break;
 
                     case SPARM_PONDEROUSNESS:
+#ifdef JP 
+                        mpr("あなたは鈍重になったようだ。");
+#else
                         mpr("You feel rather ponderous.");
+#endif
                         // you.speed += 2; 
                         you.redraw_evasion = 1;
                         break;
 
                     case SPARM_LEVITATION:
+#ifdef JP 
+                        mpr("あなたは体が軽くなったようだ。");
+#else
                         mpr("You feel rather light.");
+#endif
                         break;
 
                     case SPARM_MAGIC_RESISTANCE:
+#ifdef JP 
+                        mpr("あなたは魔法への抵抗力を帯びた。");
+#else
                         mpr("You feel resistant to magic.");
+#endif
                         break;
 
                     case SPARM_PROTECTION:
+#ifdef JP 
+                        mpr("あなたは護りの力を感じた。");
+#else
                         mpr("You feel protected.");
+#endif
                         break;
 
                     case SPARM_STEALTH:
+#ifdef JP 
+                        mpr("あなたは動きが静かになったようだ。");
+#else
                         mpr("You feel stealthy.");
+#endif
                         break;
 
                     case SPARM_RESISTANCE:
+#ifdef JP 
+                        mpr("あなたは極端な温度への耐性を帯びた。");
+#else
                         mpr("You feel resistant to extremes of temperature.");
+#endif
                         break;
 
                     case SPARM_POSITIVE_ENERGY:
+#ifdef JP 
+                        mpr("あなたの生命の力は保護されている。");
+#else
                         mpr("Your life-force is being protected.");
+#endif
                         break;
 
                     case SPARM_ARCHMAGI:
                         if (!you.skills[SK_SPELLCASTING])
+#ifdef JP 
+                            mpr("あなたは奇妙に茫然とした。");
+#else
                             mpr("You feel strangely numb.");
+#endif
                         else
+#ifdef JP 
+                            mpr("あなたは強大な力を感じた。");
+#else
                             mpr("You feel extremely powerful.");
+#endif
                         break;
                     }
                 }
@@ -331,15 +423,27 @@ void handle_delay( void )
                     use_randart( delay.parm1 );
 
                 if (item_cursed( you.inv[ delay.parm1 ] ))
+#ifdef JP 
+                    mpr( "うわ！凄まじく冷たい！" );
+#else
                     mpr( "Oops, that feels deathly cold." );
+#endif
 
                 you.redraw_armour_class = 1;
                 you.redraw_evasion = 1;
+#ifdef USE_TILE
+		if (Options.use_tile)
+                    TilePlayerRefresh();
+#endif
                 break;
 
             case DELAY_ARMOUR_OFF:
                 in_name( delay.parm1, DESC_NOCAP_YOUR, str_pass ); 
+#ifdef JP 
+                snprintf( info, INFO_SIZE, "あなたは%sを外した。", str_pass );
+#else
                 snprintf( info, INFO_SIZE, "You finish taking off %s.", str_pass );
+#endif
                 mpr(info);
 
                 if (you.inv[ delay.parm1 ].sub_type < ARM_SHIELD
@@ -385,20 +489,36 @@ void handle_delay( void )
 
                 you.redraw_armour_class = 1;
                 you.redraw_evasion = 1;
+#ifdef USE_TILE
+		if(Options.use_tile)
+                    TilePlayerRefresh();
+#endif
                 break;
 
             case DELAY_EAT:
+#ifdef JP 
+                mpr( "あなたは食事を終えた。" );
+#else
                 mpr( "You finish eating." );
+#endif
                 break; 
 
             case DELAY_MEMORIZE:
+#ifdef JP 
+                mpr( "あなたは記憶を完了した。" );
+#else
                 mpr( "You finish memorising." );
+#endif
                 add_spell_to_memory( delay.parm1 );
                 break; 
 
             case DELAY_PASSWALL:
                 {
+#ifdef JP 
+                    mpr( "あなたは岩に溶け込んだ。" );
+#else
                     mpr( "You finish merging with the rock." );
+#endif
                     more();  // or the above message won't be seen
 
                     const int pass_x = delay.parm1;
@@ -453,8 +573,12 @@ void handle_delay( void )
                         {
                             if (you.species == SP_MERFOLK && grid == DNGN_DEEP_WATER)
                             {
+#ifdef JP 
+                                mpr("あなたは水中に飛び込んで、本来の形態に変化した。");
+#else
                                 mpr("You fall into the water and return "
                                     "to your normal form.");
+#endif
                                 merfolk_start_swimming();
                             }
                             else
@@ -468,19 +592,36 @@ void handle_delay( void )
                 break; 
 
             case DELAY_BUTCHER:
+#ifdef JP 
+                strcpy( info, "あなたは死体を肉に" );
+#else
                 strcpy( info, "You finish " );
+#endif
                 strcat( info, (you.species == SP_TROLL
+#ifdef JP 
+                                || you.species == SP_GHOUL) ? "引き裂く"
+                                                            : "捌く" );
+#else
                                 || you.species == SP_GHOUL) ? "ripping"
                                                             : "chopping" );
+#endif
 
+#ifdef JP 
+                strcat( info, "のを終えた。" );
+#else
                 strcat( info, " the corpse into pieces." );
+#endif
                 mpr( info );
 
                 turn_corpse_into_chunks( mitm[ delay.parm1 ] );
 
                 if (you.berserker && you.berserk_penalty != NO_BERSERK_PENALTY)
                 {
+#ifdef JP 
+                    mpr("あなたはそれを楽しんだ。");
+#else
                     mpr("You enjoyed that.");
+#endif
                     you.berserk_penalty = 0;
                 }
                 break;
@@ -506,14 +647,22 @@ void handle_delay( void )
                 if (!copy_item_to_grid( you.inv[ delay.parm1 ], 
                                         you.x_pos, you.y_pos, delay.parm2 ))
                 {
+#ifdef JP 
+                    mpr("ここにはアイテムが多すぎるので、そのアイテムを落すことはできない。");
+#else
                     mpr("Too many items on this level, not dropping the item.");
+#endif
                 }
                 else
                 {
                     quant_name( you.inv[ delay.parm1 ], delay.parm2, 
                                 DESC_NOCAP_A, str_pass );
 
+#ifdef JP 
+                    snprintf( info, INFO_SIZE, "あなたは%sを落した。", str_pass );
+#else
                     snprintf( info, INFO_SIZE, "You drop %s.", str_pass );
+#endif
                     mpr(info);
 
                     dec_inv_item_quantity( delay.parm1, delay.parm2 );
@@ -536,7 +685,11 @@ void handle_delay( void )
                 break;
 
             default:
+#ifdef JP 
+                mpr( "あなたはそれをやり終えた。" );
+#else
                 mpr( "You finish doing something." );
+#endif
                 break; 
             }
 

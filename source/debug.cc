@@ -54,6 +54,10 @@
 #define MyDebugBreak() _asm {int 3}
 #endif
 
+#ifdef USE_TILE
+#define get_input_line(x,y) {mpr_on(MODE_MPR);get_input_line(x,y);mpr_on(MODE_CRT);}
+#endif
+
 //-----------------------------------
 //      Internal Variables
 //
@@ -106,9 +110,17 @@ static void BreakStrToDebugger(const char *mesg)
         MB_SETFOREGROUND;    // bring the app to the front
 
     strcpy(text, mesg);
+#ifdef JP /* 訳不用？ */
     strcat(text, "\nDo you want to drop into the debugger?");
+#else
+    strcat(text, "\nDo you want to drop into the debugger?");
+#endif
 
+#ifdef JP /* 訳不用？ */
     int result = MessageBoxA(NULL, text, "Debug Break", flags);
+#else
+    int result = MessageBoxA(NULL, text, "Debug Break", flags);
+#endif
 
     if (result == IDYES)
         MyDebugBreak();
@@ -246,10 +258,18 @@ static void CreateConsoleWindow()
             VERIFY(::SetConsoleScreenBufferSize(sConsole, size));
         }
         else
+#ifdef JP /* 訳不用？ */
             DEBUGSTR(L "Couldn't get the console window's handle!");
+#else
+            DEBUGSTR(L "Couldn't get the console window's handle!");
+#endif
     }
     else
+#ifdef JP /* 訳不用？ */
         DEBUGSTR(L "Couldn't allocate the console window!");
+#else
+        DEBUGSTR(L "Couldn't allocate the console window!");
+#endif
 }
 #endif
 
@@ -328,7 +348,11 @@ void AssertFailed(const char *expr, const char *file, int line)
     char mesg[512];
 
 #if MAC
+#ifdef JP /* 訳不用？ */
     sprintf(mesg, "ASSERT(%s) in %s at line %d failed.", expr, file, line);
+#else
+    sprintf(mesg, "ASSERT(%s) in %s at line %d failed.", expr, file, line);
+#endif
 
 #else
     const char *fileName = file + strlen(file); // strip off path
@@ -336,7 +360,11 @@ void AssertFailed(const char *expr, const char *file, int line)
     while (fileName > file && fileName[-1] != '\\')
         --fileName;
 
+#ifdef JP /* 訳不用？ */
     sprintf(mesg, "ASSERT(%s) in '%s' at line %d failed.", expr, fileName,
+#else
+    sprintf(mesg, "ASSERT(%s) in '%s' at line %d failed.", expr, fileName,
+#endif
             line);
 #endif
 
@@ -398,10 +426,16 @@ static int debug_prompt_for_monster( void )
     char  obj_name[ ITEMNAME_SIZE ];
     char *ptr;
 
+#ifdef JP
+    mpr( "(ヒント: 『オークのゾンビ』などは生成できない)", MSGCH_PROMPT );
+    mpr( "生成するモンスターの名前は？", MSGCH_PROMPT );
+#else
     mpr( "(Hint: 'generated' names, eg 'orc zombie', won't work)", MSGCH_PROMPT );
     mpr( "Which monster by name? ", MSGCH_PROMPT );
+#endif
+
     get_input_line( specs, sizeof( specs ) );
-    
+
     if (specs[0] == '\0')
         return (-1);
 
@@ -410,8 +444,11 @@ static int debug_prompt_for_monster( void )
     for (int i = 0; i < NUM_MONSTERS; i++)
     {
         moname( i, true, DESC_PLAIN, obj_name );
-
+#ifdef JP
+        ptr = strstr( obj_name, specs );
+#else
         ptr = strstr( strlwr(obj_name), strlwr(specs) );
+#endif
         if (ptr != NULL)
         {
             mpr( obj_name );
@@ -442,7 +479,7 @@ static int debug_prompt_for_skill( const char *prompt )
 
     mpr( prompt, MSGCH_PROMPT );
     get_input_line( specs, sizeof( specs ) );
-    
+
     if (specs[0] == '\0')
         return (-1);
 
@@ -456,8 +493,11 @@ static int debug_prompt_for_skill( const char *prompt )
 
         char sk_name[80];
         strncpy( sk_name, skill_name(i), sizeof( sk_name ) );
-
+#ifdef JP
+        char *ptr = strstr( sk_name, specs );
+#else
         char *ptr = strstr( strlwr(sk_name), strlwr(specs) );
+#endif
         if (ptr != NULL)
         {
             if (ptr == sk_name && strlen(specs) > 0)
@@ -481,14 +521,18 @@ static int debug_prompt_for_skill( const char *prompt )
 //
 //---------------------------------------------------------------
 #ifdef WIZARD
-void debug_change_species( void ) 
+void debug_change_species( void )
 {
     char specs[80];
     int i;
 
+#ifdef JP
+    mpr( "どの種族に変更したいのですか？ " , MSGCH_PROMPT );
+#else
     mpr( "What species would you like to be now? " , MSGCH_PROMPT );
+#endif
     get_input_line( specs, sizeof( specs ) );
-    
+
     if (specs[0] == '\0')
         return;
 
@@ -498,8 +542,11 @@ void debug_change_species( void )
     {
         char sp_name[80];
         strncpy( sp_name, species_name(i, you.experience_level), sizeof( sp_name ) );
-
+#ifdef JP
+        char *ptr = strstr( sp_name, specs );
+#else
         char *ptr = strstr( strlwr(sp_name), strlwr(specs) );
+#endif
         if (ptr != NULL)
         {
             if (ptr == sp_name && strlen(specs) > 0)
@@ -514,7 +561,11 @@ void debug_change_species( void )
     }
 
     if (sp == -1)
+#ifdef JP
+        mpr( "その種族には変更できない。" );
+#else
         mpr( "That species isn't available." );
+#endif
     else
     {
         for (i = 0; i < NUM_SKILLS; i++)
@@ -523,15 +574,15 @@ void debug_change_species( void )
             you.skill_points[i] /= species_skills( i, you.species );
         }
 
-        you.species = sp;         
+        you.species = sp;
 
         redraw_screen();
     }
-} 
-#endif 
+}
+#endif
 //---------------------------------------------------------------
 //
-// debug_prompt_for_int 
+// debug_prompt_for_int
 //
 // If nonneg, then it returns a non-negative number or -1 on fail
 // If !nonneg, then it returns an integer, and 0 on fail
@@ -543,8 +594,13 @@ static int debug_prompt_for_int( const char *prompt, bool nonneg )
     char specs[80];
 
     mpr( prompt, MSGCH_PROMPT );
+#ifdef USE_TILE
+    mpr_on(MODE_MPR);
     get_input_line( specs, sizeof( specs ) );
-
+    mpr_on(MODE_CRT);
+#else
+    get_input_line( specs, sizeof( specs ) );
+#endif
     if (specs[0] == '\0')
         return (nonneg ? -1 : 0);
 
@@ -571,7 +627,11 @@ static int debug_prompt_for_int( const char *prompt, bool nonneg )
 #ifdef WIZARD
 void cast_spec_spell(void)
 {
+#ifdef JP
+    int spell = debug_prompt_for_int( "どの番号の呪文を唱えますか？ ", true );
+#else
     int spell = debug_prompt_for_int( "Cast which spell by number? ", true );
+#endif
 
     if (spell == -1)
         canned_msg( MSG_OK );
@@ -593,22 +653,34 @@ void cast_spec_spell_name(void)
     char specs[80];
     char spname[80];
 
+#ifdef JP
+    mpr( "どの名前の呪文を唱えますか？ ", MSGCH_PROMPT );
+#else
     mpr( "Cast which spell by name? ", MSGCH_PROMPT );
+#endif
     get_input_line( specs, sizeof( specs ) );
-    
+
     for (i = 0; i < NUM_SPELLS; i++)
     {
         strncpy( spname, spell_title(i), sizeof( spname ) );
-
+#ifdef JP
+        if (strstr( spname, specs ) != NULL)
+#else
         if (strstr( strlwr(spname), strlwr(specs) ) != NULL)
+#endif
         {
             your_spells(i, 0, false);
             return;
         }
     }
 
+#ifdef JP
+    mpr((one_chance_in(20)) ? "魔法学校からやり直したまえ。"
+                            : "そのような呪文は見当も付かない。");
+#else
     mpr((one_chance_in(20)) ? "Maybe you should go back to WIZARD school."
                             : "I couldn't find that spell.");
+#endif
 }
 #endif
 
@@ -621,8 +693,12 @@ void cast_spec_spell_name(void)
 #ifdef WIZARD
 void create_spec_monster(void)
 {
+#ifdef JP
+    int mon = debug_prompt_for_int( "どの番号のモンスターを生成しますか？ ", true );
+#else
     int mon = debug_prompt_for_int( "Create which monster by number? ", true );
-    
+#endif
+
     if (mon == -1)
         canned_msg( MSG_OK );
     else
@@ -643,10 +719,18 @@ void create_spec_monster_name(void)
 
     if (mon == -1)
     {
+#ifdef JP
+        mpr("そのようなモンスターは見当も付かない。");
+#else
         mpr("I couldn't find that monster.");
+#endif
 
         if (one_chance_in(20))
+#ifdef JP
+            mpr("そいつはどこかに隠れてるんじゃないかな。");
+#else
             mpr("Maybe it's hiding.");
+#endif
     }
     else
     {
@@ -669,12 +753,20 @@ void level_travel( int delta )
 
     if (delta == 0)
     {
+#ifdef JP
+        new_level = debug_prompt_for_int( "どの階に移動しますか？ ", true ) - 1;
+#else
         new_level = debug_prompt_for_int( "Travel to which level? ", true ) - 1;
+#endif
     }
 
     if (new_level < 0 || new_level >= 50)
     {
+#ifdef JP
+        mpr( "その階は範囲外です。" );
+#else
         mpr( "That level is out of bounds." );
+#endif
         return;
     }
 
@@ -694,7 +786,7 @@ void level_travel( int delta )
 #ifdef WIZARD
 void create_spec_object(void)
 {
-    static int max_subtype[] = 
+    static int max_subtype[] =
     {
         NUM_WEAPONS,
         NUM_MISSILES,
@@ -730,16 +822,32 @@ void create_spec_object(void)
 
     int            thing_created;
 
-    for (;;) 
+    for (;;)
     {
+#ifdef JP
+        mpr(") - 武器        ( - 飛び道具  [ - 防具    / - ワンド   ?  - 巻物",
+#else
         mpr(") - weapons     ( - missiles  [ - armour  / - wands    ?  - scrolls",
+#endif
              MSGCH_PROMPT);
+#ifdef JP
+        mpr("= - 装身具      ! - 薬        : - 本      | - 杖       0  - オーブ",
+#else
         mpr("= - jewellery   ! - potions   : - books   | - staves   0  - The Orb",
+#endif
              MSGCH_PROMPT);
-        mpr("} - miscellany  X - corpses   %% - food    $ - gold    ESC - exit", 
+#ifdef JP
+        mpr("} - 宝物        X - 死体      %% - 食料    $ - 金貨    ESC - 中止",
+#else
+        mpr("} - miscellany  X - corpses   %% - food    $ - gold    ESC - exit",
+#endif
              MSGCH_PROMPT);
 
+#ifdef JP
+        mpr("どの種類のアイテムですか？ ", MSGCH_PROMPT);
+#else
         mpr("What class of item? ", MSGCH_PROMPT);
+#endif
 
         keyin = toupper( get_ch() );
 
@@ -771,7 +879,7 @@ void create_spec_object(void)
             class_wanted = OBJ_FOOD;
         else if (keyin == '$')
             class_wanted = OBJ_GOLD;
-        else if (keyin == ESCAPE || keyin == ' ' 
+        else if (keyin == ESCAPE || keyin == ' '
                 || keyin == '\r' || keyin == '\n')
         {
             canned_msg( MSG_OK );
@@ -786,7 +894,11 @@ void create_spec_object(void)
     thing_created = get_item_slot();
     if (thing_created == NON_ITEM)
     {
+#ifdef JP
+        mpr( "アイテムを配置できなかった。" );
+#else
         mpr( "Could not allocate item." );
+#endif
         return;
     }
 
@@ -799,7 +911,11 @@ void create_spec_object(void)
     }
     else if (class_wanted == OBJ_GOLD)
     {
+#ifdef JP
+        int amount = debug_prompt_for_int( "何枚の金貨を？ ", true );
+#else
         int amount = debug_prompt_for_int( "How much gold? ", true );
+#endif
         if (amount <= 0)
         {
             canned_msg( MSG_OK );
@@ -816,7 +932,11 @@ void create_spec_object(void)
 
         if (mon == -1)
         {
+#ifdef JP
+            mpr( "存在しないモンスターです。" );
+#else
             mpr( "No such monster." );
+#endif
             return;
         }
 
@@ -831,7 +951,47 @@ void create_spec_object(void)
     }
     else
     {
+#ifdef USE_X11
+// SWIN_LIST に一覧を表示
+        if (!mitm[thing_created].sub_type)
+        {
+            mpr_on(MODE_CRT);
+            mitm[thing_created].base_type = class_wanted;
+            mitm[thing_created].sub_type  = 0;
+            mitm[thing_created].plus      = 0;
+            mitm[thing_created].plus2     = 0;
+            mitm[thing_created].special   = 0;
+            mitm[thing_created].flags     = 0;
+            mitm[thing_created].quantity  = 1;
+            set_ident_flags( mitm[thing_created], ISFLAG_IDENT_MASK );
+
+        textcolor(PIX_LIGHTGREY);
+        gotoxy(1, 1);
+            for (i = 0; i < max_subtype[ class_wanted ]; i++)
+            {
+                mitm[thing_created].sub_type = i;
+                item_name( mitm[thing_created], DESC_PLAIN, obj_name );
+                if ((i&1)==0)
+                {
+                    gotoxy(1, wherey());
+            clear_to_end_of_line();
+                    cprintf("%02d %s",i,obj_name);
+                }
+                else
+                {
+                    gotoxy(41, wherey());
+                    cprintf("%02d %s\n",i,obj_name);
+                }
+            }
+            mitm[thing_created].sub_type = 0;
+        }
+#endif
+
+#ifdef JP
+        mpr( "どの名前のアイテムですか？ ", MSGCH_PROMPT );
+#else
         mpr( "What type of item? ", MSGCH_PROMPT );
+#endif
         get_input_line( specs, sizeof( specs ) );
 
         if (specs[0] == '\0')
@@ -840,8 +1000,8 @@ void create_spec_object(void)
             return;
         }
 
-        // In order to get the sub-type, we'll fill out the base type... 
-        // then we're going to iterate over all possible subtype values 
+        // In order to get the sub-type, we'll fill out the base type...
+        // then we're going to iterate over all possible subtype values
         // and see if we get a winner. -- bwr
         mitm[thing_created].base_type = class_wanted;
         mitm[thing_created].sub_type  = 0;
@@ -852,29 +1012,49 @@ void create_spec_object(void)
         mitm[thing_created].quantity  = 1;
         set_ident_flags( mitm[thing_created], ISFLAG_IDENT_MASK );
 
-        if (class_wanted == OBJ_ARMOUR) 
+        if (class_wanted == OBJ_ARMOUR)
         {
+#ifdef JP
+            if (strstr( "ナーガの", specs ))
+#else
             if (strstr( "naga barding", specs ))
+#endif
             {
                 mitm[thing_created].sub_type = ARM_BOOTS;
                 mitm[thing_created].plus2 = TBOOT_NAGA_BARDING;
             }
+#ifdef JP
+            else if (strstr( "セントールの", specs ))
+#else
             else if (strstr( "centaur barding", specs ))
+#endif
             {
                 mitm[thing_created].sub_type = ARM_BOOTS;
                 mitm[thing_created].plus2 = TBOOT_CENTAUR_BARDING;
             }
+#ifdef JP
+            else if (strstr( "魔法帽", specs ))
+#else
             else if (strstr( "wizard's hat", specs ))
+#endif
             {
                 mitm[thing_created].sub_type = ARM_HELMET;
                 mitm[thing_created].plus2 = THELM_WIZARD_HAT;
             }
+#ifdef JP
+            else if (strstr( "帽子", specs ))
+#else
             else if (strstr( "cap", specs ))
+#endif
             {
                 mitm[thing_created].sub_type = ARM_HELMET;
                 mitm[thing_created].plus2 = THELM_CAP;
             }
+#ifdef JP
+            else if (strstr( "兜", specs ))
+#else
             else if (strstr( "helm", specs ))
+#endif
             {
                 mitm[thing_created].sub_type = ARM_HELMET;
                 mitm[thing_created].plus2 = THELM_HELM;
@@ -888,31 +1068,43 @@ void create_spec_object(void)
 
             for (i = 0; i < max_subtype[ mitm[thing_created].base_type ]; i++)
             {
-                mitm[thing_created].sub_type = i;     
+                mitm[thing_created].sub_type = i;
                 item_name( mitm[thing_created], DESC_PLAIN, obj_name );
-
+#ifdef JP
+                ptr = strstr( obj_name, specs );
+#else
                 ptr = strstr( strlwr(obj_name), strlwr(specs) );
+#endif
                 if (ptr != NULL)
                 {
                     // earliest match is the winner
                     if (ptr - obj_name < best_index)
                     {
                         mpr( obj_name );
-                        type_wanted = i;    
+                        type_wanted = i;
                         best_index = ptr - obj_name;
                     }
                 }
+#ifdef USE_X11
+        //数字での入力
+                if (i==atoi(specs) && i!=0)type_wanted = i;
+                if (specs[0]=='0' && specs[1]<32) type_wanted = 0;
+#endif
             }
 
             if (type_wanted == -1)
             {
+#ifdef JP
+                mpr( "存在しないアイテムです。" );
+#else
                 mpr( "No such item." );
+#endif
                 return;
             }
-            
+
             mitm[thing_created].sub_type = type_wanted;
         }
-        
+
         switch (mitm[thing_created].base_type)
         {
         case OBJ_MISSILES:
@@ -920,9 +1112,13 @@ void create_spec_object(void)
             // intentional fall-through
         case OBJ_WEAPONS:
         case OBJ_ARMOUR:
+#ifdef JP
+            mpr( "どの名前のエゴですか？ ", MSGCH_PROMPT );
+#else
             mpr( "What ego type? ", MSGCH_PROMPT );
+#endif
             get_input_line( specs, sizeof( specs ) );
-            
+
             if (specs[0] != '\0')
             {
                 special_wanted = 0;
@@ -932,15 +1128,18 @@ void create_spec_object(void)
                 {
                     mitm[thing_created].special = i;
                     item_name( mitm[thing_created], DESC_PLAIN, obj_name );
-
+#ifdef JP
+                    ptr = strstr( obj_name, specs );
+#else
                     ptr = strstr( strlwr(obj_name), strlwr(specs) );
+#endif
                     if (ptr != NULL)
                     {
                         // earliest match is the winner
                         if (ptr - obj_name < best_index)
                         {
                             mpr( obj_name );
-                            special_wanted = i;    
+                            special_wanted = i;
                             best_index = ptr - obj_name;
                         }
                     }
@@ -953,14 +1152,22 @@ void create_spec_object(void)
         case OBJ_BOOKS:
             if (mitm[thing_created].sub_type == BOOK_MANUAL)
             {
+#ifdef JP
+                special_wanted = debug_prompt_for_skill( "どのスキルの虎の巻ですか？ " );
+#else
                 special_wanted = debug_prompt_for_skill( "A manual for which skill? " );
+#endif
                 if (special_wanted != -1)
                     mitm[thing_created].plus = special_wanted;
                 else
+#ifdef JP
+                    mpr( "残念ながら、その技能の本は在庫にない。" );
+#else
                     mpr( "Sorry, no books on that skill today." );
+#endif
             }
             break;
-        
+
         case OBJ_WANDS:
             mitm[thing_created].plus = 24;
             break;
@@ -1003,7 +1210,11 @@ void tweak_object(void)
     char specs[50];
     char keyin;
 
+#ifdef JP
+    int item = prompt_invent_item( "どのアイテムを改造しますか？ ", -1 );
+#else
     int item = prompt_invent_item( "Tweak which item? ", -1 );
+#endif
     if (item == PROMPT_ABORT)
     {
         canned_msg( MSG_OK );
@@ -1017,14 +1228,22 @@ void tweak_object(void)
     {
         void *field_ptr = NULL;
 
-        for (;;) 
+        for (;;)
         {
             item_name( you.inv[item], DESC_INVENTORY_EQUIP, info );
             mpr( info );
 
+#ifdef JP
+            mpr( "a - 修正値1  b - 修正値2  c - 特性  d - 個数  ESC - 中止",
+#else
             mpr( "a - plus  b - plus2  c - special  d - quantity  ESC - exit",
+#endif
                  MSGCH_PROMPT );
+#ifdef JP
+            mpr( "どの点を改造しますか？ ", MSGCH_PROMPT );
+#else
             mpr( "Which field? ", MSGCH_PROMPT );
+#endif
 
             keyin = tolower( get_ch() );
 
@@ -1036,7 +1255,7 @@ void tweak_object(void)
                 field_ptr = &(you.inv[item].special);
             else if (keyin == 'd')
                 field_ptr = &(you.inv[item].quantity);
-            else if (keyin == ESCAPE || keyin == ' ' 
+            else if (keyin == ESCAPE || keyin == ' '
                     || keyin == '\r' || keyin == '\n')
             {
                 canned_msg( MSG_OK );
@@ -1050,19 +1269,31 @@ void tweak_object(void)
         if (keyin != 'c')
         {
             const short *const ptr = static_cast< short * >( field_ptr );
+#ifdef JP
+            snprintf( info, INFO_SIZE, "元の数値: %d (0x%04x)", *ptr, *ptr );
+#else
             snprintf( info, INFO_SIZE, "Old value: %d (0x%04x)", *ptr, *ptr );
+#endif
         }
-        else 
+        else
         {
             const long *const ptr = static_cast< long * >( field_ptr );
+#ifdef JP
+            snprintf( info, INFO_SIZE, "元の数値: %ld (0x%08lx)", *ptr, *ptr );
+#else
             snprintf( info, INFO_SIZE, "Old value: %ld (0x%08lx)", *ptr, *ptr );
+#endif
         }
 
         mpr( info );
 
+#ifdef JP
+        mpr( "新しい数値は？ ", MSGCH_PROMPT );
+#else
         mpr( "New value? ", MSGCH_PROMPT );
+#endif
         get_input_line( specs, sizeof( specs ) );
-        
+
         if (specs[0] == '\0')
             return;
 
@@ -1094,18 +1325,19 @@ void tweak_object(void)
 //---------------------------------------------------------------
 #if DEBUG_DIAGNOSTICS
 
-static const char *enchant_names[] = 
+static const char *enchant_names[] =
 {
-    "None", 
-    "Slow", "Haste", "*BUG-3*", "Fear", "Conf", "Invis", 
+#ifdef JP /* 訳不用？ */
+    "None",
+    "Slow", "Haste", "*BUG-3*", "Fear", "Conf", "Invis",
     "YPois-1", "YPois-2", "YPois-3", "YPois-4",
     "YShug-1", "YShug-2", "YShug-3", "YShug-4",
     "YRot-1", "YRot-2", "YRot-3", "YRot-4",
     "Summon", "Abj-1", "Abj-2", "Abj-3", "Abj-4", "Abj-5", "Abj-6",
-    "Corona-1", "Corona-2", "Corona-3", "Corona-4", 
-    "Charm", "YSticky-1", "YSticky-2", "YSticky-3", "YSticky-4", 
+    "Corona-1", "Corona-2", "Corona-3", "Corona-4",
+    "Charm", "YSticky-1", "YSticky-2", "YSticky-3", "YSticky-4",
     "*BUG-35*", "*BUG-36*", "*BUG-37*",
-    "GlowShapeshifter", "Shapeshifter", 
+    "GlowShapeshifter", "Shapeshifter",
     "Tele-1", "Tele-2", "Tele-3", "Tele-4",
     "*BUG-44*", "*BUG-45*", "*BUG-46*", "*BUG-47*", "*BUG-48*", "*BUG-49*",
     "*BUG-50*", "*BUG-51*", "*BUG-52*", "*BUG-53*", "*BUG-54*", "*BUG-55*",
@@ -1115,6 +1347,27 @@ static const char *enchant_names[] =
     "OldAbj-1", "OldAbj-2", "OldAbj-3", "OldAbj-4", "OldAbj-5", "OldAbj-6",
     "OldCreatedFriendly", "SleepWary", "Submerged", "Short Lived",
     "*BUG-too big*"
+#else
+    "None",
+    "Slow", "Haste", "*BUG-3*", "Fear", "Conf", "Invis",
+    "YPois-1", "YPois-2", "YPois-3", "YPois-4",
+    "YShug-1", "YShug-2", "YShug-3", "YShug-4",
+    "YRot-1", "YRot-2", "YRot-3", "YRot-4",
+    "Summon", "Abj-1", "Abj-2", "Abj-3", "Abj-4", "Abj-5", "Abj-6",
+    "Corona-1", "Corona-2", "Corona-3", "Corona-4",
+    "Charm", "YSticky-1", "YSticky-2", "YSticky-3", "YSticky-4",
+    "*BUG-35*", "*BUG-36*", "*BUG-37*",
+    "GlowShapeshifter", "Shapeshifter",
+    "Tele-1", "Tele-2", "Tele-3", "Tele-4",
+    "*BUG-44*", "*BUG-45*", "*BUG-46*", "*BUG-47*", "*BUG-48*", "*BUG-49*",
+    "*BUG-50*", "*BUG-51*", "*BUG-52*", "*BUG-53*", "*BUG-54*", "*BUG-55*",
+    "*BUG-56*",
+    "Pois-1", "Pois-2", "Pois-3", "Pois-4",
+    "Sticky-1", "Sticky-2", "Sticky-3", "Sticky-4",
+    "OldAbj-1", "OldAbj-2", "OldAbj-3", "OldAbj-4", "OldAbj-5", "OldAbj-6",
+    "OldCreatedFriendly", "SleepWary", "Submerged", "Short Lived",
+    "*BUG-too big*"
+#endif
 };
 
 void stethoscope(int mwh)
@@ -1127,7 +1380,11 @@ void stethoscope(int mwh)
         i = mwh;
     else
     {
+#ifdef JP /* 訳不用？ */
         mpr( "Which monster?", MSGCH_PROMPT );
+#else
+        mpr( "Which monster?", MSGCH_PROMPT );
+#endif
 
         direction( stth );
 
@@ -1147,7 +1404,11 @@ void stethoscope(int mwh)
 
         if (env.cgrid[steth_x][steth_y] != EMPTY_CLOUD)
         {
-            snprintf( info, INFO_SIZE, "cloud type: %d delay: %d", 
+#ifdef JP /* 訳不用？ */
+            snprintf( info, INFO_SIZE, "cloud type: %d delay: %d",
+#else
+            snprintf( info, INFO_SIZE, "cloud type: %d delay: %d",
+#endif
                      env.cloud[ env.cgrid[steth_x][steth_y] ].type,
                      env.cloud[ env.cgrid[steth_x][steth_y] ].decay );
 
@@ -1156,7 +1417,11 @@ void stethoscope(int mwh)
 
         if (mgrd[steth_x][steth_y] == NON_MONSTER)
         {
+#ifdef JP /* 訳不用？ */
             snprintf( info, INFO_SIZE, "item grid = %d", igrd[steth_x][steth_y] );
+#else
+            snprintf( info, INFO_SIZE, "item grid = %d", igrd[steth_x][steth_y] );
+#endif
             mpr( info, MSGCH_DIAGNOSTICS );
             return;
         }
@@ -1165,21 +1430,36 @@ void stethoscope(int mwh)
     }
 
     // print type of monster
+#ifdef JP /* 訳不用？ */
     snprintf( info, INFO_SIZE, "%s (id #%d; type=%d loc=(%d,%d) align=%s)",
+#else
+    snprintf( info, INFO_SIZE, "%s (id #%d; type=%d loc=(%d,%d) align=%s)",
+#endif
               monam( menv[i].number, menv[i].type, true, DESC_CAP_THE ),
               i, menv[i].type,
               menv[i].x, menv[i].y,
+#ifdef JP /* 訳不用？ */
               ((menv[i].attitude == ATT_FRIENDLY) ? "friendly" :
                (menv[i].attitude == ATT_HOSTILE)  ? "hostile" :
-               (menv[i].attitude == ATT_NEUTRAL)  ? "neutral" 
+               (menv[i].attitude == ATT_NEUTRAL)  ? "neutral"
                                                   : "unknown alignment") );
+#else
+              ((menv[i].attitude == ATT_FRIENDLY) ? "friendly" :
+               (menv[i].attitude == ATT_HOSTILE)  ? "hostile" :
+               (menv[i].attitude == ATT_NEUTRAL)  ? "neutral"
+                                                  : "unknown alignment") );
+#endif
 
     mpr( info, MSGCH_DIAGNOSTICS );
 
     // print stats and other info
+#ifdef JP /* 訳不用？ */
     snprintf( info, INFO_SIZE,"HD=%d HP=%d/%d AC=%d EV=%d MR=%d SP=%d energy=%d num=%d flags=%02x",
-             menv[i].hit_dice, 
-             menv[i].hit_points, menv[i].max_hit_points, 
+#else
+    snprintf( info, INFO_SIZE,"HD=%d HP=%d/%d AC=%d EV=%d MR=%d SP=%d energy=%d num=%d flags=%02x",
+#endif
+             menv[i].hit_dice,
+             menv[i].hit_points, menv[i].max_hit_points,
              menv[i].armour_class, menv[i].evasion,
              mons_resist_magic( &menv[i] ),
              menv[i].speed, menv[i].speed_increment,
@@ -1188,36 +1468,65 @@ void stethoscope(int mwh)
     mpr( info, MSGCH_DIAGNOSTICS );
 
     // print behaviour information
-    
+
     const int hab = monster_habitat( menv[i].type );
 
-    snprintf( info, INFO_SIZE, "hab=%s beh=%s(%d) foe=%s(%d) mem=%d target=(%d,%d)", 
+#ifdef JP /* 訳不用？ */
+    snprintf( info, INFO_SIZE, "hab=%s beh=%s(%d) foe=%s(%d) mem=%d target=(%d,%d)",
              ((hab == DNGN_DEEP_WATER)            ? "water" :
-              (hab == DNGN_LAVA)                  ? "lava" 
+              (hab == DNGN_LAVA)                  ? "lava"
                                                   : "floor"),
 
              ((menv[i].behaviour == BEH_SLEEP)    ? "sleep" :
               (menv[i].behaviour == BEH_WANDER)   ? "wander" :
               (menv[i].behaviour == BEH_SEEK)     ? "seek" :
               (menv[i].behaviour == BEH_FLEE)     ? "flee" :
-              (menv[i].behaviour == BEH_CORNERED) ? "cornered" 
-                                                  : "unknown"), 
+              (menv[i].behaviour == BEH_CORNERED) ? "cornered"
+                                                  : "unknown"),
              menv[i].behaviour,
 
              ((menv[i].foe == MHITYOU)            ? "you" :
               (menv[i].foe == MHITNOT)            ? "none" :
-              (menv[menv[i].foe].type == -1)      ? "unassigned monster" 
+              (menv[menv[i].foe].type == -1)      ? "unassigned monster"
                  : monam( menv[menv[i].foe].number, menv[menv[i].foe].type,
                           true, DESC_PLAIN )),
-             menv[i].foe, 
-             menv[i].foe_memory, 
+             menv[i].foe,
+             menv[i].foe_memory,
 
              menv[i].target_x, menv[i].target_y );
+#else
+    snprintf( info, INFO_SIZE, "hab=%s beh=%s(%d) foe=%s(%d) mem=%d target=(%d,%d)",
+             ((hab == DNGN_DEEP_WATER)            ? "water" :
+              (hab == DNGN_LAVA)                  ? "lava"
+                                                  : "floor"),
+
+             ((menv[i].behaviour == BEH_SLEEP)    ? "sleep" :
+              (menv[i].behaviour == BEH_WANDER)   ? "wander" :
+              (menv[i].behaviour == BEH_SEEK)     ? "seek" :
+              (menv[i].behaviour == BEH_FLEE)     ? "flee" :
+              (menv[i].behaviour == BEH_CORNERED) ? "cornered"
+                                                  : "unknown"),
+             menv[i].behaviour,
+
+             ((menv[i].foe == MHITYOU)            ? "you" :
+              (menv[i].foe == MHITNOT)            ? "none" :
+              (menv[menv[i].foe].type == -1)      ? "unassigned monster"
+                 : monam( menv[menv[i].foe].number, menv[menv[i].foe].type,
+                          true, DESC_PLAIN )),
+             menv[i].foe,
+             menv[i].foe_memory,
+
+             menv[i].target_x, menv[i].target_y );
+#endif
 
     mpr( info, MSGCH_DIAGNOSTICS );
 
     // print resistances
+#ifdef JP /* 訳不用？ */
     snprintf( info, INFO_SIZE, "resist: fire=%d cold=%d elec=%d pois=%d neg=%d",
+#else
+    snprintf( info, INFO_SIZE, "resist: fire=%d cold=%d elec=%d pois=%d neg=%d",
+#endif
               mons_res_fire( &menv[i] ),
               mons_res_cold( &menv[i] ),
               mons_res_elec( &menv[i] ),
@@ -1228,8 +1537,12 @@ void stethoscope(int mwh)
 
 
     // print enchantments
+#ifdef JP /* 訳不用？ */
     strncpy( info, "ench: ", INFO_SIZE );
-    for (j = 0; j < 6; j++) 
+#else
+    strncpy( info, "ench: ", INFO_SIZE );
+#endif
+    for (j = 0; j < 6; j++)
     {
         if (menv[i].enchantment[j] >= NUM_ENCHANTMENTS)
             strncat( info, enchant_names[ NUM_ENCHANTMENTS ], INFO_SIZE );
@@ -1241,16 +1554,24 @@ void stethoscope(int mwh)
         else if (j < 5)
         {
             mpr( info, MSGCH_DIAGNOSTICS );
+#ifdef JP /* 訳不用？ */
             strncpy( info, "ench: ", INFO_SIZE );
+#else
+            strncpy( info, "ench: ", INFO_SIZE );
+#endif
         }
     }
 
     mpr( info, MSGCH_DIAGNOSTICS );
 
-    if (menv[i].type == MONS_PLAYER_GHOST 
+    if (menv[i].type == MONS_PLAYER_GHOST
         || menv[i].type == MONS_PANDEMONIUM_DEMON)
     {
-        snprintf( info, INFO_SIZE, "Ghost damage: %d; brand: %d", 
+#ifdef JP /* 訳不用？ */
+        snprintf( info, INFO_SIZE, "Ghost damage: %d; brand: %d",
+#else
+        snprintf( info, INFO_SIZE, "Ghost damage: %d; brand: %d",
+#endif
                   ghost.values[ GVAL_DAMAGE ], ghost.values[ GVAL_BRAND ] );
         mpr( info, MSGCH_DIAGNOSTICS );
     }
@@ -1267,19 +1588,31 @@ static void dump_item( const char *name, int num, const item_def &item )
 {
     mpr( name, MSGCH_WARN );
 
+#ifdef JP /* 訳不用？ */
     snprintf( info, INFO_SIZE, "    item #%d:  base: %d; sub: %d; plus: %d; plus2: %d; special: %ld",
-             num, item.base_type, item.sub_type, 
+#else
+    snprintf( info, INFO_SIZE, "    item #%d:  base: %d; sub: %d; plus: %d; plus2: %d; special: %ld",
+#endif
+             num, item.base_type, item.sub_type,
              item.plus, item.plus2, item.special );
 
     mpr( info );
 
+#ifdef JP /* 訳不用？ */
     snprintf( info, INFO_SIZE, "    quant: %d; colour: %d; ident: 0x%08lx; ident_type: %d",
+#else
+    snprintf( info, INFO_SIZE, "    quant: %d; colour: %d; ident: 0x%08lx; ident_type: %d",
+#endif
              item.quantity, item.colour, item.flags,
              get_ident_type( item.base_type, item.sub_type ) );
 
     mpr( info );
 
+#ifdef JP /* 訳不用？ */
     snprintf( info, INFO_SIZE, "    x: %d; y: %d; link: %d",
+#else
+    snprintf( info, INFO_SIZE, "    x: %d; y: %d; link: %d",
+#endif
              item.x, item.y, item.link );
 
     mpr( info );
@@ -1315,7 +1648,11 @@ void debug_item_scan( void )
                 // Check for invalid (zero quantity) items that are linked in
                 if (!is_valid_item( mitm[obj] ))
                 {
+#ifdef JP /* 訳不用？ */
                     snprintf( info, INFO_SIZE, "Linked invalid item at (%d,%d)!", x, y);
+#else
+                    snprintf( info, INFO_SIZE, "Linked invalid item at (%d,%d)!", x, y);
+#endif
                     mpr( info, MSGCH_WARN );
                     item_name( mitm[obj], DESC_PLAIN, name );
                     dump_item( name, obj, mitm[obj] );
@@ -1324,7 +1661,11 @@ void debug_item_scan( void )
                 // Check that item knows what stack it's in
                 if (mitm[obj].x != x || mitm[obj].y != y)
                 {
+#ifdef JP /* 訳不用？ */
                     snprintf( info, INFO_SIZE, "Item position incorrect at (%d,%d)!", x, y);
+#else
+                    snprintf( info, INFO_SIZE, "Item position incorrect at (%d,%d)!", x, y);
+#endif
                     mpr( info, MSGCH_WARN );
                     item_name( mitm[obj], DESC_PLAIN, name );
                     dump_item( name, obj, mitm[obj] );
@@ -1334,7 +1675,11 @@ void debug_item_scan( void )
                 // this will also keep this from being an infinite loop.
                 if (mitm[obj].flags & ISFLAG_DEBUG_MARK)
                 {
+#ifdef JP /* 訳不用？ */
                     snprintf( info, INFO_SIZE, "Potential INFINITE STACK at (%d, %d)", x, y);
+#else
+                    snprintf( info, INFO_SIZE, "Potential INFINITE STACK at (%d, %d)", x, y);
+#endif
                     mpr( info, MSGCH_WARN );
                     break;
                 }
@@ -1353,13 +1698,21 @@ void debug_item_scan( void )
         item_name( mitm[i], DESC_PLAIN, name );
 
         // Don't check (-1,-1) player items or (0,0) monster items
-        if ((mitm[i].x > 0 || mitm[i].y > 0) 
+        if ((mitm[i].x > 0 || mitm[i].y > 0)
             && !(mitm[i].flags & ISFLAG_DEBUG_MARK))
         {
+#ifdef JP /* 訳不用？ */
             mpr( "Unlinked item:", MSGCH_WARN );
+#else
+            mpr( "Unlinked item:", MSGCH_WARN );
+#endif
             dump_item( name, i, mitm[i] );
-            
-            snprintf( info, INFO_SIZE, "igrd(%d,%d) = %d", mitm[i].x, mitm[i].y, 
+
+#ifdef JP /* 訳不用？ */
+            snprintf( info, INFO_SIZE, "igrd(%d,%d) = %d", mitm[i].x, mitm[i].y,
+#else
+            snprintf( info, INFO_SIZE, "igrd(%d,%d) = %d", mitm[i].x, mitm[i].y,
+#endif
                      igrd[ mitm[i].x ][ mitm[i].y ] );
             mpr( info );
 
@@ -1370,7 +1723,11 @@ void debug_item_scan( void )
                 {
                     if (menv[j].inv[k] == i)
                     {
-                        snprintf( info, INFO_SIZE, "Held by monster #%d: %s at (%d,%d)", 
+#ifdef JP /* 訳不用？ */
+                        snprintf( info, INFO_SIZE, "Held by monster #%d: %s at (%d,%d)",
+#else
+                        snprintf( info, INFO_SIZE, "Held by monster #%d: %s at (%d,%d)",
+#endif
                                  j, ptr_monam( &menv[j], DESC_CAP_A ),
                                  menv[j].x, menv[j].y );
 
@@ -1392,33 +1749,48 @@ void debug_item_scan( void )
         //   -- items described as buggy (typically adjectives out of range)
         //      (note: covers buggy, bugginess, buggily, whatever else)
         //
+#ifdef JP /* 訳不用？ */
         if (strstr( name, "questionable" ) != NULL
             || strstr( name, "eggplant" ) != NULL
             || strstr( name, "bola" ) != NULL
             || strstr( name, "bugg" ) != NULL)
+#else
+        if (strstr( name, "questionable" ) != NULL
+            || strstr( name, "eggplant" ) != NULL
+            || strstr( name, "bola" ) != NULL
+            || strstr( name, "bugg" ) != NULL)
+#endif
         {
+#ifdef JP /* 訳不用？ */
             mpr( "Bad item:", MSGCH_WARN );
+#else
+            mpr( "Bad item:", MSGCH_WARN );
+#endif
             dump_item( name, i, mitm[i] );
         }
-        else if ((mitm[i].base_type == OBJ_WEAPONS 
-                && (abs(mitm[i].plus) > 30 
+        else if ((mitm[i].base_type == OBJ_WEAPONS
+                && (abs(mitm[i].plus) > 30
                     || abs(mitm[i].plus2) > 30
                     || (!is_random_artefact( mitm[i] )
-                        && (mitm[i].special >= 30 
+                        && (mitm[i].special >= 30
                             && mitm[i].special < 181))))
 
-            || (mitm[i].base_type == OBJ_MISSILES 
-                && (abs(mitm[i].plus) > 25 
-                    || (!is_random_artefact( mitm[i] ) 
+            || (mitm[i].base_type == OBJ_MISSILES
+                && (abs(mitm[i].plus) > 25
+                    || (!is_random_artefact( mitm[i] )
                         && mitm[i].special >= 30)))
 
             || (mitm[i].base_type == OBJ_ARMOUR
-                && (abs(mitm[i].plus) > 25 
+                && (abs(mitm[i].plus) > 25
                     || (!is_random_artefact( mitm[i] )
-                        && mitm[i].sub_type != ARM_HELMET 
+                        && mitm[i].sub_type != ARM_HELMET
                         && mitm[i].special >= 30))))
         {
+#ifdef JP /* 訳不用？ */
             mpr( "Bad plus or special value:", MSGCH_WARN );
+#else
+            mpr( "Bad plus or special value:", MSGCH_WARN );
+#endif
             dump_item( name, i, mitm[i] );
         }
     }
@@ -1437,16 +1809,28 @@ void debug_item_scan( void )
 
         moname( monster->type, true, DESC_PLAIN, name );
 
+#ifdef JP /* 訳不用？ */
         if (strcmp( name, "program bug" ) == 0)
+#else
+        if (strcmp( name, "program bug" ) == 0)
+#endif
         {
+#ifdef JP /* 訳不用？ */
             mpr( "Program bug detected!", MSGCH_WARN );
+#else
+            mpr( "Program bug detected!", MSGCH_WARN );
+#endif
 
             snprintf( info, INFO_SIZE,
+#ifdef JP /* 訳不用？ */
                       "Buggy monster detected: monster #%d; position (%d,%d)",
+#else
+                      "Buggy monster detected: monster #%d; position (%d,%d)",
+#endif
                       i, monster->x, monster->y );
 
             mpr( info, MSGCH_WARN );
-        }   
+        }
     }
 }
 #endif
@@ -1459,13 +1843,25 @@ void debug_item_scan( void )
 #ifdef WIZARD
 void debug_add_skills(void)
 {
+#ifdef JP
+    int skill = debug_prompt_for_skill( "どのスキルですか？(名前で入力) " );
+#else
     int skill = debug_prompt_for_skill( "Which skill (by name)? " );
+#endif
 
     if (skill == -1)
+#ifdef JP
+        mpr("そのスキルは存在しないようだ。");
+#else
         mpr("That skill doesn't seem to exist.");
+#endif
     else
     {
+#ifdef JP
+        mpr("練習中……。");
+#else
         mpr("Exercising...");
+#endif
         exercise(skill, 100);
     }
 }                               // end debug_add_skills()
@@ -1479,20 +1875,32 @@ void debug_add_skills(void)
 #ifdef WIZARD
 void debug_set_skills(void)
 {
+#ifdef JP
+    int skill = debug_prompt_for_skill( "どのスキルですか？(名前で入力) " );
+#else
     int skill = debug_prompt_for_skill( "Which skill (by name)? " );
+#endif
 
     if (skill == -1)
+#ifdef JP
+        mpr("そのスキルは存在しないようだ。");
+#else
         mpr("That skill doesn't seem to exist.");
+#endif
     else
     {
         mpr( skill_name(skill) );
+#ifdef JP
+        int amount = debug_prompt_for_int( "何レベルにしますか？ ", true );
+#else
         int amount = debug_prompt_for_int( "To what level? ", true );
+#endif
 
         if (amount == -1)
             canned_msg( MSG_OK );
         else
         {
-            const int points = (skill_exp_needed( amount + 1 ) 
+            const int points = (skill_exp_needed( amount + 1 )
                                 * species_skills( skill, you.species )) / 100;
 
             you.skill_points[skill] = points + 1;
@@ -1541,7 +1949,11 @@ void debug_set_skills(void)
 void debug_set_all_skills(void)
 {
     int i;
+#ifdef JP
+    int amount = debug_prompt_for_int( "全スキルを何レベルに変更しますか？ ", true );
+#else
     int amount = debug_prompt_for_int( "Set all skills to what level? ", true );
+#endif
 
     if (amount < 0)             // cancel returns -1 -- bwr
         canned_msg( MSG_OK );
@@ -1552,13 +1964,13 @@ void debug_set_all_skills(void)
 
         for (i = SK_FIGHTING; i < NUM_SKILLS; i++)
         {
-            if (i == SK_UNUSED_1 
+            if (i == SK_UNUSED_1
                 || (i > SK_UNARMED_COMBAT && i < SK_SPELLCASTING))
             {
                 continue;
             }
 
-            const int points = (skill_exp_needed( amount + 1 ) 
+            const int points = (skill_exp_needed( amount + 1 )
                                 * species_skills( i, you.species )) / 100;
 
             you.skill_points[i] = points + 1;
@@ -1592,9 +2004,13 @@ bool debug_add_mutation(void)
 
     // Yeah, the gaining message isn't too good for this... but
     // there isn't an array of simple mutation names. -- bwr
-    mpr( "Which mutation (by message when getting mutation)? ", MSGCH_PROMPT );
+#ifdef JP
+    mpr( "どの突然変異ですか？(変異獲得時のメッセージで指定) \n", MSGCH_PROMPT );
+#else
+    mpr( "Which mutation (by message when getting mutation)? \n", MSGCH_PROMPT );
+#endif
     get_input_line( specs, sizeof( specs ) );
-    
+
     if (specs[0] == '\0')
         return (false);
 
@@ -1604,8 +2020,11 @@ bool debug_add_mutation(void)
     {
         char mut_name[80];
         strncpy( mut_name, mutation_name( i, 1 ), sizeof( mut_name ) );
-
+#ifdef JP
+        char *ptr = strstr( mut_name, specs );
+#else
         char *ptr = strstr( strlwr(mut_name), strlwr(specs) );
+#endif
         if (ptr != NULL)
         {
             // we take the first mutation that matches
@@ -1615,13 +2034,25 @@ bool debug_add_mutation(void)
     }
 
     if (mutation == -1)
+#ifdef JP
+        mpr("あなたをそんな風には改変できない！");
+#else
         mpr("I can't warp you that way!");
+#endif
     else
     {
+#ifdef JP
+        snprintf( info, INFO_SIZE, "発見: %s", mutation_name( mutation, 1 ) );
+#else
         snprintf( info, INFO_SIZE, "Found: %s", mutation_name( mutation, 1 ) );
+#endif
         mpr( info );
 
+#ifdef JP
+        int levels = debug_prompt_for_int( "何段階変異しますか？ ", false );
+#else
         int levels = debug_prompt_for_int( "How many levels? ", false );
+#endif
 
         if (levels == 0)
         {
@@ -1636,7 +2067,7 @@ bool debug_add_mutation(void)
                     success = true;
             }
         }
-        else 
+        else
         {
             for (int i = 0; i < -levels; i++)
             {
@@ -1661,9 +2092,13 @@ void debug_get_religion(void)
 {
     char specs[80];
 
+#ifdef JP
+    mpr( "どの神を信仰しますか？(名前で指定) ", MSGCH_PROMPT );
+#else
     mpr( "Which god (by name)? ", MSGCH_PROMPT );
+#endif
     get_input_line( specs, sizeof( specs ) );
-    
+
     if (specs[0] == '\0')
         return;
 
@@ -1673,8 +2108,11 @@ void debug_get_religion(void)
     {
         char name[80];
         strncpy( name, god_name(i), sizeof( name ) );
-
+#ifdef JP
+        char *ptr = strstr( name, specs );
+#else
         char *ptr = strstr( strlwr(name), strlwr(specs) );
+#endif
         if (ptr != NULL)
         {
             god = i;
@@ -1683,7 +2121,11 @@ void debug_get_religion(void)
     }
 
     if (god == -1)
+#ifdef JP
+        mpr( "その神は今日は信徒を募集していないようだ。" );
+#else
         mpr( "That god doesn't seem to be taking followers today." );
+#endif
     else
     {
         grd[you.x_pos][you.y_pos] = 179 + god;
@@ -1695,7 +2137,12 @@ void debug_get_religion(void)
 
 void error_message_to_player(void)
 {
+#ifdef JP
+    mpr("おお友よ、何かしらのバグが発生したようである。");
+    mpr("そこからは可及的速やかに逃げ去るべきではないか。");
+#else
     mpr("Oh dear. There appears to be a bug in the program.");
     mpr("I suggest you leave this level then save as soon as possible.");
+#endif
 
 }                               // end error_message_to_player()

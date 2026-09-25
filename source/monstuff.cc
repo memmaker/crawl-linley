@@ -198,7 +198,7 @@ bool curse_an_item( char which, char power )
             if (item_cursed( you.inv[i] ))
                 continue;
 
-            if (you.inv[i].base_type == OBJ_POTIONS 
+            if (you.inv[i].base_type == OBJ_POTIONS
                 && (which != 1 || you.inv[i].sub_type == POT_DECAY))
             {
                 continue;
@@ -266,9 +266,17 @@ static void monster_drop_ething(struct monsters *monster)
     if (destroyed)
     {
         if (grd[monster->x][monster->y] == DNGN_LAVA)
+#ifdef JP
+            mpr("あなたはジュージューという音を耳にした。");
+#else
             mpr("You hear a hissing sound.");
+#endif
         else
+#ifdef JP
+            mpr("あなたはドボンという音を耳にした。");
+#else
             mpr("You hear a splashing sound.");
+#endif
     }
 }                               // end monster_drop_ething()
 
@@ -326,7 +334,11 @@ void monster_die(struct monsters *monster, char killer, int i)
             you.might += bonus;
             haste_player( bonus );
 
+#ifdef JP
+            mpr( "あなたは怒りの増大とともに、内なるトログの力を意識した。",
+#else
             mpr( "You feel the power of Trog in you as your rage grows.",
+#endif
                  MSGCH_GOD, GOD_TROG );
         }
         else if (wearing_amulet( AMU_RAGE ) && one_chance_in(30))
@@ -337,14 +349,18 @@ void monster_die(struct monsters *monster, char killer, int i)
             you.might += bonus;
             haste_player( bonus );
 
+#ifdef JP
+            mpr( "あなたの護符が真っ赤に輝いた。" );
+#else
             mpr( "Your amulet glows a violent red." );
+#endif
         }
     }
 
     if (you.prev_targ == monster_killed)
         you.prev_targ = MHITNOT;
 
-    const bool pet_kill = (MON_KILL(killer) && ((i >= 0 && i < 200) 
+    const bool pet_kill = (MON_KILL(killer) && ((i >= 0 && i < 200)
                             && mons_friendly(&menv[i])));
 
     if (monster->type == MONS_GIANT_SPORE
@@ -356,7 +372,11 @@ void monster_die(struct monsters *monster, char killer, int i)
     else if (monster->type == MONS_FIRE_VORTEX
              || monster->type == MONS_SPATIAL_VORTEX)
     {
+#ifdef JP
+        simple_monster_message( monster, "は四散した！", MSGCH_MONSTER_DAMAGE,
+#else
         simple_monster_message( monster, " dissipates!", MSGCH_MONSTER_DAMAGE,
+#endif
                                 MDAM_DEAD );
 
         if (!testbits(monster->flags, MF_CREATED_FRIENDLY))
@@ -373,7 +393,11 @@ void monster_die(struct monsters *monster, char killer, int i)
     else if (monster->type == MONS_SIMULACRUM_SMALL
              || monster->type == MONS_SIMULACRUM_LARGE)
     {
+#ifdef JP
+        simple_monster_message( monster, "は霧散した！", MSGCH_MONSTER_DAMAGE,
+#else
         simple_monster_message( monster, " vaporizes!", MSGCH_MONSTER_DAMAGE,
+#endif
                                 MDAM_DEAD );
 
         if (!testbits(monster->flags, MF_CREATED_FRIENDLY))
@@ -388,7 +412,11 @@ void monster_die(struct monsters *monster, char killer, int i)
     }
     else if (monster->type == MONS_DANCING_WEAPON)
     {
+#ifdef JP
+        simple_monster_message(monster, "は地面に落下した。",
+#else
         simple_monster_message(monster, " falls from the air.",
+#endif
                                MSGCH_MONSTER_DAMAGE, MDAM_DEAD);
 
         if (!testbits(monster->flags, MF_CREATED_FRIENDLY))
@@ -405,11 +433,18 @@ void monster_die(struct monsters *monster, char killer, int i)
         {
         case KILL_YOU:          /* You kill in combat. */
         case KILL_YOU_MISSILE:  /* You kill by missile or beam. */
+#ifdef JP
+            strcpy(info, "あなたは");
+            strcat(info, ptr_monam(monster, DESC_PLAIN));
+            strcat(info, (wounded_damaged(monster->type)) ? "を倒した" : "を殺した");
+            strcat(info, "!");
+#else
             strcpy(info, "You ");
             strcat(info, (wounded_damaged(monster->type)) ? "destroy" : "kill");
             strcat(info, " ");
             strcat(info, ptr_monam(monster, DESC_NOCAP_THE));
             strcat(info, "!");
+#endif
 
             if (death_message)
                 mpr(info, MSGCH_MONSTER_DAMAGE, MDAM_DEAD);
@@ -421,11 +456,15 @@ void monster_die(struct monsters *monster, char killer, int i)
             else
             {
                 if (death_message)
+#ifdef JP
+                    mpr("奇妙な徒労感に襲われた。");
+#else
                     mpr("That felt strangely unrewarding.");
+#endif
             }
 
             // Xom doesn't care who you killed:
-            if (you.religion == GOD_XOM 
+            if (you.religion == GOD_XOM
                     && random2(70) <= 10 + monster->hit_dice)
             {
                 Xom_acts(true, 1 + random2(monster->hit_dice), false);
@@ -470,7 +509,11 @@ void monster_die(struct monsters *monster, char killer, int i)
             {
                 if (you.hp < you.hp_max)
                 {
+#ifdef JP
+                    mpr("あなたは少し元気になった。");
+#else
                     mpr("You feel a little better.");
+#endif
                     inc_hp(monster->hit_dice + random2(monster->hit_dice),
                            false);
                 }
@@ -482,7 +525,11 @@ void monster_die(struct monsters *monster, char killer, int i)
             {
                 if (you.magic_points < you.max_magic_points)
                 {
+#ifdef JP
+                    mpr("あなたは魔法の力が戻ってくるのを感じた。");
+#else
                     mpr("You feel your power returning.");
+#endif
                     inc_mp( 1 + random2(monster->hit_dice / 2), false );
                 }
             }
@@ -496,14 +543,22 @@ void monster_die(struct monsters *monster, char killer, int i)
                                     mons_charclass(monster->type)) != -1)
                 {
                     if (death_message)
+#ifdef JP
+                        mpr("真っ赤なもやが集まってきた……。");
+#else
                         mpr("A glowing mist starts to gather...");
+#endif
                 }
             }
             break;
 
         case KILL_MON:          /* Monster kills in combat */
         case KILL_MON_MISSILE:  /* Monster kills by missile or beam */
+#ifdef JP
+            simple_monster_message(monster, "は死んだ！", MSGCH_MONSTER_DAMAGE,
+#else
             simple_monster_message(monster, " dies!", MSGCH_MONSTER_DAMAGE,
+#endif
                                    MDAM_DEAD);
 
             // no piety loss if god gifts killed by other monsters
@@ -537,7 +592,11 @@ void monster_die(struct monsters *monster, char killer, int i)
                            prefers demons) */
                         if (you.magic_points < you.max_magic_points)
                         {
+#ifdef JP
+                            mpr("あなたは魔法の力が戻ってくるのを感じた。");
+#else
                             mpr("You feel your power returning.");
+#endif
                             inc_mp(1 + random2(random2(monster->hit_dice)),
                                    false);
                         }
@@ -548,7 +607,11 @@ void monster_die(struct monsters *monster, char killer, int i)
 
         /* Monster killed by trap/inanimate thing/itself/poison not from you */
         case KILL_MISC:
+#ifdef JP
+            simple_monster_message(monster, "は死んだ！", MSGCH_MONSTER_DAMAGE,
+#else
             simple_monster_message(monster, " dies!", MSGCH_MONSTER_DAMAGE,
+#endif
                                    MDAM_DEAD);
             break;
 
@@ -557,7 +620,11 @@ void monster_die(struct monsters *monster, char killer, int i)
            This must only be called by monsters running out of time (or
            abjuration), because it uses the beam variables! Or does it??? */
             simple_monster_message( monster,
+#ifdef JP
+                                    "はひと吹きの煙を残して消え去った！" );
+#else
                                     " disappears in a puff of smoke!" );
+#endif
 
             place_cloud( CLOUD_GREY_SMOKE_MON + random2(3), monster->x,
                          monster->y, 1 + random2(3) );
@@ -578,7 +645,11 @@ void monster_die(struct monsters *monster, char killer, int i)
         if (YOU_KILL(killer))
         {
             if (curse_an_item(1, 0))
+#ifdef JP
+                mpr("あなたは一瞬、胸騒ぎを覚えた……。", MSGCH_MONSTER_SPELL);
+#else
                 mpr("You feel nervous for a moment...", MSGCH_MONSTER_SPELL);
+#endif
         }
     }
     else if (monster->type == MONS_GUARDIAN_MUMMY
@@ -587,13 +658,21 @@ void monster_die(struct monsters *monster, char killer, int i)
     {
         if (YOU_KILL(killer))
         {
+#ifdef JP
+            mpr("あなたは一瞬、恐ろしい胸騒ぎを覚えた……。",
+#else
             mpr("You feel extremely nervous for a moment...",
+#endif
                 MSGCH_MONSTER_SPELL);
 
             miscast_effect( SPTYP_NECROMANCY,
                             3 + (monster->type == MONS_GREATER_MUMMY) * 8
                               + (monster->type == MONS_MUMMY_PRIEST) * 5,
+#ifdef JP
+                            random2avg(88, 3), 100, "ミイラの死の呪い" );
+#else
                             random2avg(88, 3), 100, "a mummy death curse" );
+#endif
         }
     }
     else if (monster->type == MONS_BORIS)
@@ -606,24 +685,38 @@ void monster_die(struct monsters *monster, char killer, int i)
         {
             // Provide the player with an ingame clue to Boris' return.  -- bwr
             const int tmp = random2(6);
-            simple_monster_message( monster, 
+#ifdef JP
+            simple_monster_message( monster,
+                    (tmp == 0) ? "は言った。「これが私の最期ではないぞ！」" :
+                    (tmp == 1) ? "は言った。「次の機会にお前を仕留めてやろう！」" :
+                    (tmp == 2) ? "は言った。「これで終わりだと思うなよ！」" :
+                    (tmp == 3) ? "は言った。「また戻ってくるぞ！」" :
+                    (tmp == 4) ? "は言った。「これが終わりではない。これは始まりに過ぎない！」" :
+                    (tmp == 5) ? "は言った。「私を殺しただと？私はそうは思わんな！」"
+                               : "は言った。「そう簡単に私を打ち負かすことなどできるものか！」",
+                                    MSGCH_TALK );
+#else
+            simple_monster_message( monster,
                     (tmp == 0) ? " says, \"You haven't seen the last of me!\"" :
                     (tmp == 1) ? " says, \"I'll get you next time!\"" :
                     (tmp == 2) ? " says, \"This isn't over yet!\"" :
                     (tmp == 3) ? " says, \"I'll be back!\"" :
                     (tmp == 4) ? " says, \"This isn't the end, its only just beginning!\"" :
-                    (tmp == 5) ? " says, \"Kill me?  I think not!\"" 
+                    (tmp == 5) ? " says, \"Kill me?  I think not!\""
                                : " says, \"You cannot defeat me so easily!\"",
                                     MSGCH_TALK );
+#endif
         }
 
-        // Now that Boris is dead, he's a valid target for monster 
+        // Now that Boris is dead, he's a valid target for monster
         // creation again. -- bwr
         you.unique_creatures[ monster->type - 280 ] = 0;
     }
 
     if (killer != KILL_RESET)
     {
+        you.kills.record_kill(monster);
+
         if (mons_has_ench(monster, ENCH_ABJ_I, ENCH_ABJ_VI))
         {
             if (mons_weight(mons_charclass(monster->type)))
@@ -631,7 +724,11 @@ void monster_die(struct monsters *monster, char killer, int i)
                 if (monster->type == MONS_SIMULACRUM_SMALL
                     || monster->type == MONS_SIMULACRUM_LARGE)
                 {
+#ifdef JP
+                    simple_monster_message( monster, "は霧散した！" );
+#else
                     simple_monster_message( monster, " vaporizes!" );
+#endif
 
                     place_cloud( CLOUD_COLD_MON, monster->x, monster->y,
                                  1 + random2(3) );
@@ -639,7 +736,11 @@ void monster_die(struct monsters *monster, char killer, int i)
                 else
                 {
                     simple_monster_message(monster,
+#ifdef JP
+                                "の死体はひと吹きの煙を残して消え去った！");
+#else
                                 "'s corpse disappears in a puff of smoke!");
+#endif
 
                     place_cloud( CLOUD_GREY_SMOKE_MON + random2(3),
                                  monster->x, monster->y, 1 + random2(3) );
@@ -715,7 +816,7 @@ static bool jelly_divide(struct monsters * parent)
         {
             // 10-50 for now - must take clouds into account:
             if (mgrd[parent->x + jex][parent->y + jey] == NON_MONSTER
-                && grd[parent->x + jex][parent->y + jey] > DNGN_LAST_SOLID_TILE 
+                && grd[parent->x + jex][parent->y + jey] > DNGN_LAST_SOLID_TILE
                 && (parent->x + jex != you.x_pos || parent->y + jey != you.y_pos))
             {
                 foundSpot = true;
@@ -766,10 +867,18 @@ static bool jelly_divide(struct monsters * parent)
 
     mgrd[child->x][child->y] = k;
 
+#ifdef JP
+    if (!simple_monster_message(parent, "は二つに分裂した！"))
+#else
     if (!simple_monster_message(parent, " splits in two!"))
+#endif
     {
         if (!silenced(parent->x, parent->y) || !silenced(child->x, child->y))
+#ifdef JP
+            mpr("あなたは騒音が止んだことに気付いた。");
+#else
             mpr("You hear a squelching noise.");
+#endif
     }
 
     return (true);
@@ -787,9 +896,9 @@ void alert_nearby_monsters(void)
         // Judging from the above comment, this function isn't
         // intended to wake up monsters, so we're only going to
         // alert monsters that aren't sleeping.  For cases where an
-        // event should wake up monsters and alert them, I'd suggest 
+        // event should wake up monsters and alert them, I'd suggest
         // calling noisy() before calling this function. -- bwr
-        if (monster->type != -1 
+        if (monster->type != -1
             && monster->behaviour != BEH_SLEEP
             && mons_near(monster))
         {
@@ -813,7 +922,7 @@ static bool valid_morph( struct monsters *monster, int new_mclass )
         || new_mclass == MONS_SHAPESHIFTER
         || new_mclass == MONS_GLOWING_SHAPESHIFTER
 
-        // These shouldn't happen anyways (demons unaffected + holiness check), 
+        // These shouldn't happen anyways (demons unaffected + holiness check),
         // but if we ever do have polydemon, these will be needed:
         || new_mclass == MONS_PLAYER_GHOST
         || new_mclass == MONS_PANDEMONIUM_DEMON
@@ -834,8 +943,8 @@ static bool valid_morph( struct monsters *monster, int new_mclass )
     }
 
     // not fair to strand a water monster on dry land, either.  :)
-    if (monster_habitat(new_mclass) == DNGN_DEEP_WATER 
-        && current_tile != DNGN_DEEP_WATER 
+    if (monster_habitat(new_mclass) == DNGN_DEEP_WATER
+        && current_tile != DNGN_DEEP_WATER
         && current_tile != DNGN_SHALLOW_WATER)
     {
         return (false);
@@ -859,9 +968,9 @@ bool monster_polymorph( struct monsters *monster, int targetc, int power )
 
     UNUSED( power );
 
-    // Used to be mons_power, but that just returns hit_dice 
-    // for the monster class.  By using the current hit dice 
-    // the player gets the opportunity to use draining more 
+    // Used to be mons_power, but that just returns hit_dice
+    // for the monster class.  By using the current hit dice
+    // the player gets the opportunity to use draining more
     // effectively against shapeshifters. -- bwr
     source_power = monster->hit_dice;
     relax = 2;
@@ -881,7 +990,11 @@ bool monster_polymorph( struct monsters *monster, int targetc, int power )
                 relax++;
 
             if (relax > 50)
+#ifdef JP
+                return (simple_monster_message( monster, "は激しく身震いした。" ));
+#else
                 return (simple_monster_message( monster, " shudders." ));
+#endif
         }
         while (!valid_morph( monster, targetc )
                 || target_power < source_power - relax
@@ -889,9 +1002,24 @@ bool monster_polymorph( struct monsters *monster, int targetc, int power )
     }
 
     // messaging: {dlb}
-    bool invis = mons_flag( targetc, M_INVIS ) 
+    bool invis = mons_flag( targetc, M_INVIS )
                     || mons_has_ench( monster, ENCH_INVIS );
 
+#ifdef JP
+        strcat( str_polymon, "は" );
+
+        if (invis && !player_see_invis())
+            strcat( str_polymon, "何か不可視の存在" );
+        else
+            strcat( str_polymon, monam( 250, targetc, !invis, DESC_PLAIN ) );
+
+        if (mons_has_ench( monster, ENCH_GLOWING_SHAPESHIFTER, ENCH_SHAPESHIFTER ))
+            strcat( str_polymon, "に変身した！" );
+        else if (targetc == MONS_PULSATING_LUMP)
+            strcat( str_polymon, "に退化した！" );
+        else
+            strcat( str_polymon, "に変化した！" );
+#else
     if (mons_has_ench( monster, ENCH_GLOWING_SHAPESHIFTER, ENCH_SHAPESHIFTER ))
         strcat( str_polymon, " changes into " );
     else if (targetc == MONS_PULSATING_LUMP)
@@ -910,6 +1038,8 @@ bool monster_polymorph( struct monsters *monster, int targetc, int power )
 
         strcat( str_polymon, "!" );
     }
+#endif
+
 
     player_messaged = simple_monster_message( monster, str_polymon );
 
@@ -922,7 +1052,7 @@ bool monster_polymorph( struct monsters *monster, int targetc, int power )
     monster->number = 250;
 
     int abj = mons_has_ench( monster, ENCH_ABJ_I, ENCH_ABJ_VI );
-    int shifter = mons_has_ench( monster, ENCH_GLOWING_SHAPESHIFTER, 
+    int shifter = mons_has_ench( monster, ENCH_GLOWING_SHAPESHIFTER,
                                           ENCH_SHAPESHIFTER );
 
     // Note: define_monster() will clear out all enchantments! -- bwr
@@ -941,6 +1071,9 @@ bool monster_polymorph( struct monsters *monster, int targetc, int power )
     monster->hit_points = monster->max_hit_points
                                 * ((old_hp * 100) / old_hp_max) / 100
                                 + random2(monster->max_hit_points);
+
+    if (monster->hit_points < 1)
+        monster->hit_points = 1;
 
     if (monster->hit_points > monster->max_hit_points)
         monster->hit_points = monster->max_hit_points;
@@ -1007,10 +1140,10 @@ static bool habitat_okay( struct monsters *monster, int targ )
         // flying monsters don't care
         ret = true;
     }
-    else if (mons_flag( monster->type, M_AMPHIBIOUS ) 
+    else if (mons_flag( monster->type, M_AMPHIBIOUS )
             && (targ == DNGN_DEEP_WATER || targ == DNGN_SHALLOW_WATER))
     {
-        // Amphibious creatures are "land" by default in mon-data, 
+        // Amphibious creatures are "land" by default in mon-data,
         // we allow them to swim here. -- bwr
         ret = true;
     }
@@ -1019,7 +1152,7 @@ static bool habitat_okay( struct monsters *monster, int targ )
         // water elementals can crawl out over the land
         ret = true;
     }
-    else if (habitat == DNGN_FLOOR 
+    else if (habitat == DNGN_FLOOR
             && (targ >= DNGN_FLOOR || targ == DNGN_SHALLOW_WATER))
     {
         // FLOOR habitat monster going to a non-bad place
@@ -1108,7 +1241,11 @@ bool swap_places(struct monsters *monster)
 
     if (swap)
     {
+#ifdef JP
+        mpr("あなたは居場所を入れ替わった。");
+#else
         mpr("You swap places.");
+#endif
 
         mgrd[monster->x][monster->y] = NON_MONSTER;
 
@@ -1121,7 +1258,11 @@ bool swap_places(struct monsters *monster)
     {
         // Might not be ideal, but it's better that insta-killing
         // the monster... maybe try for a short blinki instead? -- bwr
+#ifdef JP
+        simple_monster_message( monster, "は抵抗した。" );
+#else
         simple_monster_message( monster, " resists." );
+#endif
     }
 
     return (swap);
@@ -1145,43 +1286,78 @@ void print_wounds(struct monsters *monster)
     if (monster_descriptor(monster->type, MDSC_NOMSG_WOUNDS))
         return;
 
+#ifdef JP
+    strcpy(str_wound, "は");
+#else
     strcpy(str_wound, " is ");
+#endif
 
     if (monster->hit_points <= monster->max_hit_points / 6)
     {
+#ifdef JP
+        strcat(str_wound, "今にも");
+        strcat(str_wound, wounded_damaged(monster->type) ? "倒れそうだ"
+                                                         : "死にそうだ");
+#else
         strcat(str_wound, "almost ");
         strcat(str_wound, wounded_damaged(monster->type) ? "destroyed"
                                                          : "dead");
+#endif
         dam_level = MDAM_ALMOST_DEAD;
     }
     else
     {
         if (monster->hit_points <= monster->max_hit_points / 6)
         {
+#ifdef JP
+            strcat(str_wound, "非常にひどく");
+#else
             strcat(str_wound, "horribly ");
+#endif
             dam_level = MDAM_HORRIBLY_DAMAGED;
         }
         else if (monster->hit_points <= monster->max_hit_points / 3)
         {
+#ifdef JP
+            strcat(str_wound, "ひどく" );
+#else
             strcat(str_wound, "heavily " );
+#endif
             dam_level = MDAM_HEAVILY_DAMAGED;
         }
         else if (monster->hit_points <= 3 * (monster-> max_hit_points / 4))
         {
+#ifdef JP
+            strcat(str_wound, "幾らか");
+#else
             strcat(str_wound, "moderately ");
+#endif
             dam_level = MDAM_MODERATELY_DAMAGED;
         }
         else
         {
+#ifdef JP
+            strcat(str_wound, "軽く");
+#else
             strcat(str_wound, "lightly ");
+#endif
             dam_level = MDAM_LIGHTLY_DAMAGED;
         }
 
+#ifdef JP
+        strcat(str_wound, wounded_damaged(monster->type) ? "損傷を負っている"
+                                                         : "傷を負っている");
+#else
         strcat(str_wound, wounded_damaged(monster->type) ? "damaged"
                                                          : "wounded");
+#endif
     }
 
+#ifdef JP
+    strcat(str_wound, "。");
+#else
     strcat(str_wound, ".");
+#endif
     simple_monster_message(monster, str_wound, MSGCH_MONSTER_DAMAGE, dam_level);
 }                               // end print_wounds()
 
@@ -1205,7 +1381,7 @@ bool wounded_damaged(int wound_class)
 // 2. Call handle_behaviour to re-evaluate AI state and target x,y
 //
 //---------------------------------------------------------------
-void behaviour_event( struct monsters *mon, int event, int src, 
+void behaviour_event( struct monsters *mon, int event, int src,
                       int src_x, int src_y )
 {
     bool isSmart = (mons_intel(mon->type) > I_ANIMAL);
@@ -1227,9 +1403,9 @@ void behaviour_event( struct monsters *mon, int event, int src,
             mon->behaviour = BEH_WANDER;
 
         // A bit of code to make Project Noise actually so
-        // something again.  Basically, dumb monsters and 
-        // monsters who aren't otherwise occupied will at 
-        // least consider the (apparent) source of the noise 
+        // something again.  Basically, dumb monsters and
+        // monsters who aren't otherwise occupied will at
+        // least consider the (apparent) source of the noise
         // interesting for a moment. -- bwr
         if (!isSmart || mon->foe == MHITNOT || mon->behaviour == BEH_WANDER)
         {
@@ -1285,7 +1461,11 @@ void behaviour_event( struct monsters *mon, int event, int src,
     case ME_CORNERED:
         // just set behaviour.. foe doesn't change.
         if (mon->behaviour != BEH_CORNERED && !mons_has_ench(mon,ENCH_FEAR))
+#ifdef JP
+            simple_monster_message(mon, "は戦いを決意した！");
+#else
             simple_monster_message(mon, " turns to fight!");
+#endif
 
         mon->behaviour = BEH_CORNERED;
         break;
@@ -1338,9 +1518,9 @@ static void handle_behaviour(struct monsters *mon)
     bool isScared = mons_has_ench(mon, ENCH_FEAR);
 
     // immobility logic stolen from later on in handle_monster().. argh!  --gdl
-    bool isMobile = !(mon->type == MONS_OKLOB_PLANT 
+    bool isMobile = !(mon->type == MONS_OKLOB_PLANT
                         || mon->type == MONS_CURSE_SKULL
-                        || (mon->type >= MONS_CURSE_TOE 
+                        || (mon->type >= MONS_CURSE_TOE
                             && mon->type <= MONS_POTION_MIMIC));
 
     // check for confusion -- early out.
@@ -1379,7 +1559,7 @@ static void handle_behaviour(struct monsters *mon)
     }
 
     // set friendly target, if they don't already have one
-    if (isFriendly 
+    if (isFriendly
         && you.pet_target != MHITNOT
         && (mon->foe == MHITNOT || mon->foe == MHITYOU))
     {
@@ -1584,7 +1764,7 @@ static void handle_behaviour(struct monsters *mon)
         case BEH_WANDER:
             // is our foe in LOS?
             // Batty monsters don't automatically reseek so that
-            // they'll flitter away, we'll reset them just before 
+            // they'll flitter away, we'll reset them just before
             // they get movement in handle_monsters() instead. -- bwr
             if (proxFoe && !testbits( mon->flags, MF_BATTY ))
             {
@@ -1597,9 +1777,9 @@ static void handle_behaviour(struct monsters *mon)
             // XXX: This is really dumb wander behaviour... instead of
             // changing the goal square every turn, better would be to
             // have the monster store a direction and have the monster
-            // head in that direction for a while, then shift the 
-            // direction to the left or right.  We're changing this so 
-            // wandering monsters at least appear to have some sort of 
+            // head in that direction for a while, then shift the
+            // direction to the left or right.  We're changing this so
+            // wandering monsters at least appear to have some sort of
             // attention span.  -- bwr
             if ((mon->x == mon->target_x && mon->y == mon->target_y)
                 || one_chance_in(20)
@@ -1650,7 +1830,7 @@ static void handle_behaviour(struct monsters *mon)
                 else
                     new_beh = BEH_WANDER;
             }
-            else 
+            else
             {
                 mon->target_x = foe_x;
                 mon->target_y = foe_y;
@@ -1680,11 +1860,15 @@ bool simple_monster_message(struct monsters *monster, const char *event,
 {
     char buff[INFO_SIZE];
 
-    if (mons_near( monster ) 
+    if (mons_near( monster )
         && (channel == MSGCH_MONSTER_SPELL || player_monster_visible(monster)))
     {
-        snprintf( buff, sizeof(buff), "%s%s", 
+        snprintf( buff, sizeof(buff), "%s%s",
+#ifdef JP
+                  ptr_monam(monster, DESC_PLAIN), event );
+#else
                   ptr_monam(monster, DESC_CAP_THE), event );
+#endif
 
         mpr( buff, channel, param );
         return (true);
@@ -1709,11 +1893,11 @@ static bool handle_enchantment(struct monsters *monster)
     int tmp;
 
     // Yes, this is the speed we want.  This function will be called in
-    // two curcumstances: (1) the monster can move and have enough energy, 
-    // and (2) the monster cannot move (speed == 0) and the monster loop 
+    // two curcumstances: (1) the monster can move and have enough energy,
+    // and (2) the monster cannot move (speed == 0) and the monster loop
     // is running.
     //
-    // In the first case we don't have to figure in the player's time, 
+    // In the first case we don't have to figure in the player's time,
     // since the rate of call to this function already does that (ie.
     // a bat would get here 6 times in 2 normal player turns, and if
     // the player was twice as fast it would be 6 times every four player
@@ -1721,15 +1905,15 @@ static bool handle_enchantment(struct monsters *monster)
     // absolute time frame.
     //
     // In the second case, we're hacking things so that plants can suffer
-    // from sticky flame.  The rate of call in this case is once every 
+    // from sticky flame.  The rate of call in this case is once every
     // player action... so the time_taken by the player is the ratio to
-    // the absolute time frame.  
+    // the absolute time frame.
     //
     // This will be used below for poison and sticky flame so that the
     // damage is apparently in the absolute time frame.  This is done
     // by scaling the damage and the chance that the effect goes away.
     // The result is that poison on a regular monster will be doing
-    // 1d3 damage every two rounds, and last eight rounds, and on 
+    // 1d3 damage every two rounds, and last eight rounds, and on
     // a bat the same poison will be doing 1/3 the damage each action
     // it gets (the mod fractions are randomized in), will have three
     // turns to the other monster's one, and the effect will survive
@@ -1782,7 +1966,7 @@ static bool handle_enchantment(struct monsters *monster)
 
             // Air elementals are a special case, as their
             // submerging in air isn't up to choice. -- bwr
-            if (monster->type == MONS_AIR_ELEMENTAL) 
+            if (monster->type == MONS_AIR_ELEMENTAL)
             {
                 heal_monster( monster, 1, one_chance_in(5) );
 
@@ -1798,14 +1982,14 @@ static bool handle_enchantment(struct monsters *monster)
             // Badly injured monsters prefer to stay submerged...
             // electrical eels and lava snakes have ranged attacks
             // and are more likely to surface.  -- bwr
-            if (habitat == DNGN_FLOOR || habitat != grid) 
+            if (habitat == DNGN_FLOOR || habitat != grid)
                 mons_del_ench( monster, ENCH_SUBMERGED ); // forced to surface
             else if (monster->hit_points <= monster->max_hit_points / 2)
                 break;
             else if (((monster->type == MONS_ELECTRICAL_EEL
                         || monster->type == MONS_LAVA_SNAKE)
                     && (random2(1000) < mod_speed( 20, speed )
-                        || (mons_near(monster) 
+                        || (mons_near(monster)
                             && monster->hit_points == monster->max_hit_points
                             && !one_chance_in(10))))
                     || random2(5000) < mod_speed( 10, speed ))
@@ -1835,7 +2019,7 @@ static bool handle_enchantment(struct monsters *monster)
             if (mons_res_poison(monster) < 0)
                 dam += roll_dice( 2, poisonval ) - 1;
 
-            // We adjust damage for monster speed (since this is applied 
+            // We adjust damage for monster speed (since this is applied
             // only when the monster moves), and we handle the factional
             // part as well (so that speed 30 creatures will take damage).
             dam *= 10;
@@ -1847,9 +2031,17 @@ static bool handle_enchantment(struct monsters *monster)
 
 #if DEBUG_DIAGNOSTICS
                 // for debugging, we don't have this silent.
-                simple_monster_message( monster, " takes poison damage.", 
+#ifdef JP
+                simple_monster_message( monster, "は毒のダメージを受けた。",
+#else
+                simple_monster_message( monster, " takes poison damage.",
+#endif
                                         MSGCH_DIAGNOSTICS );
+#ifdef JP
+                snprintf( info, INFO_SIZE, "毒のダメージ: %d", dam );
+#else
                 snprintf( info, INFO_SIZE, "poison damage: %d", dam );
+#endif
                 mpr( info, MSGCH_DIAGNOSTICS );
 #endif
 
@@ -1877,7 +2069,7 @@ static bool handle_enchantment(struct monsters *monster)
         case ENCH_YOUR_ROT_I:
             if (random2(1000) < mod_speed( 250, speed ))
                 mons_del_ench(monster, ENCH_YOUR_ROT_I);
-            else if (monster->hit_points > 1 
+            else if (monster->hit_points > 1
                     && random2(1000) < mod_speed( 333, speed ))
             {
                 hurt_monster(monster, 1);
@@ -1888,7 +2080,7 @@ static bool handle_enchantment(struct monsters *monster)
         case ENCH_YOUR_ROT_II:
         case ENCH_YOUR_ROT_III:
         case ENCH_YOUR_ROT_IV:
-            if (monster->hit_points > 1 
+            if (monster->hit_points > 1
                 && random2(1000) < mod_speed( 333, speed ))
             {
                 hurt_monster(monster, 1);
@@ -1924,7 +2116,7 @@ static bool handle_enchantment(struct monsters *monster)
             if (mons_res_fire( monster ) < 0)
                 dam += roll_dice( 2, 5 ) - 1;
 
-            // We adjust damage for monster speed (since this is applied 
+            // We adjust damage for monster speed (since this is applied
             // only when the monster moves), and we handle the factional
             // part as well (so that speed 30 creatures will take damage).
             dam *= 10;
@@ -1933,10 +2125,18 @@ static bool handle_enchantment(struct monsters *monster)
             if (dam > 0)
             {
                 hurt_monster( monster, dam );
+#ifdef JP
+                simple_monster_message(monster, "は火傷を負った！");
+#else
                 simple_monster_message(monster, " burns!");
+#endif
 
 #if DEBUG_DIAGNOSTICS
+#ifdef JP
+                snprintf( info, INFO_SIZE, "焼夷のダメージ: %d", dam );
+#else
                 snprintf( info, INFO_SIZE, "sticky flame damage: %d", dam );
+#endif
                 mpr( info, MSGCH_DIAGNOSTICS );
 #endif
 
@@ -2000,7 +2200,7 @@ static bool handle_enchantment(struct monsters *monster)
 
         case ENCH_GLOWING_SHAPESHIFTER:     // this ench never runs out
             // number of actions is fine for shapeshifters
-            if (monster->type == MONS_GLOWING_SHAPESHIFTER 
+            if (monster->type == MONS_GLOWING_SHAPESHIFTER
                 || random2(1000) < mod_speed( 250, speed ))
             {
                 monster_polymorph(monster, RANDOM_MONSTER, 0);
@@ -2008,7 +2208,7 @@ static bool handle_enchantment(struct monsters *monster)
             break;
 
         case ENCH_SHAPESHIFTER:     // this ench never runs out
-            if (monster->type == MONS_SHAPESHIFTER 
+            if (monster->type == MONS_SHAPESHIFTER
                 || random2(1000) < mod_speed( 1000 / ((15 * monster->hit_dice) / 5), speed ))
             {
                 monster_polymorph(monster, RANDOM_MONSTER, 0);
@@ -2164,7 +2364,11 @@ static void handle_nearby_ability(struct monsters *monster)
         if (coinflip() && !mons_friendly(monster)
             && monster->behaviour != BEH_WANDER)
         {
+#ifdef JP
+            simple_monster_message(monster, "はあなたを睨みつけた。");
+#else
             simple_monster_message(monster, " stares at you.");
+#endif
 
             if (you.paralysis < 10)
                 you.paralysis += 2 + random2(3);
@@ -2175,7 +2379,11 @@ static void handle_nearby_ability(struct monsters *monster)
         if (coinflip() && !mons_friendly(monster)
             && monster->behaviour != BEH_WANDER)
         {
+#ifdef JP
+            simple_monster_message(monster, "はあなたを睨みつけた。");
+#else
             simple_monster_message(monster, " stares at you.");
+#endif
 
             dec_mp(5 + random2avg(13, 3));
 
@@ -2200,8 +2408,8 @@ static void handle_nearby_ability(struct monsters *monster)
         {
             if (grd[monster->x][monster->y] == DNGN_SHALLOW_WATER
                 || grd[monster->x][monster->y] == DNGN_BLUE_FOUNTAIN
-                || (!mons_friendly(monster) 
-                    && grid_distance( monster->x, monster->y, 
+                || (!mons_friendly(monster)
+                    && grid_distance( monster->x, monster->y,
                                       you.x_pos, you.y_pos ) == 1
                     && (monster->hit_points == monster->max_hit_points
                         || (monster->hit_points > monster->max_hit_points / 2
@@ -2211,8 +2419,8 @@ static void handle_nearby_ability(struct monsters *monster)
             }
         }
         else if (monster_habitat(monster->type) == grd[monster->x][monster->y]
-                 && (one_chance_in(5) 
-                     || (grid_distance( monster->x, monster->y, 
+                 && (one_chance_in(5)
+                     || (grid_distance( monster->x, monster->y,
                                         you.x_pos, you.y_pos ) > 1
                             && monster->type != MONS_ELECTRICAL_EEL
                             && monster->type != MONS_LAVA_SNAKE
@@ -2284,11 +2492,11 @@ static bool handle_special_ability(struct monsters *monster, bolt & beem)
 
             // faking LOS by checking the neighbouring square
             int dx = targ->x - monster->x;
-            if (dx) 
+            if (dx)
                 dx /= dx;
 
             int dy = targ->y - monster->y;
-            if (dy) 
+            if (dy)
                 dy /= dy;
 
             const int tx = monster->x + dx;
@@ -2297,7 +2505,7 @@ static bool handle_special_ability(struct monsters *monster, bolt & beem)
             if (tx < 0 || tx > GXM || ty < 0 || ty > GYM)
                 continue;
 
-            if (grd[tx][ty] > DNGN_LAST_SOLID_TILE) 
+            if (grd[tx][ty] > DNGN_LAST_SOLID_TILE)
             {
                 monster->hit_points = -1;
                 used = true;
@@ -2317,7 +2525,11 @@ static bool handle_special_ability(struct monsters *monster, bolt & beem)
             break;
 
         // setup tracer
+#ifdef JP
+        strcpy(beem.beam_name, "溶岩の塊");
+#else
         strcpy(beem.beam_name, "glob of lava");
+#endif
         beem.range = 4;
         beem.rangeMax = 13;
         beem.damage = dice_def( 3, 10 );
@@ -2327,7 +2539,11 @@ static bool handle_special_ability(struct monsters *monster, bolt & beem)
         beem.hit = 20;
         beem.beam_source = monster_index(monster);
         beem.thrower = KILL_MON;
+#ifdef JP
+        beem.aux_source = "溶岩の塊";
+#else
         beem.aux_source = "glob of lava";
+#endif
 
         // fire tracer
         fire_tracer(monster, beem);
@@ -2335,7 +2551,11 @@ static bool handle_special_ability(struct monsters *monster, bolt & beem)
         // good idea?
         if (mons_should_fire(beem))
         {
+#ifdef JP
+            simple_monster_message(monster, "は溶岩を吐き出した！");
+#else
             simple_monster_message(monster, " spits lava!");
+#endif
             fire_beam(beem);
             used = true;
         }
@@ -2352,7 +2572,11 @@ static bool handle_special_ability(struct monsters *monster, bolt & beem)
             break;
 
         // setup tracer
+#ifdef JP
+        strcpy(beem.beam_name, "電撃の矢");
+#else
         strcpy(beem.beam_name, "bolt of electricity");
+#endif
         beem.damage = dice_def( 3, 6 );
         beem.colour = LIGHTCYAN;
         beem.type = SYM_ZAP;
@@ -2360,7 +2584,11 @@ static bool handle_special_ability(struct monsters *monster, bolt & beem)
         beem.hit = 150;
         beem.beam_source = monster_index(monster);
         beem.thrower = KILL_MON;
+#ifdef JP
+        beem.aux_source = "電撃の矢";
+#else
         beem.aux_source = "bolt of electricity";
+#endif
         beem.range = 4;
         beem.rangeMax = 13;
         beem.isBeam = true;
@@ -2371,7 +2599,11 @@ static bool handle_special_ability(struct monsters *monster, bolt & beem)
         // good idea?
         if (mons_should_fire(beem))
         {
+#ifdef JP
+            simple_monster_message(monster, "は電撃の矢を撃ち出した！");
+#else
             simple_monster_message(monster, " shoots out a bolt of electricity!");
+#endif
             fire_beam(beem);
             used = true;
         }
@@ -2428,7 +2660,11 @@ static bool handle_special_ability(struct monsters *monster, bolt & beem)
                 // good idea?
                 if (mons_should_fire(beem))
                 {
-                    simple_monster_message( monster, " makes a gesture!", 
+#ifdef JP
+                    simple_monster_message( monster, "は意味ありげに手を振りかざした！",
+#else
+                    simple_monster_message( monster, " makes a gesture!",
+#endif
                                             MSGCH_MONSTER_SPELL );
 
                     mons_cast(monster, beem, spell_cast);
@@ -2449,7 +2685,11 @@ static bool handle_special_ability(struct monsters *monster, bolt & beem)
     case MONS_KILLER_KLOWN:
         if (one_chance_in(7))
         {
+#ifdef JP
+            simple_monster_message(monster, "が消え去った。");
+#else
             simple_monster_message(monster, " blinks.");
+#endif
             monster_blink(monster);
         }
         break;
@@ -2473,7 +2713,11 @@ static bool handle_special_ability(struct monsters *monster, bolt & beem)
         // easy to set up and doesn't involve inventory.
 
         // set up the beam
+#ifdef JP
+        strcpy(beem.beam_name, "降り注ぐ大針");
+#else
         strcpy(beem.beam_name, "volley of spikes");
+#endif
         beem.range = 9;
         beem.rangeMax = 9;
         beem.hit = 14;
@@ -2483,7 +2727,11 @@ static bool handle_special_ability(struct monsters *monster, bolt & beem)
         beem.colour = LIGHTGREY;
         beem.flavour = BEAM_MISSILE;
         beem.thrower = KILL_MON;
+#ifdef JP
+        beem.aux_source = "降り注ぐ大針";
+#else
         beem.aux_source = "volley of spikes";
+#endif
         beem.isBeam = false;
 
         // fire tracer
@@ -2492,7 +2740,11 @@ static bool handle_special_ability(struct monsters *monster, bolt & beem)
         // good idea?
         if (mons_should_fire(beem))
         {
+#ifdef JP
+            simple_monster_message(monster, "は尻尾を振りかぶった！");
+#else
             simple_monster_message(monster, " flicks its tail!");
+#endif
             fire_beam(beem);
             used = true;
             // decrement # of volleys left
@@ -2524,7 +2776,11 @@ static bool handle_special_ability(struct monsters *monster, bolt & beem)
             // good idea?
             if (mons_should_fire(beem))
             {
+#ifdef JP
+                simple_monster_message(monster, "はブレスを吐いた。");
+#else
                 simple_monster_message(monster, " breathes.");
+#endif
                 fire_beam(beem);
                 mmov_x = 0;
                 mmov_y = 0;
@@ -2568,10 +2824,18 @@ static bool handle_potion(struct monsters *monster, bolt & beem)
                 && mons_holiness(monster->type) != MH_NONLIVING
                 && mons_holiness(monster->type) != MH_PLANT)
             {
+#ifdef JP
+                simple_monster_message(monster, "は薬を飲んだ。");
+#else
                 simple_monster_message(monster, " drinks a potion.");
+#endif
 
                 if (heal_monster(monster, 5 + random2(7), false))
+#ifdef JP
+                    simple_monster_message(monster, "の傷が治った！");
+#else
                     simple_monster_message(monster, " is healed!");
+#endif
 
                 if (mitm[monster->inv[MSLOT_POTION]].sub_type
                                                     == POT_HEAL_WOUNDS)
@@ -2595,7 +2859,11 @@ static bool handle_potion(struct monsters *monster, bolt & beem)
             // why only drink these if not near player? {dlb}
             if (!mons_near(monster))
             {
+#ifdef JP
+                simple_monster_message(monster, "は薬を飲んだ。");
+#else
                 simple_monster_message(monster, " drinks a potion.");
+#endif
 
                 mons_ench_f2(monster, beem);
 
@@ -2673,7 +2941,7 @@ static bool handle_reaching(struct monsters *monster)
 static bool handle_scroll(struct monsters *monster)
 {
     // yes, there is a logic to this ordering {dlb}:
-    if (mons_has_ench(monster, ENCH_CONFUSION) 
+    if (mons_has_ench(monster, ENCH_CONFUSION)
         || monster->behaviour == BEH_SLEEP
         || mons_has_ench( monster, ENCH_SUBMERGED ))
     {
@@ -2695,7 +2963,11 @@ static bool handle_scroll(struct monsters *monster)
             {
                 if (monster->behaviour == BEH_FLEE)
                 {
+#ifdef JP
+                    simple_monster_message(monster, "は巻物を読んだ。");
+#else
                     simple_monster_message(monster, " reads a scroll.");
+#endif
                     monster_teleport(monster, false);
                     read = true;
                 }
@@ -2707,8 +2979,13 @@ static bool handle_scroll(struct monsters *monster)
             {
                 if (mons_near(monster))
                 {
+#ifdef JP
+                    simple_monster_message(monster, "は巻物を読んだ。");
+                    simple_monster_message(monster, "が消え去った！");
+#else
                     simple_monster_message(monster, " reads a scroll.");
                     simple_monster_message(monster, " blinks!");
+#endif
                     monster_blink(monster);
                     read = true;
                 }
@@ -2718,7 +2995,11 @@ static bool handle_scroll(struct monsters *monster)
         case SCR_SUMMONING:
             if (mons_near(monster))
             {
+#ifdef JP
+                simple_monster_message(monster, "は巻物を読んだ。");
+#else
                 simple_monster_message(monster, " reads a scroll.");
+#endif
                 create_monster( MONS_ABOMINATION_SMALL, ENCH_ABJ_II,
                                 SAME_ATTITUDE(monster), monster->x, monster->y,
                                 monster->foe, 250 );
@@ -2837,7 +3118,7 @@ static bool handle_wand(struct monsters *monster, bolt &beem)
             return (false);
 
         case WAND_INVISIBILITY:
-            if (!mons_has_ench( monster, ENCH_INVIS ) 
+            if (!mons_has_ench( monster, ENCH_INVIS )
                 && !mons_has_ench( monster, ENCH_SUBMERGED ))
             {
                 beem.target_x = monster->x;
@@ -2876,10 +3157,18 @@ static bool handle_wand(struct monsters *monster, bolt &beem)
 
         if (niceWand || zap)
         {
+#ifdef JP
+            if (!simple_monster_message(monster, "はワンドを振りかざした。"))
+#else
             if (!simple_monster_message(monster, " zaps a wand."))
+#endif
             {
                 if (!silenced(you.x_pos, you.y_pos))
+#ifdef JP
+                    mpr("あなたはワンドを振る音を耳にした。");
+#else
                     mpr("You hear a zap.");
+#endif
             }
 
             // charge expenditure {dlb}
@@ -2922,12 +3211,12 @@ static bool handle_spell( struct monsters *monster, bolt & beem )
         return (false);           //jmf: shapeshiftes don't get spells, just
                                   //     physical powers.
     }
-    else if (mons_has_ench(monster, ENCH_CONFUSION) 
+    else if (mons_has_ench(monster, ENCH_CONFUSION)
             && !mons_flag(monster->type, M_CONFUSED))
     {
         return (false);
     }
-    else if (monster->type == MONS_PANDEMONIUM_DEMON 
+    else if (monster->type == MONS_PANDEMONIUM_DEMON
             && !ghost.values[ GVAL_DEMONLORD_SPELLCASTER ])
     {
         return (false);
@@ -2957,10 +3246,10 @@ static bool handle_spell( struct monsters *monster, bolt & beem )
                 spell_cast = MS_DIG;
                 finalAnswer = true;
             }
-            else if (hspell_pass[2] == MS_HEAL 
+            else if (hspell_pass[2] == MS_HEAL
                         && monster->hit_points < monster->max_hit_points)
             {
-                // The player's out of sight!  
+                // The player's out of sight!
                 // Quick, let's take a turn to heal ourselves. -- bwr
                 spell_cast = MS_HEAL;
                 finalAnswer = true;
@@ -2987,14 +3276,14 @@ static bool handle_spell( struct monsters *monster, bolt & beem )
         }
 
         // Promote the casting of useful spells for low-HP monsters.
-        if (!finalAnswer 
+        if (!finalAnswer
             && monster->hit_points < monster->max_hit_points / 4
             && !one_chance_in(4))
         {
             // Note: There should always be at least some chance we don't
             // get here... even if the monster is on it's last HP.  That
-            // way we don't have to worry about monsters infinitely casting 
-            // Healing on themselves (ie orc priests). 
+            // way we don't have to worry about monsters infinitely casting
+            // Healing on themselves (ie orc priests).
             if (monster->behaviour == BEH_FLEE
                 && ms_low_hitpoint_cast( monster, hspell_pass[5] ))
             {
@@ -3020,7 +3309,7 @@ static bool handle_spell( struct monsters *monster, bolt & beem )
             for (int i = 0; i < 6; i++)
             {
                 if (hspell_pass[i] == MS_NO_SPELL)
-                    num_no_spell++;    
+                    num_no_spell++;
                 else if (ms_waste_of_time( monster, hspell_pass[i] ))
                 {
                     hspell_pass[i] = MS_NO_SPELL;
@@ -3037,11 +3326,11 @@ static bool handle_spell( struct monsters *monster, bolt & beem )
             {
                 bool spellOK = false;
 
-                // setup spell - fleeing monsters will always try to 
+                // setup spell - fleeing monsters will always try to
                 // choose their emergency spell.
                 if (monster->behaviour == BEH_FLEE)
                 {
-                    spell_cast = (one_chance_in(5) ? MS_NO_SPELL 
+                    spell_cast = (one_chance_in(5) ? MS_NO_SPELL
                                                    : hspell_pass[5]);
                 }
                 else
@@ -3081,7 +3370,7 @@ static bool handle_spell( struct monsters *monster, bolt & beem )
                         // a measure of time instead of peeking to see
                         // if the player is still there). -- bwr
                         if (!mons_player_visible( monster )
-                            && (monster->target_x != you.x_pos 
+                            && (monster->target_x != you.x_pos
                                 || monster->target_y != you.y_pos
                                 || coinflip()))
                         {
@@ -3121,12 +3410,20 @@ static bool handle_spell( struct monsters *monster, bolt & beem )
                 if (silenced(monster->x, monster->y))
                     return (false);
 
+#ifdef JP
+                simple_monster_message( monster, "は立派な銀の角笛を吹き鳴らした。",
+#else
                 simple_monster_message( monster, " winds a great silver horn.",
+#endif
                                         MSGCH_MONSTER_SPELL );
             }
             else if (mons_is_demon( monster->type ))
             {
-                simple_monster_message( monster, " gestures.", 
+#ifdef JP
+                simple_monster_message( monster, "は意味ありげに手を振りかざした！",
+#else
+                simple_monster_message( monster, " gestures.",
+#endif
                                         MSGCH_MONSTER_SPELL );
             }
             else
@@ -3142,19 +3439,31 @@ static bool handle_spell( struct monsters *monster, bolt & beem )
                         switch (random2(3))
                         {
                         case 0:
-                            simple_monster_message( monster, 
+                            simple_monster_message( monster,
+#ifdef JP
+                                                    "は祈りを上げた。",
+#else
                                                     " prays.",
+#endif
                                                     MSGCH_MONSTER_SPELL );
                             break;
                         case 1:
-                            simple_monster_message( monster, 
+                            simple_monster_message( monster,
+#ifdef JP
+                                                    "は何やら奇妙な祈祷の言葉を呟いた。",
+#else
                                                     " mumbles some strange prayers.",
+#endif
                                                     MSGCH_MONSTER_SPELL );
                             break;
                         case 2:
                         default:
-                            simple_monster_message( monster, 
+                            simple_monster_message( monster,
+#ifdef JP
+                                                    "は祈祷の呪文を口にした。",
+#else
                                                     " utters an invocation.",
+#endif
                                                     MSGCH_MONSTER_SPELL );
                             break;
                         }
@@ -3165,21 +3474,33 @@ static bool handle_spell( struct monsters *monster, bolt & beem )
                         {
                         case 0:
                             // XXX: could be better, chosen to match the
-                            // ones in monspeak.cc... has the problem 
+                            // ones in monspeak.cc... has the problem
                             // that it doesn't suggest a vocal component. -- bwr
-                            simple_monster_message( monster, 
+                            simple_monster_message( monster,
+#ifdef JP
+                                                    "は荒々しく手を振りかざした。",
+#else
                                                     " gestures wildly.",
+#endif
                                                     MSGCH_MONSTER_SPELL );
                             break;
                         case 1:
-                            simple_monster_message( monster, 
+                            simple_monster_message( monster,
+#ifdef JP
+                                                    "は何やら奇妙な祈祷の言葉を呟いた。",
+#else
                                                     " mumbles some strange words.",
+#endif
                                                     MSGCH_MONSTER_SPELL );
                             break;
                         case 2:
                         default:
-                            simple_monster_message( monster, 
+                            simple_monster_message( monster,
+#ifdef JP
+                                                    "は呪文を唱えた。",
+#else
                                                     " casts a spell.",
+#endif
                                                     MSGCH_MONSTER_SPELL );
                             break;
                         }
@@ -3201,13 +3522,21 @@ static bool handle_spell( struct monsters *monster, bolt & beem )
                 case MONS_SERPENT_OF_HELL:
                 case MONS_QUICKSILVER_DRAGON:
                 case MONS_IRON_DRAGON:
+#ifdef JP
+                    if (!simple_monster_message(monster, "はブレスを吐いた。",
+#else
                     if (!simple_monster_message(monster, " breathes.",
+#endif
                                                 MSGCH_MONSTER_SPELL))
                     {
                         if (!silenced(monster->x, monster->y)
                             && !silenced(you.x_pos, you.y_pos))
                         {
+#ifdef JP
+                            mpr("あなたは轟きを耳にした。", MSGCH_MONSTER_SPELL);
+#else
                             mpr("You hear a roar.", MSGCH_MONSTER_SPELL);
+#endif
                         }
                     }
                     break;
@@ -3224,17 +3553,29 @@ static bool handle_spell( struct monsters *monster, bolt & beem )
                 case MONS_GREAT_ORB_OF_EYES:
                 case MONS_SHINING_EYE:
                 case MONS_EYE_OF_DEVASTATION:
+#ifdef JP
+                    simple_monster_message(monster, "は凝視した。", MSGCH_MONSTER_SPELL);
+#else
                     simple_monster_message(monster, " gazes.", MSGCH_MONSTER_SPELL);
+#endif
                     break;
 
                 case MONS_GIANT_ORANGE_BRAIN:
+#ifdef JP
+                    simple_monster_message(monster, "は脈動した。",
+#else
                     simple_monster_message(monster, " pulsates.",
+#endif
                                            MSGCH_MONSTER_SPELL);
                     break;
 
                 case MONS_NAGA:
                 case MONS_NAGA_WARRIOR:
+#ifdef JP
+                    simple_monster_message(monster, "は毒を吐いた。",
+#else
                     simple_monster_message(monster, " spits poison.",
+#endif
                                            MSGCH_MONSTER_SPELL);
                     break;
                 }
@@ -3245,7 +3586,11 @@ static bool handle_spell( struct monsters *monster, bolt & beem )
             if (monster->type == MONS_GERYON
                 && !silenced(you.x_pos, you.y_pos))
             {
+#ifdef JP
+                mpr("あなたは薄気味の悪い悲しげな声を耳にした。");
+#else
                 mpr("You hear a weird and mournful sound.");
+#endif
             }
         }
 
@@ -3253,7 +3598,11 @@ static bool handle_spell( struct monsters *monster, bolt & beem )
         if (spell_cast == MS_BLINK && monsterNearby)
             // why only cast blink if nearby? {dlb}
         {
+#ifdef JP
+            simple_monster_message(monster, "が消え去った！");
+#else
             simple_monster_message(monster, " blinks!");
+#endif
             monster_blink(monster);
         }
         else
@@ -3278,7 +3627,7 @@ static bool handle_spell( struct monsters *monster, bolt & beem )
 static bool handle_throw(struct monsters *monster, bolt & beem)
 {
     // yes, there is a logic to this ordering {dlb}:
-    if (mons_has_ench(monster, ENCH_CONFUSION) 
+    if (mons_has_ench(monster, ENCH_CONFUSION)
         || monster->behaviour == BEH_SLEEP
         || mons_has_ench( monster, ENCH_SUBMERGED ))
     {
@@ -3297,7 +3646,7 @@ static bool handle_throw(struct monsters *monster, bolt & beem)
         return (false);
 
     // poor 2-headed ogres {dlb}
-    if (monster->type == MONS_TWO_HEADED_OGRE || monster->type == MONS_ETTIN) 
+    if (monster->type == MONS_TWO_HEADED_OGRE || monster->type == MONS_ETTIN)
         return (false);
 
     // recent addition {GDL} - monsters won't throw if they can do melee.
@@ -3383,7 +3732,7 @@ void handle_monsters(void)
             }
 
             // Handle enchantments and clouds on nonmoving monsters:
-            if (monster->speed == 0) 
+            if (monster->speed == 0)
             {
                 if (env.cgrid[monster->x][monster->y] != EMPTY_CLOUD
                     && !mons_has_ench( monster, ENCH_SUBMERGED ))
@@ -3406,15 +3755,15 @@ void handle_monsters(void)
             if (monster->type == MONS_SHAPESHIFTER)
                 mons_add_ench( monster, ENCH_SHAPESHIFTER );
 
-            // We reset batty monsters from wander to seek here, instead 
+            // We reset batty monsters from wander to seek here, instead
             // of in handle_behaviour() since that will be called with
-            // every single movement, and we want these monsters to 
+            // every single movement, and we want these monsters to
             // hit and run. -- bwr
-            if (monster->foe != MHITNOT 
+            if (monster->foe != MHITNOT
                 && monster->behaviour == BEH_WANDER
                 && testbits( monster->flags, MF_BATTY ))
             {
-                monster->behaviour = BEH_SEEK;    
+                monster->behaviour = BEH_SEEK;
             }
 
             while (monster->speed_increment >= 80)
@@ -3448,7 +3797,7 @@ void handle_monsters(void)
 
                 // submerging monsters will hide from clouds
                 const int habitat = monster_habitat( monster->type );
-                if (habitat != DNGN_FLOOR 
+                if (habitat != DNGN_FLOOR
                     && habitat == grd[monster->x][monster->y]
                     && env.cgrid[monster->x][monster->y] != EMPTY_CLOUD)
                 {
@@ -3458,12 +3807,12 @@ void handle_monsters(void)
                 // regenerate:
                 if (monster_descriptor(monster->type, MDSC_REGENERATES)
 
-                    || (monster->type == MONS_FIRE_ELEMENTAL 
+                    || (monster->type == MONS_FIRE_ELEMENTAL
                         && (grd[monster->x][monster->y] == DNGN_LAVA
                             || env.cgrid[monster->x][monster->y] == CLOUD_FIRE
                             || env.cgrid[monster->x][monster->y] == CLOUD_FIRE_MON))
 
-                    || (monster->type == MONS_WATER_ELEMENTAL 
+                    || (monster->type == MONS_WATER_ELEMENTAL
                         && (grd[monster->x][monster->y] == DNGN_SHALLOW_WATER
                             || grd[monster->x][monster->y] == DNGN_DEEP_WATER))
 
@@ -3490,7 +3839,7 @@ void handle_monsters(void)
                 }
 
                 if (igrd[monster->x][monster->y] != NON_ITEM
-                    && (mons_itemuse(monster->type) == MONUSE_WEAPONS_ARMOUR 
+                    && (mons_itemuse(monster->type) == MONUSE_WEAPONS_ARMOUR
                         || mons_itemuse(monster->type) == MONUSE_EATS_ITEMS
                         || monster->type == MONS_NECROPHAGE
                         || monster->type == MONS_GHOUL))
@@ -3505,7 +3854,7 @@ void handle_monsters(void)
                 brkk = false;
 
                 if (mons_has_ench( monster, ENCH_CONFUSION )
-                    || (monster->type == MONS_AIR_ELEMENTAL 
+                    || (monster->type == MONS_AIR_ELEMENTAL
                         && mons_has_ench( monster, ENCH_SUBMERGED )))
                 {
                     mmov_x = random2(3) - 1;
@@ -3513,13 +3862,13 @@ void handle_monsters(void)
 
                     // bounds check: don't let confused monsters try to run
                     // off the map
-                    if (monster->target_x + mmov_x < 0 
+                    if (monster->target_x + mmov_x < 0
                             || monster->target_x + mmov_x >= GXM)
                     {
                         mmov_x = 0;
                     }
 
-                    if (monster->target_y + mmov_y < 0 
+                    if (monster->target_y + mmov_y < 0
                             || monster->target_y + mmov_y >= GYM)
                     {
                         mmov_y = 0;
@@ -3585,7 +3934,7 @@ void handle_monsters(void)
                 // see if we move into (and fight) an unfriendly monster
                 int targmon = mgrd[monster->x + mmov_x][monster->y + mmov_y];
                 if (targmon != NON_MONSTER
-                    && targmon != i 
+                    && targmon != i
                     && !mons_aligned(i, targmon))
                 {
                     // figure out if they fight
@@ -3689,7 +4038,7 @@ void handle_monsters(void)
         }                       // end of if (mons_class != -1)
     }                           // end of for loop
 
-    // Clear any summoning flags so that lower indiced 
+    // Clear any summoning flags so that lower indiced
     // monsters get their actions in the next round.
     for (i = 0; i < MAX_MONSTERS; i++)
     {
@@ -3724,7 +4073,7 @@ static bool handle_pickup(struct monsters *monster)
         int max_eat = roll_dice( 1, 10 );
         int eaten = 0;
 
-        for (item = igrd[monster->x][monster->y]; 
+        for (item = igrd[monster->x][monster->y];
              item != NON_ITEM && eaten < max_eat && hps_gained < 50;
              item = mitm[item].link)
         {
@@ -3745,7 +4094,7 @@ static bool handle_pickup(struct monsters *monster)
 
             // don't eat special game items
             if (mitm[item].base_type == OBJ_ORBS
-                || (mitm[item].base_type == OBJ_MISCELLANY 
+                || (mitm[item].base_type == OBJ_MISCELLANY
                     && mitm[item].sub_type == MISC_RUNE_OF_ZOT))
             {
                 continue;
@@ -3789,16 +4138,25 @@ static bool handle_pickup(struct monsters *monster)
             if (!silenced(you.x_pos, you.y_pos)
                 && !silenced(monster->x, monster->y))
             {
+#ifdef JP
+                strcpy(info, "あなたは");
+#else
                 strcpy(info, "You hear a");
+#endif
                 if (!monsterNearby)
+#ifdef JP
+                    strcat(info, "遠くに");
+                strcat(info, "物を食べる音を耳にした。");
+#else
                     strcat(info, " distant");
                 strcat(info, " slurping noise.");
+#endif
                 mpr(info);
             }
 
-            if (mons_flag( monster->type, M_SPLITS )) 
+            if (mons_flag( monster->type, M_SPLITS ))
             {
-                const int reqd = (monster->hit_dice <= 6) 
+                const int reqd = (monster->hit_dice <= 6)
                                             ? 50 : monster->hit_dice * 8;
 
                 if (monster->hit_points >= reqd)
@@ -3849,11 +4207,20 @@ static bool handle_pickup(struct monsters *monster)
 
         if (monsterNearby)
         {
+#ifdef JP
+            strcpy(info, ptr_monam(monster, DESC_PLAIN));
+            strcat(info, "は");
+#else
             strcpy(info, ptr_monam(monster, DESC_CAP_THE));
             strcat(info, " picks up ");
+#endif
             it_name(monster->inv[MSLOT_WEAPON], DESC_NOCAP_A, str_pass);
             strcat(info, str_pass);
+#ifdef JP
+            strcat(info, "を拾った。");
+#else
             strcat(info, ".");
+#endif
             mpr(info);
         }
         break;
@@ -3870,15 +4237,24 @@ static bool handle_pickup(struct monsters *monster)
         {
             if (monsterNearby)
             {
+#ifdef JP
+                strcpy(info, ptr_monam(monster, DESC_PLAIN));
+                strcat(info, "は");
+#else
                 strcpy(info, ptr_monam(monster, DESC_CAP_THE));
                 strcat(info, " picks up ");
+#endif
                 it_name(item, DESC_NOCAP_A, str_pass);
                 strcat(info, str_pass);
+#ifdef JP
+                strcat(info, "を拾った。");
+#else
                 strcat(info, ".");
+#endif
                 mpr(info);
             }
 
-            inc_mitm_item_quantity( monster->inv[MSLOT_MISSILE], 
+            inc_mitm_item_quantity( monster->inv[MSLOT_MISSILE],
                                     mitm[item].quantity );
 
             dec_mitm_item_quantity( item, mitm[item].quantity );
@@ -3897,11 +4273,20 @@ static bool handle_pickup(struct monsters *monster)
 
         if (monsterNearby)
         {
+#ifdef JP
+            strcpy(info, ptr_monam(monster, DESC_PLAIN));
+            strcat(info, "は");
+#else
             strcpy(info, ptr_monam(monster, DESC_CAP_THE));
             strcat(info, " picks up ");
+#endif
             it_name(monster->inv[MSLOT_MISSILE], DESC_NOCAP_A, str_pass);
             strcat(info, str_pass);
+#ifdef JP
+            strcat(info, "を拾った。");
+#else
             strcat(info, ".");
+#endif
             mpr(info);
         }
         break;
@@ -3914,11 +4299,20 @@ static bool handle_pickup(struct monsters *monster)
 
         if (monsterNearby)
         {
+#ifdef JP
+            strcpy(info, ptr_monam(monster, DESC_PLAIN));
+            strcat(info, "は");
+#else
             strcpy(info, ptr_monam(monster, DESC_CAP_THE));
             strcat(info, " picks up ");
+#endif
             it_name(monster->inv[MSLOT_WAND], DESC_NOCAP_A, str_pass);
             strcat(info, str_pass);
+#ifdef JP
+            strcat(info, "を拾った。");
+#else
             strcat(info, ".");
+#endif
             mpr(info);
         }
         break;
@@ -3931,11 +4325,20 @@ static bool handle_pickup(struct monsters *monster)
 
         if (monsterNearby)
         {
+#ifdef JP
+            strcpy(info, ptr_monam(monster, DESC_PLAIN));
+            strcat(info, "は");
+#else
             strcpy(info, ptr_monam(monster, DESC_CAP_THE));
             strcat(info, " picks up ");
+#endif
             it_name(monster->inv[MSLOT_SCROLL], DESC_NOCAP_A, str_pass);
             strcat(info, str_pass);
+#ifdef JP
+            strcat(info, "を拾った。");
+#else
             strcat(info, ".");
+#endif
             mpr(info);
         }
         break;
@@ -3948,11 +4351,20 @@ static bool handle_pickup(struct monsters *monster)
 
         if (monsterNearby)
         {
+#ifdef JP
+            strcpy(info, ptr_monam(monster, DESC_PLAIN));
+            strcat(info, "は");
+#else
             strcpy(info, ptr_monam(monster, DESC_CAP_THE));
             strcat(info, " picks up ");
+#endif
             it_name(monster->inv[MSLOT_POTION], DESC_NOCAP_A, str_pass);
             strcat(info, str_pass);
+#ifdef JP
+            strcat(info, "を拾った。");
+#else
             strcat(info, ".");
+#endif
             mpr(info);
         }
         break;
@@ -3972,11 +4384,20 @@ static bool handle_pickup(struct monsters *monster)
 
         if (monsterNearby)
         {
+#ifdef JP
+            strcpy(info, ptr_monam(monster, DESC_PLAIN));
+            strcat(info, "は");
+#else
             strcpy(info, ptr_monam(monster, DESC_CAP_THE));
             strcat(info, " eats ");
+#endif
             it_name(item, DESC_NOCAP_THE, str_pass);
             strcat(info, str_pass);
+#ifdef JP
+            strcat(info, "を食べた。");
+#else
             strcat(info, ".");
+#endif
             mpr(info);
         }
 
@@ -3987,18 +4408,26 @@ static bool handle_pickup(struct monsters *monster)
         if (monsterNearby)
         {
 
-            strcpy(info, monam( monster->number, monster->type, 
-                                player_monster_visible( monster ), 
+#ifdef JP
+            strcpy(info, monam( monster->number, monster->type,
+                                player_monster_visible( monster ),
+                                DESC_PLAIN ));
+
+            strcat(info, "は金貨を拾った。");
+#else
+            strcpy(info, monam( monster->number, monster->type,
+                                player_monster_visible( monster ),
                                 DESC_CAP_THE ));
 
             strcat(info, " picks up some gold.");
+#endif
             mpr(info);
         }
 
         if (monster->inv[MSLOT_GOLD] != NON_ITEM)
         {
             // transfer gold to monster's object, destroy ground object
-            inc_mitm_item_quantity( monster->inv[MSLOT_GOLD], 
+            inc_mitm_item_quantity( monster->inv[MSLOT_GOLD],
                                     mitm[item].quantity );
 
             destroy_item( item );
@@ -4015,10 +4444,10 @@ static bool handle_pickup(struct monsters *monster)
     }
 
     // Item has been picked-up, move to monster inventory.
-    mitm[item].x = 0; 
-    mitm[item].y = 0; 
+    mitm[item].x = 0;
+    mitm[item].y = 0;
 
-    // Monster's only take the top item of stacks, so relink the 
+    // Monster's only take the top item of stacks, so relink the
     // top item, and unlink the item.
     igrd[monster->x][monster->y] = mitm[item].link;
     mitm[item].link = NON_ITEM;
@@ -4035,7 +4464,7 @@ static void monster_move(struct monsters *monster)
     int count_x, count_y, count;
     int okmove = DNGN_SHALLOW_WATER;
 
-    const int habitat = monster_habitat( monster->type ); 
+    const int habitat = monster_habitat( monster->type );
     bool deep_water_available = false;
 
     // let's not even bother with this if mmov_x and mmov_y are zero.
@@ -4047,7 +4476,7 @@ static void monster_move(struct monsters *monster)
     if (monster->type == MONS_FIRE_ELEMENTAL || one_chance_in(5))
         okmove = DNGN_WATER_STUCK;
 
-    if (mons_flies(monster) > 0 
+    if (mons_flies(monster) > 0
         || habitat != DNGN_FLOOR
         || mons_flag( monster->type, M_AMPHIBIOUS ))
     {
@@ -4093,7 +4522,7 @@ static void monster_move(struct monsters *monster)
                     good_move[count_x][count_y] = false;
                     continue;
                 }
-            } 
+            }
             else if (grd[ targ_x ][ targ_y ] < okmove)
             {
                 good_move[count_x][count_y] = false;
@@ -4115,16 +4544,16 @@ static void monster_move(struct monsters *monster)
             // Water elementals avoid fire and heat
             if (monster->type == MONS_WATER_ELEMENTAL
                 && (target_grid == DNGN_LAVA
-                    || targ_cloud == CLOUD_FIRE 
+                    || targ_cloud == CLOUD_FIRE
                     || targ_cloud == CLOUD_FIRE_MON
-                    || targ_cloud == CLOUD_STEAM 
+                    || targ_cloud == CLOUD_STEAM
                     || targ_cloud == CLOUD_STEAM_MON))
             {
                 good_move[count_x][count_y] = false;
                 continue;
             }
 
-            // Fire elementals avoid water and cold 
+            // Fire elementals avoid water and cold
             if (monster->type == MONS_FIRE_ELEMENTAL
                 && (target_grid == DNGN_DEEP_WATER
                     || target_grid == DNGN_SHALLOW_WATER
@@ -4253,7 +4682,7 @@ static void monster_move(struct monsters *monster)
     if (grd[monster->x + mmov_x][monster->y + mmov_y] == DNGN_CLOSED_DOOR
         || (grd[monster->x + mmov_x][monster->y + mmov_y] == DNGN_SECRET_DOOR
             && (mons_intel(monster_index(monster)) == I_HIGH
-            	|| mons_intel(monster_index(monster)) == I_NORMAL)))
+                || mons_intel(monster_index(monster)) == I_NORMAL)))
     {
         if (monster->type == MONS_ZOMBIE_SMALL
             || monster->type == MONS_ZOMBIE_LARGE
@@ -4287,10 +4716,19 @@ static void monster_move(struct monsters *monster)
         if (!silenced(you.x_pos, you.y_pos)
             && !silenced(monster->x, monster->y))
         {
+#ifdef JP
+            strcpy(info, "あなたは");
+#else
             strcpy(info, "You hear a");
+#endif
             if (!mons_near(monster))
+#ifdef JP
+                strcat(info, "遠くに");
+            strcat(info, "物を食べる音を耳にした。");
+#else
                 strcat(info, " distant");
             strcat(info, " slurping noise.");
+#endif
             mpr(info);
         }
 
@@ -4303,7 +4741,7 @@ static void monster_move(struct monsters *monster)
         if (mons_flag( monster->type, M_SPLITS ))
         {
             // and here is where the jelly might divide {dlb}
-            const int reqd = (monster->hit_dice < 6) ? 50 
+            const int reqd = (monster->hit_dice < 6) ? 50
                                                      : monster->hit_dice * 8;
 
             if (monster->hit_points >= reqd)
@@ -4313,13 +4751,13 @@ static void monster_move(struct monsters *monster)
 
 
     // water creatures have a preferance for water they can hide in -- bwr
-    if (habitat == DNGN_DEEP_WATER 
+    if (habitat == DNGN_DEEP_WATER
         && deep_water_available
         && grd[monster->x][monster->y] != DNGN_DEEP_WATER
         && grd[monster->x + mmov_x][monster->y + mmov_y] != DNGN_DEEP_WATER
-        && (monster->x + mmov_x != you.x_pos 
+        && (monster->x + mmov_x != you.x_pos
             || monster->y + mmov_y != you.y_pos)
-        && (coinflip() 
+        && (coinflip()
             || monster->hit_points <= (monster->max_hit_points * 3) / 4))
     {
         count = 0;
@@ -4336,8 +4774,8 @@ static void monster_move(struct monsters *monster)
 
                     if (one_chance_in( count ))
                     {
-                        mmov_x = count_x - 1;  
-                        mmov_y = count_y - 1; 
+                        mmov_x = count_x - 1;
+                        mmov_y = count_y - 1;
                     }
                 }
             }
@@ -4352,7 +4790,7 @@ static void monster_move(struct monsters *monster)
     if (good_move[mmov_x + 1][mmov_y + 1] == false)
     {
         int current_distance = grid_distance( monster->x, monster->y,
-                                              monster->target_x, 
+                                              monster->target_x,
                                               monster->target_y );
 
         int dir = -1;
@@ -4396,7 +4834,7 @@ static void monster_move(struct monsters *monster)
                 {
                     dist[i] = grid_distance( monster->x + compass_x[newdir],
                                              monster->y + compass_y[newdir],
-                                             monster->target_x, 
+                                             monster->target_x,
                                              monster->target_y );
                 }
                 else
@@ -4459,7 +4897,11 @@ forget_it:
             grd[monster->x + mmov_x][monster->y + mmov_y] = DNGN_FLOOR;
 
             if (!silenced(you.x_pos, you.y_pos))
+#ifdef JP
+                mpr("あなたは壁を削る音を耳にした。");
+#else
                 mpr("You hear a grinding noise.");
+#endif
         }
     }
 
@@ -4476,13 +4918,18 @@ forget_it:
             mmov_y = 0;
         }
 
-        // If we're following the player through stairs, the only valid 
+        // If we're following the player through stairs, the only valid
         // movement is towards the player. -- bwr
         if (testbits( monster->flags, MF_TAKING_STAIRS ))
         {
 #if DEBUG_DIAGNOSTICS
+#ifdef JP
+            snprintf( info, INFO_SIZE, "%sは後に続くために行動順を飛ばしている。",
+                      ptr_monam( monster, DESC_PLAIN ) );
+#else
             snprintf( info, INFO_SIZE, "%s is skipping movement in order to follow.",
                       ptr_monam( monster, DESC_CAP_THE ) );
+#endif
 
             mpr( info, MSGCH_DIAGNOSTICS );
 #endif
@@ -4502,7 +4949,7 @@ forget_it:
         if (monster->type == MONS_EFREET
             || monster->type == MONS_FIRE_ELEMENTAL)
         {
-            place_cloud( CLOUD_FIRE_MON, monster->x, monster->y, 
+            place_cloud( CLOUD_FIRE_MON, monster->x, monster->y,
                          2 + random2(4) );
         }
 
@@ -4539,7 +4986,11 @@ static bool plant_spit(struct monsters *monster, struct bolt &pbolt)
     char spit_string[INFO_SIZE];
 
     // setup plant spit
+#ifdef JP
+    strcpy( pbolt.beam_name, "強酸" );
+#else
     strcpy( pbolt.beam_name, "acid" );
+#endif
     pbolt.type = SYM_ZAP;
     pbolt.range = 9;
     pbolt.rangeMax = 9;
@@ -4556,11 +5007,23 @@ static bool plant_spit(struct monsters *monster, struct bolt &pbolt)
 
     if (mons_should_fire(pbolt))
     {
+#ifdef JP
+        strcpy( spit_string, "はあなたに" );
+#else
         strcpy( spit_string, " spits" );
+#endif
         if (pbolt.target_x == you.x_pos && pbolt.target_y == you.y_pos)
+#ifdef JP
+            strcat( spit_string, "消化液を吐いた" );
+#else
             strcat( spit_string, " at you" );
+#endif
 
+#ifdef JP
+        strcat( spit_string, "。" );
+#else
         strcat( spit_string, "." );
+#endif
         simple_monster_message( monster, spit_string );
 
         fire_beam( pbolt );
@@ -4587,7 +5050,11 @@ static void mons_in_cloud(struct monsters *monster)
     switch (env.cloud[wc].type)
     {
     case CLOUD_DEBUGGING:
+#ifdef JP
+        cprintf("致命的エラー: モンスターが存在しない雲に乗り上げた！");
+#else
         cprintf("Fatal error: monster steps on nonexistent cloud!");
+#endif
         exit(0);
         return;
 
@@ -4600,7 +5067,11 @@ static void mons_in_cloud(struct monsters *monster)
             return;
         }
 
+#ifdef JP
+        simple_monster_message(monster, "は炎に巻かれた！");
+#else
         simple_monster_message(monster, " is engulfed in flame!");
+#endif
 
         if (mons_res_fire(monster) > 0)
             return;
@@ -4616,7 +5087,11 @@ static void mons_in_cloud(struct monsters *monster)
 
     case CLOUD_STINK:
     case CLOUD_STINK_MON:
+#ifdef JP
+        simple_monster_message(monster, "は毒ガスに巻き込まれた！");
+#else
         simple_monster_message(monster, " is engulfed in noxious gasses!");
+#endif
 
         if (mons_res_poison(monster) > 0)
             return;
@@ -4631,7 +5106,11 @@ static void mons_in_cloud(struct monsters *monster)
 
     case CLOUD_COLD:
     case CLOUD_COLD_MON:
+#ifdef JP
+        simple_monster_message(monster, "は凍てつく気体に巻き込まれた！");
+#else
         simple_monster_message(monster, " is engulfed in freezing vapours!");
+#endif
 
         if (mons_res_cold(monster) > 0)
             return;
@@ -4648,7 +5127,11 @@ static void mons_in_cloud(struct monsters *monster)
     // what of armour of poison resistance here? {dlb}
     case CLOUD_POISON:
     case CLOUD_POISON_MON:
+#ifdef JP
+        simple_monster_message(monster, "は毒の煙霧に巻き込まれた！");
+#else
         simple_monster_message(monster, " is engulfed in a cloud of poison!");
+#endif
 
         if (mons_res_poison(monster) > 0)
             return;
@@ -4669,7 +5152,11 @@ static void mons_in_cloud(struct monsters *monster)
         if (monster->type == MONS_STEAM_DRAGON)
             return;
 
+#ifdef JP
+        simple_monster_message(monster, "は蒸気に巻き込まれた！");
+#else
         simple_monster_message(monster, " is engulfed in steam!");
+#endif
 
         if (mons_res_fire(monster) > 0)
             return;
@@ -4684,7 +5171,11 @@ static void mons_in_cloud(struct monsters *monster)
 
     case CLOUD_MIASMA:
     case CLOUD_MIASMA_MON:
+#ifdef JP
+        simple_monster_message(monster, "は暗黒の瘴気に巻き込まれた！");
+#else
         simple_monster_message(monster, " is engulfed in a dark miasma!");
+#endif
 
         if (mons_holiness(monster->type) != MH_NATURAL)
             return;
@@ -4836,15 +5327,24 @@ bool message_current_target(void)
 
         if (mons_near(montarget) && player_monster_visible( montarget ))
         {
-            snprintf( info, INFO_SIZE, 
+            snprintf( info, INFO_SIZE,
+#ifdef JP
+                      "あなたは現在、%sに狙いをつけている。(p/tで発射)",
+                      ptr_monam(montarget, DESC_PLAIN) );
+#else
                       "You are currently targeting %s (use p/t to fire).",
                       ptr_monam(montarget, DESC_NOCAP_THE) );
+#endif
 
             mpr(info);
             return (true);        // early return {dlb}
         }
 
+#ifdef JP
+        mpr("あなたが狙いをつける対象はいない。");
+#else
         mpr("You have no current target.");
+#endif
     }
 
     return (false);
@@ -4878,7 +5378,7 @@ bool heal_monster(struct monsters * patient, int health_boost,
         return (false);
     else
     {
-        patient->hit_points += health_boost; 
+        patient->hit_points += health_boost;
 
         if (patient->hit_points > patient->max_hit_points)
         {

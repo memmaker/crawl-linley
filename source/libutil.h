@@ -11,6 +11,10 @@
 #ifndef LIBUTIL_H
 #define LIBUTIL_H
 
+void play_sound(const char *file);
+
+bool pattern_match(const char *pattern, const char *text);
+
 void get_input_line( char *const buff, int len );
 
 #ifdef NEED_USLEEP

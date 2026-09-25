@@ -11,6 +11,7 @@
  */
 
 #include "AppHdr.h"
+#include "chardump.h"
 #include "shopping.h"
 
 #include <stdio.h>
@@ -31,14 +32,73 @@
 #include "player.h"
 #include "randart.h"
 #include "spl-book.h"
+#include "stash.h"
 #include "stuff.h"
-
 
 static char in_a_shop(char shoppy, char id[4][50]);
 static char more3(void);
 static void purchase( int shop, int item_got, int cost );
 static void shop_init_id(int i, FixedArray < int, 4, 50 > &shop_id);
 static void shop_print(const char *shoppy, char sh_line);
+
+
+#ifdef JP
+    //50
+    const char *rand_store_names[] = {
+    "アーヴィン",
+    "アラン",
+    "アンディ",
+    "イシュメル",
+    "エグバード",
+    "ガッド",
+    "カルル",
+    "ギュンター",
+    "ジョン",
+    "ジョニー",
+    "ドゥワイト",
+    "ディータ",
+    "デリック",
+    "ナフム",
+    "ネイサン",
+    "バリー",
+    "バルテル",
+    "ブレンダン",
+    "マイク",
+    "マラカイ",
+    "ライナス",
+    "ルーテル",
+    "レイフ",
+    "レスター",
+    "ロジャー",
+    "アラベラ",
+    "アルマ",
+    "アレシア",
+    "アデル",
+    "イルマ",
+    "エレイン",
+    "エステル",
+    "カミラ",
+    "カレン",
+    "テレジア",
+    "ドゥルシラ",
+    "ナタリア",
+    "ネリー",
+    "ハーマイアニ",
+    "パウラ",
+    "マリー",
+    "マルティナ",
+    "モニカ",
+    "リネット",
+    "ルル",
+    "レーナ",
+    "レジナ",
+    "ローレル",
+    "ロウィーナ",
+    "ロレッタ",
+    };
+#endif
+
+
 static void shop_set_ident_type(int i, FixedArray < int, 4, 50 > &shop_id,
                                 unsigned char base_type, unsigned char sub_type);
 static void shop_uninit_id(int i, FixedArray < int, 4, 50 > &shop_id);
@@ -54,7 +114,7 @@ char in_a_shop( char shoppy, char id[4][50] )
     char st_pass[ ITEMNAME_SIZE ] = "";
     unsigned int gp_value = 0;
     char i;
-    unsigned char ft;
+    unsigned char ft, yn;
 
 #ifdef DOS_TERM
     char buffer[4800];
@@ -68,8 +128,17 @@ char in_a_shop( char shoppy, char id[4][50] )
     clrscr();
     int itty = 0;
 
-    snprintf( info, INFO_SIZE, "Welcome to %s!", 
+#ifdef JP
+    snprintf( info, INFO_SIZE, "%sにようこそ！",
+#else
+    snprintf( info, INFO_SIZE, "Welcome to %s!",
+#endif
              shop_name(env.shop[shoppy].x, env.shop[shoppy].y) );
+
+#ifdef STASH_TRACKING
+    ShopInfo &si = stashes.get_shop(env.shop[shoppy].x, env.shop[shoppy].y);
+    si.set_name(shop_name(env.shop[shoppy].x, env.shop[shoppy].y));
+#endif
 
     shop_print(info, 20);
 
@@ -89,9 +158,16 @@ char in_a_shop( char shoppy, char id[4][50] )
     clrscr();
     itty = igrd[0][5 + shoppy];
 
+#ifdef STASH_TRACKING
+    si.reset();
+#endif
     if (itty == NON_ITEM)
     {
+#ifdef JP
+        shop_print("申し訳ない。店はもう在庫切れだ。", 20);
+#else
         shop_print("I'm sorry, my shop is empty now.", 20);
+#endif
         more3();
         goto goodbye;
     }
@@ -127,11 +203,24 @@ char in_a_shop( char shoppy, char id[4][50] )
         if (gp_value <= 1)
             gp_value = 1;
 
+        string desc;
+        if (is_dumpable_artifact(mitm[itty], Options.verbose_dump))
+            desc = munge_description(get_item_description(mitm[itty],
+                                                          Options.verbose_dump,
+                                                          true ));
+#   ifdef STASH_TRACKING
+        si.add_item(string(st_pass), desc, gp_value);
+#   endif
+
         gotoxy(60, i);
         // cdl - itoa(gp_value, st_pass, 10);
         snprintf(st_pass, sizeof(st_pass), "%5d", gp_value);
         cprintf(st_pass);
+#ifdef JP
+        cprintf("ゴールド");
+#else
         cprintf(" gold");
+#endif
         if (mitm[itty].link == NON_ITEM)
             break;
 
@@ -140,17 +229,29 @@ char in_a_shop( char shoppy, char id[4][50] )
 
     textcolor(LIGHTGREY);
 
+#ifdef JP
+    shop_print("対応する文字:アイテム購入 x/Esc:店を出る ?/*:持ち物を確認 v:商品の詳細", 23);
+#else
     shop_print("Type letter to buy item, x/Esc to leave, ?/* for inventory, v to examine.", 23);
+#endif
 
   purchase:
+#ifdef JP
+    snprintf( info, INFO_SIZE, "あなたは%d枚の金貨を持っている。", you.gold );
+#else
     snprintf( info, INFO_SIZE, "You have %d gold piece%s.", you.gold,
              (you.gold == 1) ? "" : "s" );
+#endif
 
     textcolor(YELLOW);
     shop_print(info, 19);
 
     textcolor(CYAN);
+#ifdef JP
+    shop_print("どれを買いますか？", 20);
+#else
     shop_print("What would you like to purchase?", 20);
+#endif
     textcolor(LIGHTGREY);
 
     ft = get_ch();
@@ -161,7 +262,11 @@ char in_a_shop( char shoppy, char id[4][50] )
     if (ft == 'v')
     {
         textcolor(CYAN);
+#ifdef JP
+        shop_print("どのアイテムを調べますか？", 20);
+#else
         shop_print("Examine which item?", 20);
+#endif
         textcolor(LIGHTGREY);
         ft = get_ch();
 
@@ -176,13 +281,19 @@ char in_a_shop( char shoppy, char id[4][50] )
 
         if (shop_items[ft] == NON_ITEM)
         {
+#ifdef JP
+            shop_print("残念だが、そんな商品は置いていないよ。", 20);
+#else
             shop_print("I'm sorry, you seem to be confused.", 20);
+#endif
             more3();
             goto purchase;
         }
 
         describe_item( mitm[shop_items[ft]] );
-
+#ifdef USE_MULTIWIN //force getch
+        getch();
+#endif
         goto print_stock;
     }
 
@@ -200,7 +311,11 @@ char in_a_shop( char shoppy, char id[4][50] )
     if (ft < 'a' || ft > 'z')   // see earlier comments re: uppercase {dlb}
     {
       huh:
+#ifdef JP
+        shop_print("なんだって？", 20);
+#else
         shop_print("Huh?", 20);
+#endif
         more3();
         goto purchase;
     }
@@ -212,7 +327,11 @@ char in_a_shop( char shoppy, char id[4][50] )
 
     if (shop_items[ft] == NON_ITEM)
     {
+#ifdef JP
+        shop_print("残念だが、そんな商品は置いていないよ。", 20);
+#else
         shop_print("I'm sorry, you seem to be confused.", 20);
+#endif
         more3();
         goto purchase;
     }
@@ -221,10 +340,25 @@ char in_a_shop( char shoppy, char id[4][50] )
 
     if (gp_value > you.gold)
     {
+#ifdef JP
+        shop_print("申し訳ないが、お金が足りないよ。", 20);
+#else
         shop_print("I'm sorry, you don't seem to have enough money.", 20);
+#endif
         more3();
         goto purchase;
     }
+
+    it_name(shop_items[ft], DESC_NOCAP_A, st_pass);
+#ifdef JP
+    strcat(st_pass, "を買いますか? [y/n]");
+#else
+    strcat(st_pass, "? [y/n]");
+#endif
+    shop_print(st_pass, 20);
+    yn = getch();
+    if ( (yn != 'y')&&(yn != 'Y') )
+        goto purchase;
 
     shop_set_ident_type( shoppy, shop_id, mitm[shop_items[ft]].base_type,
                          mitm[shop_items[ft]].sub_type );
@@ -235,7 +369,11 @@ char in_a_shop( char shoppy, char id[4][50] )
 
   goodbye:
     //clear_line();
+#ifdef JP
+    shop_print("それでは、ごきげんよう！", 20);
+#else
     shop_print("Goodbye!", 20);
+#endif
     more3();
 
 #ifdef DOS_TERM
@@ -331,7 +469,11 @@ char more3(void)
     char keyin = 0;
 
     gotoxy(70, 20);
+#ifdef JP
+    cprintf("-続く-");
+#else
     cprintf("-more-");
+#endif
     keyin = getch();
     if (keyin == 0)
         getch();
@@ -348,10 +490,14 @@ static void purchase( int shop, int item_got, int cost )
     // Shopkeepers will now place goods you can't carry outside the shop.
     if (num < mitm[item_got].quantity)
     {
+#ifdef JP
+        snprintf( info, INFO_SIZE, "持ちきれないようだから、店の外に運んでおくよ。" );
+#else
         snprintf( info, INFO_SIZE, "I'll put %s outside for you.",
                  (mitm[item_got].quantity == 1) ? "it" :
-                 (num > 0)                      ? "the rest" 
+                 (num > 0)                      ? "the rest"
                                                 : "these" );
+#endif
 
         shop_print( info, 20 );
         more3();
@@ -360,7 +506,7 @@ static void purchase( int shop, int item_got, int cost )
     }
 }                               // end purchase()
 
-// This probably still needs some work.  Rings used to be the only 
+// This probably still needs some work.  Rings used to be the only
 // artefacts which had a change in price, and that value corresponds
 // to returning 50 from this function.  Good artefacts will probably
 // be returning just over 30 right now.  Note that this isn't used
@@ -378,9 +524,9 @@ int randart_value( const item_def &item )
     // Brands are already accounted for via existing ego checks
 
     // This should probably be more complex... but this isn't so bad:
-    ret += 3 * prop[ RAP_AC ] + 3 * prop[ RAP_EVASION ] 
-            + 3 * prop[ RAP_ACCURACY ] + 3 * prop[ RAP_DAMAGE ] 
-            + 6 * prop[ RAP_STRENGTH ] + 6 * prop[ RAP_INTELLIGENCE ] 
+    ret += 3 * prop[ RAP_AC ] + 3 * prop[ RAP_EVASION ]
+            + 3 * prop[ RAP_ACCURACY ] + 3 * prop[ RAP_DAMAGE ]
+            + 6 * prop[ RAP_STRENGTH ] + 6 * prop[ RAP_INTELLIGENCE ]
             + 6 * prop[ RAP_DEXTERITY ];
 
     // These resistances have meaningful levels
@@ -709,7 +855,7 @@ unsigned int item_value( item_def item, char id[4][50], bool ident )
         }
 
         // elf/dwarf
-        if (cmp_equip_race( item, ISFLAG_ELVEN ) 
+        if (cmp_equip_race( item, ISFLAG_ELVEN )
                 || cmp_equip_race( item, ISFLAG_DWARVEN ))
         {
             valued *= 12;
@@ -763,10 +909,10 @@ unsigned int item_value( item_def item, char id[4][50], bool ident )
         {
             if (item_ident( item, ISFLAG_KNOW_TYPE ))
                 valued += (7 * randart_value( item ));
-            else 
+            else
                 valued += 50;
         }
-        else if (item_ident( item, ISFLAG_KNOW_TYPE ) 
+        else if (item_ident( item, ISFLAG_KNOW_TYPE )
                 && !cmp_equip_desc( item, 0 ))
         {
             valued += 20;
@@ -978,7 +1124,7 @@ unsigned int item_value( item_def item, char id[4][50], bool ident )
             valued /= 10;
         }
 
-        if (cmp_equip_race( item, ISFLAG_ELVEN ) 
+        if (cmp_equip_race( item, ISFLAG_ELVEN )
                 || cmp_equip_race( item, ISFLAG_DWARVEN ))
         {
             valued *= 12;
@@ -1017,7 +1163,7 @@ unsigned int item_value( item_def item, char id[4][50], bool ident )
             else
                 valued += 50;
         }
-        else if (item_ident( item, ISFLAG_KNOW_TYPE ) 
+        else if (item_ident( item, ISFLAG_KNOW_TYPE )
                 && !cmp_equip_desc( item, 0 ))
         {
             valued += 20;
@@ -1305,9 +1451,9 @@ unsigned int item_value( item_def item, char id[4][50], bool ident )
 
         if (id[2][item.sub_type] > 0)
         {
-            if (item_ident( item, ISFLAG_KNOW_PLUSES ) 
+            if (item_ident( item, ISFLAG_KNOW_PLUSES )
                 && (item.sub_type == RING_PROTECTION
-                    || item.sub_type == RING_STRENGTH 
+                    || item.sub_type == RING_STRENGTH
                     || item.sub_type == RING_EVASION
                     || item.sub_type == RING_DEXTERITY
                     || item.sub_type == RING_INTELLIGENCE
@@ -1470,14 +1616,14 @@ unsigned int item_value( item_def item, char id[4][50], bool ident )
     //case 10: break;
 
     case OBJ_BOOKS:
-        valued = 150 + (item_ident( item, ISFLAG_KNOW_TYPE ) 
+        valued = 150 + (item_ident( item, ISFLAG_KNOW_TYPE )
                                     ? book_rarity(item.sub_type) * 50 : 0);
         break;
 
     case OBJ_STAVES:
         if (item_not_ident( item, ISFLAG_KNOW_TYPE ))
             valued = 120;
-        else if (item.sub_type == STAFF_SMITING 
+        else if (item.sub_type == STAFF_SMITING
                 || item.sub_type == STAFF_STRIKING
                 || item.sub_type == STAFF_WARDING
                 || item.sub_type == STAFF_DISCOVERY)
@@ -1513,7 +1659,11 @@ void shop(void)
 
     if (i == MAX_SHOPS)
     {
+#ifdef JP
+        mpr("お助け！あり得べかざる店だ。");
+#else
         mpr("Help! Non-existent shop.");
+#endif
         return;
     }
 
@@ -1550,24 +1700,54 @@ const char *shop_name(int sx, int sy)
 
     if (shoppy == MAX_SHOPS)
     {
+#ifdef JP
+        mpr("お助け！あり得べかざる店だ。");
+        return ("Buggy Shop");
+#else
         mpr("Help! Non-existent shop.");
         return ("Buggy Shop");
+#endif
     }
 
     int shop_type = env.shop[shoppy].type;
 
     char st_p[ITEMNAME_SIZE];
 
+#ifdef JP
+    strcpy(sh_name, "『");
+    //env.shop[shoppy].keeper_name[0]は1～200
+    strcat(sh_name, rand_store_names[ (env.shop[shoppy].keeper_name[0] -1) / 4 ] );
+    strcat(sh_name, "の");
+#else
     make_name( env.shop[shoppy].keeper_name[0], env.shop[shoppy].keeper_name[1],
                env.shop[shoppy].keeper_name[2], 3, st_p );
-
     strcpy(sh_name, st_p);
     strcat(sh_name, "'s ");
+#endif
 
     if (shop_type == SHOP_WEAPON_ANTIQUE || shop_type == SHOP_ARMOUR_ANTIQUE)
+#ifdef JP
+        strcat( sh_name, "骨董" );
+#else
         strcat( sh_name, "Antique " );
+#endif
 
     strcat(sh_name, (shop_type == SHOP_WEAPON
+#ifdef JP
+                     || shop_type == SHOP_WEAPON_ANTIQUE) ? "武器" :
+                    (shop_type == SHOP_ARMOUR
+                     || shop_type == SHOP_ARMOUR_ANTIQUE) ? "防具" :
+
+                    (shop_type == SHOP_JEWELLERY)         ? "宝石" :
+                    (shop_type == SHOP_WAND)              ? "魔法のワンド" :
+                    (shop_type == SHOP_BOOK)              ? "書物" :
+                    (shop_type == SHOP_FOOD)              ? "食料品" :
+                    (shop_type == SHOP_SCROLL)            ? "魔法の巻物" :
+                    (shop_type == SHOP_GENERAL_ANTIQUE)   ? "骨董屋" :
+                    (shop_type == SHOP_DISTILLERY)        ? "醸造所" :
+                    (shop_type == SHOP_GENERAL)           ? "よろず屋"
+                                                          : "バグ屋");
+#else
                      || shop_type == SHOP_WEAPON_ANTIQUE) ? "Weapon" :
                     (shop_type == SHOP_ARMOUR
                      || shop_type == SHOP_ARMOUR_ANTIQUE) ? "Armour" :
@@ -1581,17 +1761,25 @@ const char *shop_name(int sx, int sy)
                     (shop_type == SHOP_DISTILLERY)        ? "Distillery" :
                     (shop_type == SHOP_GENERAL)           ? "General Store"
                                                           : "Bug");
-
-
+#endif
     if (shop_type != SHOP_GENERAL
         && shop_type != SHOP_GENERAL_ANTIQUE && shop_type != SHOP_DISTILLERY)
     {
         int temp = sx + sy % 4;
+#ifdef JP
+        strcat( sh_name, (temp == 0) ? "専門店" :
+                         (temp == 1) ? "特選店" :
+                         (temp == 2) ? "百貨店"
+                                     : "店" );
+    }
+    strcat(sh_name, "』");
+#else
         strcat( sh_name, (temp == 0) ? " Shoppe" :
                          (temp == 1) ? " Boutique" :
                          (temp == 2) ? " Emporium"
                                      : " Shop" );
     }
+#endif
 
     return (sh_name);
 }

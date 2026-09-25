@@ -28,9 +28,9 @@
 #include <conio.h>
 #endif
 
-#ifdef LINUX
-#include "liblinux.h"
-#endif
+//#ifdef LINUX
+//#include "liblinux.h"
+//#endif
 
 #include "externs.h"
 
@@ -61,12 +61,21 @@ char *const make_time_string( time_t abs_time, char *const buff, int buff_size )
 
     if (days > 0)
     {
-        snprintf( day_buff, sizeof(day_buff), "%d day%s, ", 
+#ifdef JP
+        snprintf( day_buff, sizeof(day_buff), "%d日+", days );
+#else
+        snprintf( day_buff, sizeof(day_buff), "%d day%s, ",
                   days, (days > 1) ? "s" : "" );
+#endif
     }
 
-    snprintf( buff, buff_size, "%s%02d:%02d:%02d", 
+#ifdef JP
+    snprintf( buff, buff_size, "%s%02d:%02d:%02d",
               (days > 0) ? day_buff : "", hours, mins, secs );
+#else
+    snprintf( buff, buff_size, "%s%02d:%02d:%02d",
+              (days > 0) ? day_buff : "", hours, mins, secs );
+#endif
 
     return (buff);
 }
@@ -77,13 +86,13 @@ void set_redraw_status( unsigned long flags )
 }
 
 void tag_followers( void )
-{   
+{
     int count_x, count_y;
 
     for (count_x = you.x_pos - 1; count_x <= you.x_pos + 1; count_x++)
-    {   
+    {
         for (count_y = you.y_pos - 1; count_y <= you.y_pos + 1; count_y++)
-        {   
+        {
             if (count_x == you.x_pos && count_y == you.y_pos)
                 continue;
 
@@ -105,7 +114,7 @@ void tag_followers( void )
                 || (fmenv->type == MONS_SCROLL_MIMIC)
                 || (fmenv->type == MONS_GOLD_MIMIC)
                 || (fmenv->type == -1))
-            {   
+            {
                 continue;
             }
 
@@ -119,7 +128,7 @@ void tag_followers( void )
             // player,  will follow up/down stairs.
             if (!(mons_friendly(fmenv) ||
                 (fmenv->behaviour == BEH_SEEK && fmenv->foe == MHITYOU)))
-            {   
+            {
                 continue;
             }
 
@@ -127,10 +136,14 @@ void tag_followers( void )
             fmenv->flags |= MF_TAKING_STAIRS;
 
 #if DEBUG_DIAGNOSTICS
+#ifdef JP
             snprintf( info, INFO_SIZE, "%s is marked for following.",
+#else
+            snprintf( info, INFO_SIZE, "%s is marked for following.",
+#endif
                       ptr_monam( fmenv, DESC_CAP_THE ) );
             mpr( info, MSGCH_DIAGNOSTICS );
-#endif  
+#endif
         }
     }
 }
@@ -197,8 +210,8 @@ int roll_dice( int num, int size )
     int ret = 0;
     int i;
 
-    // If num <= 0 or size <= 0, then we'll just return the default 
-    // value of zero.  This is good behaviour in that it will be 
+    // If num <= 0 or size <= 0, then we'll just return the default
+    // value of zero.  This is good behaviour in that it will be
     // appropriate for calculated values that might be passed in.
     if (num > 0 && size > 0)
     {
@@ -256,7 +269,9 @@ bool see_grid(unsigned char grx, unsigned char gry)
 void end(int end_arg)
 {
 #ifdef LINUX
+#ifndef USE_X11
     lincurses_shutdown();
+#endif
 #endif
 
 #ifdef MAC
@@ -268,6 +283,7 @@ void end(int end_arg)
 #endif
 
     exit(end_arg);
+
 }
 
 void redraw_screen(void)
@@ -475,42 +491,89 @@ void canned_msg(unsigned char which_message)
     switch (which_message)
     {
     case MSG_SOMETHING_APPEARS:
+#ifdef JP
+        strcpy(info, (you.species == SP_NAGA || you.species == SP_CENTAUR)
+                                            ? "あなたの目の前に" : "あなたの足元に");
+        strcat(info, "何かが現れた！");
+        strcat(info, "！");
+#else
         strcpy(info, "Something appears ");
         strcat(info, (you.species == SP_NAGA || you.species == SP_CENTAUR)
                                             ? "before you" : "at your feet");
         strcat(info, "!");
+#endif
         mpr(info);
         break;
 
     case MSG_NOTHING_HAPPENS:
+#ifdef JP
+        mpr("何も起こらなかったようだ。");
+#else
         mpr("Nothing appears to happen.");
+#endif
         break;
     case MSG_YOU_RESIST:
+#ifdef JP
+        mpr("あなたは抵抗に成功した。");
+#else
         mpr("You resist.");
+#endif
         break;
     case MSG_TOO_BERSERK:
+#ifdef JP
+        mpr("あなたは狂暴化しすぎている！");
+#else
         mpr("You are too berserk!");
+#endif
         break;
     case MSG_NOTHING_CARRIED:
+#ifdef JP
+        mpr("あなたは何も持ち運んでいない。");
+#else
         mpr("You aren't carrying anything.");
+#endif
         break;
     case MSG_CANNOT_DO_YET:
+#ifdef JP
+        mpr("あなたはまだそれをできない。");
+#else
         mpr("You can't do that yet.");
+#endif
         break;
     case MSG_OK:
+#ifdef JP
+        mpr("OK.");
+#else
         mpr("Okay, then.");
+#endif
         break;
     case MSG_UNTHINKING_ACT:
+#ifdef JP
+        mpr("どうしてそのようなことをしたいのですか？");
+#else
         mpr("Why would you want to do that?");
+#endif
         break;
     case MSG_SPELL_FIZZLES:
+#ifdef JP
+        mpr("呪文は失敗した。");
+#else
         mpr("The spell fizzles.");
+#endif
         break;
     case MSG_HUH:
+#ifdef JP
+        mpr("なんだって？");
+#else
         mpr("Huh?");
+#endif
         break;
     case MSG_EMPTY_HANDED:
+#ifdef JP
+        mpr("あなたは今、何も手にしていない。");
+#else
         mpr("You are now empty-handed.");
+#endif
         break;
     }
 
@@ -522,10 +585,16 @@ void canned_msg(unsigned char which_message)
 bool yesno( const char *str, bool safe, bool clear_after )
 {
     unsigned char tmp;
+    char buf[100];
+
+    you.running = 0;        // Stop travel.
+
+    strcpy(buf, str);
+    strcat(buf, safe ? "[y/n]" : "[Y/N]" );
 
     for (;;)
     {
-        mpr(str, MSGCH_PROMPT);
+        mpr(buf, MSGCH_PROMPT);
 
         tmp = (unsigned char) getch();
 
@@ -543,7 +612,27 @@ bool yesno( const char *str, bool safe, bool clear_after )
         else if (tmp == 'Y')
             return true;
         else
+#ifdef JP
+        if (Options.easy_confirm == CONFIRM_ALL_EASY
+            || (Options.easy_confirm == CONFIRM_SAFE_EASY && safe))
+        {
+            mpr("[y]はい [n]いいえ  のみで答えてください。");
+        }
+        else
+        {
+            mpr("[Y]はい [N]いいえ  のみで答えてください。");
+        }
+#else
+        if (Options.easy_confirm == CONFIRM_ALL_EASY
+            || (Options.easy_confirm == CONFIRM_SAFE_EASY && safe))
+        {
+            mpr("[y]es or [n]o only, please.");
+        }
+        else
+        {
             mpr("[Y]es or [N]o only, please.");
+        }
+#endif
     }
 }                               // end yesno()
 

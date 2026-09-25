@@ -21,7 +21,9 @@
 #if defined(macintosh) || defined(__IBMCPP__) || defined(SOLARIS) || defined(__BCPLUSPLUS__) || defined(BSD)
 #define PACKED
 #else
+#ifndef PACKED
 #define PACKED __attribute__ ((packed))
+#endif
 #endif
 
 // leaves no skeleton? ("blob" monsters?)

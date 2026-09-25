@@ -92,6 +92,7 @@
 
 // colors, such pretty colors ...
 #ifndef DOS
+#ifndef WIN32CONSOLE
     #define BLACK 0
     #define BLUE 1
     #define GREEN 2
@@ -108,14 +109,83 @@
     #define LIGHTMAGENTA 13
     #define YELLOW 14
     #define WHITE 15
+#endif
+#endif
+//
 
-    #define LIGHTGRAY LIGHTGREY
-    #define DARKGRAY DARKGREY
+#ifdef WIN32CONSOLE
+#ifdef JP
+    // WIN32CONSOLEでは黒い画面にBLUE 1の文字は暗すぎるのでLIGHTBLUE 9と同じ色に
+    // 黒い画面にRED 4の文字は暗すぎるのでLIGHTRED 12と同じ色に
+    #define BLUE 9
+    #define RED 12
+    //WIN32CONSOLEでのトウフ
+    #define B_BLACK         0*16 + 0
+    #define B_BLUE          1*16 + 1
+    #define B_GREEN         2*16 + 2
+    #define B_CYAN          3*16 + 3
+    #define B_RED           4*16 + 4
+    #define B_MAGENTA       5*16 + 5
+    #define B_BROWN         6*16 + 6
+    #define B_LIGHTGREY     7*16 + 7
+    #define B_DARKGREY      8*16 + 8
+    #define B_LIGHTBLUE     9*16 + 9
+    #define B_LIGHTGREEN   10*16 +10
+    #define B_LIGHTCYAN    11*16 +11
+    #define B_LIGHTRED     12*16 +12
+    #define B_LIGHTMAGENTA 13*16 +13
+    #define B_YELLOW       14*16 +14
+    #define B_WHITE 	   15*16 +15
+    #define B_LIGHTGRAY    B_LIGHTGREY
+    #define B_DARKGRAY     B_DARKGREY
 #else
+    #define BLUE 1
+    #define RED 4
+#endif
+    #define BLACK 0
+    //BLUE
+    #define GREEN 2
+    #define CYAN 3
+    //RED
+    #define MAGENTA 5
+    #define BROWN 6
+    #define LIGHTGREY 7
+    #define DARKGREY 8
+    #define LIGHTBLUE 9
+    #define LIGHTGREEN 10
+    #define LIGHTCYAN 11
+    #define LIGHTRED 12
+    #define LIGHTMAGENTA 13
+    #define YELLOW 14
+    #define WHITE 15
+#endif
+//
+#ifdef DOS
     #include <conio.h>
     #define LIGHTGREY LIGHTGRAY
     #define DARKGREY DARKGRAY
+#else
+    #define LIGHTGRAY LIGHTGREY
+    #define DARKGRAY DARKGREY
 #endif
+
+// Graphics Colors
+#define PIX_BLACK 0
+#define PIX_BLUE 1
+#define PIX_GREEN 2
+#define PIX_CYAN 3
+#define PIX_RED 4
+#define PIX_MAGENTA 5
+#define PIX_BROWN 6
+#define PIX_LIGHTGREY 7
+#define PIX_DARKGREY 8
+#define PIX_LIGHTBLUE 9
+#define PIX_LIGHTGREEN 10
+#define PIX_LIGHTCYAN 11
+#define PIX_LIGHTRED 12
+#define PIX_LIGHTMAGENTA 13
+#define PIX_YELLOW 14
+#define PIX_WHITE 15
 
 // Colour options... these are used as bit flags along with the colour
 // value in the low byte.
@@ -156,5 +226,31 @@
 // CTRL sequences.  This is a macro because a lot of the type 
 // it wants to be used in case labels.
 #define CONTROL( xxx )          (xxx - 'A' + 1)
+
+#ifdef USE_TILE
+#define MODE_CRT   0  //cprintf > crt
+#define MODE_MPR   1  //cprintf > message
+#define MODE_STAT  2  //cprintf > character status
+#define MODE_DNGN  3  //cprintf > dungeon screen
+
+// MOUSE
+#define KEYIN_MODE_NONE       0
+#define KEYIN_MODE_COMMAND    1
+#define KEYIN_MODE_TARGET     2
+#define KEYIN_MODE_TARGET_DIR 3
+#define KEYIN_MODE_TARGET_PRE 4
+#define KEYIN_MODE_INVENT     5
+#define KEYIN_MODE_MORE       6
+#define KEYIN_MODE_MAP        7
+#define KEYIN_MODE_PAPER_DOLL 8
+#define KEYIN_MODE_END        9
+#define KEYIN_MODE_MSG_REPLAY 10
+#define KEYIN_MODE_ITEMLIST_COMMAND 11
+#define KEYIN_MODE_MULTIPICK  12
+
+#else
+  // Not USE_TILE
+  #define set_keyin_mode(x) {/*x*/}
+#endif
 
 #endif

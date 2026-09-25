@@ -52,6 +52,10 @@
 #include "spl-cast.h"
 #include "stuff.h"
 
+#ifdef USE_TILE
+#include "tiles.h"
+#endif
+
 static void autopickup(void);
 
 // Used to be called "unlink_items", but all it really does is make
@@ -114,7 +118,7 @@ static bool item_ok_to_clean(int item)
         return false;
 
     // never clean runes
-    if (mitm[item].base_type == OBJ_MISCELLANY 
+    if (mitm[item].base_type == OBJ_MISCELLANY
         && mitm[item].sub_type == MISC_RUNE_OF_ZOT)
     {
         return false;
@@ -127,9 +131,13 @@ static bool item_ok_to_clean(int item)
 // unsuccessful cleanup (should be exceedingly rare!)
 int cull_items(void)
 {
-    // XXX: Not the prettiest of messages, but the player 
+    // XXX: Not the prettiest of messages, but the player
     // deserves to know whenever this kicks in. -- bwr
+#ifdef JP
+    mpr( "あまりに多くのアイテムが存在するので、一部を抹消します。", MSGCH_WARN );
+#else
     mpr( "Too many items on level, removing some.", MSGCH_WARN );
+#endif
 
     /* rules:
        1. Don't cleanup anything nearby the player
@@ -158,7 +166,7 @@ int cull_items(void)
                 continue;
             }
 
-            // iterate through the grids list of items: 
+            // iterate through the grids list of items:
             for (item = igrd[x][y]; item != NON_ITEM; item = next)
             {
                 next = mitm[item].link; // in case we can't get it later.
@@ -192,18 +200,18 @@ int cull_items(void)
     return (first_cleaned);
 }
 
-// Note:  This function is to isolate all the checks to see if 
+// Note:  This function is to isolate all the checks to see if
 //        an item is valid (often just checking the quantity).
 //
-//        It shouldn't be used a a substitute for those cases 
-//        which actually want to check the quantity (as the 
+//        It shouldn't be used a a substitute for those cases
+//        which actually want to check the quantity (as the
 //        rules for unused objects might change).
 bool is_valid_item( const item_def &item )
 {
     return (item.base_type != OBJ_UNASSIGNED && item.quantity > 0);
 }
 
-// Reduce quantity of an inventory item, do cleanup if item goes away.  
+// Reduce quantity of an inventory item, do cleanup if item goes away.
 //
 // Returns true if stack of items no longer exists.
 bool dec_inv_item_quantity( int obj, int amount )
@@ -215,7 +223,7 @@ bool dec_inv_item_quantity( int obj, int amount )
 
     if (you.inv[obj].quantity <= amount)
     {
-        for (int i = 0; i < NUM_EQUIP; i++) 
+        for (int i = 0; i < NUM_EQUIP; i++)
         {
             if (you.equip[i] == obj)
             {
@@ -243,7 +251,7 @@ bool dec_inv_item_quantity( int obj, int amount )
     return (ret);
 }
 
-// Reduce quantity of a monster/grid item, do cleanup if item goes away.  
+// Reduce quantity of a monster/grid item, do cleanup if item goes away.
 //
 // Returns true if stack of items no longer exists.
 bool dec_mitm_item_quantity( int obj, int amount )
@@ -293,7 +301,7 @@ void init_item( int item )
 }
 
 // Returns an unused mitm slot, or NON_ITEM if none available.
-// The reserve is the number of item slots to not check. 
+// The reserve is the number of item slots to not check.
 // Items may be culled if a reserve <= 10 is specified.
 int get_item_slot( int reserve )
 {
@@ -332,7 +340,7 @@ void unlink_item( int dest )
     if (dest == NON_ITEM || !is_valid_item( mitm[dest] ))
         return;
 
-    if (mitm[dest].x == 0 && mitm[dest].y == 0) 
+    if (mitm[dest].x == 0 && mitm[dest].y == 0)
     {
         // (0,0) is where the monster items are (and they're unlinked by igrd),
         // although it also contains items that are not linked in yet.
@@ -366,7 +374,7 @@ void unlink_item( int dest )
         // Always return because this item might just be temporary.
         return;
     }
-    else 
+    else
     {
         // Linked item on map:
         //
@@ -404,13 +412,17 @@ void unlink_item( int dest )
 
 #if DEBUG
     // Okay, the sane ways are gone... let's warn the player:
+#ifdef JP
     mpr( "BUG WARNING: Problems unlinking item!!!", MSGCH_DANGER );
+#else
+    mpr( "BUG WARNING: Problems unlinking item!!!", MSGCH_DANGER );
+#endif
 
-    // Okay, first we scan all items to see if we have something 
-    // linked to this item.  We're not going to return if we find 
-    // such a case... instead, since things are already out of 
+    // Okay, first we scan all items to see if we have something
+    // linked to this item.  We're not going to return if we find
+    // such a case... instead, since things are already out of
     // alignment, let's assume there might be multiple links as well.
-    bool  linked = false; 
+    bool  linked = false;
     int   old_link = mitm[dest].link; // used to try linking the first
 
     // clean the relevant parts of the object:
@@ -457,13 +469,17 @@ void unlink_item( int dest )
 
     // Okay, finally warn player if we didn't do anything.
     if (!linked)
+#ifdef JP
         mpr("BUG WARNING: Item didn't seem to be linked at all.", MSGCH_DANGER);
+#else
+        mpr("BUG WARNING: Item didn't seem to be linked at all.", MSGCH_DANGER);
+#endif
 #endif
 }                               // end unlink_item()
 
 void destroy_item( int dest )
 {
-    // Don't destroy non-items, but this function may be called upon 
+    // Don't destroy non-items, but this function may be called upon
     // to remove items reduced to zero quantity, so we allow "invalid"
     // objects in.
     if (dest == NON_ITEM || !is_valid_item( mitm[dest] ))
@@ -488,13 +504,13 @@ void destroy_item_stack( int x, int y )
         if (is_valid_item( mitm[o] ))
         {
             if (mitm[o].base_type == OBJ_ORBS)
-            {   
+            {
                 set_unique_item_status( OBJ_ORBS, mitm[o].sub_type,
                                         UNIQ_LOST_IN_ABYSS );
             }
             else if (is_fixed_artefact( mitm[o] ))
-            {   
-                set_unique_item_status( OBJ_WEAPONS, mitm[o].special, 
+            {
+                set_unique_item_status( OBJ_WEAPONS, mitm[o].special,
                                         UNIQ_LOST_IN_ABYSS );
             }
 
@@ -525,15 +541,25 @@ void item_check(char keyin)
     {
         if (grid >= DNGN_STONE_STAIRS_DOWN_I && grid <= DNGN_ROCK_STAIRS_DOWN)
         {
+#ifdef JP
+            snprintf( info, INFO_SIZE, "ここには%sで造られた下り階段がある。",
+                     (grid == DNGN_ROCK_STAIRS_DOWN) ? "岩" : "石" );
+#else
             snprintf( info, INFO_SIZE, "There is a %s staircase leading down here.",
                      (grid == DNGN_ROCK_STAIRS_DOWN) ? "rock" : "stone" );
+#endif
 
             mpr(info);
         }
         else if (grid >= DNGN_STONE_STAIRS_UP_I && grid <= DNGN_ROCK_STAIRS_UP)
         {
+#ifdef JP
+            snprintf( info, INFO_SIZE, "ここには%sで造られた上り階段がある。",
+                     (grid == DNGN_ROCK_STAIRS_UP) ? "岩" : "石" );
+#else
             snprintf( info, INFO_SIZE, "There is a %s staircase leading upwards here.",
-                     (grid == DNGN_ROCK_STAIRS_DOWN) ? "rock" : "stone" );
+                     (grid == DNGN_ROCK_STAIRS_UP) ? "rock" : "stone" );
+#endif
 
             mpr(info);
         }
@@ -542,151 +568,336 @@ void item_check(char keyin)
             switch (grid)
             {
             case DNGN_ENTER_HELL:
+#ifdef JP
+                mpr("ここには地獄への門がある。");
+#else
                 mpr("There is a gateway to Hell here.");
+#endif
                 break;
             case DNGN_ENTER_GEHENNA:
+#ifdef JP
+                mpr("ここにはゲヘナへの門がある。");
+#else
                 mpr("There is a gateway to Gehenna here.");
+#endif
                 break;
             case DNGN_ENTER_COCYTUS:
+#ifdef JP
+                mpr("ここにはコキュートスの凍れる荒野への門がある。");
+#else
                 mpr("There is a gateway to the frozen wastes of Cocytus here.");
+#endif
                 break;
             case DNGN_ENTER_TARTARUS:
+#ifdef JP
+                mpr("ここにはタルタロスへの門がある。");
+#else
                 mpr("There is a gateway to Tartarus here.");
+#endif
                 break;
             case DNGN_ENTER_DIS:
+#ifdef JP
+                mpr("ここには鉄の都ディースへの門がある。");
+#else
                 mpr("There is a gateway to the Iron City of Dis here.");
+#endif
                 break;
             case DNGN_ENTER_SHOP:
+#ifdef JP
+                snprintf( info, INFO_SIZE, "ここには%sの入り口がある。", shop_name(you.x_pos, you.y_pos));
+#else
                 snprintf( info, INFO_SIZE, "There is an entrance to %s here.", shop_name(you.x_pos, you.y_pos));
+#endif
                 mpr(info);
                 break;
             case DNGN_ENTER_LABYRINTH:
+#ifdef JP
+                mpr("ここにはラビリンスへの門がある！");
+                mpr("注意せよ、飢餓が待ち受けている！");
+#else
                 mpr("There is an entrance to a labyrinth here.");
                 mpr("Beware, for starvation awaits!");
+#endif
                 break;
             case DNGN_ENTER_ABYSS:
+#ifdef JP
+                mpr("ここにはアビスの無限の恐怖への、一方通行の門がある。");
+#else
                 mpr("There is a one-way gate to the infinite horrors of the Abyss here.");
+#endif
                 break;
             case DNGN_STONE_ARCH:
+#ifdef JP
+                mpr("ここには石のアーチがある。");
+#else
                 mpr("There is an empty stone archway here.");
+#endif
                 break;
             case DNGN_EXIT_ABYSS:
+#ifdef JP
+                mpr("ここにはアビスから外に出る門がある。");
+#else
                 mpr("There is a gateway leading out of the Abyss here.");
+#endif
                 break;
             case DNGN_ENTER_PANDEMONIUM:
+#ifdef JP
+                mpr("ここにはパンデモニウムの大広間への門がある。");
+#else
                 mpr("There is a gate leading to the halls of Pandemonium here.");
+#endif
                 break;
             case DNGN_EXIT_PANDEMONIUM:
+#ifdef JP
+                mpr("ここにはパンデモニウムから外に出る門がある。");
+#else
                 mpr("There is a gate leading out of Pandemonium here.");
+#endif
                 break;
             case DNGN_TRANSIT_PANDEMONIUM:
+#ifdef JP
+                mpr("ここにはパンデモニウムの別領域への門がある。");
+#else
                 mpr("There is a gate leading to another region of Pandemonium here.");
+#endif
                 break;
             case DNGN_ENTER_ORCISH_MINES:
+#ifdef JP
+                mpr("ここにはオークの坑道への階段がある。");
+#else
                 mpr("There is a staircase to the Orcish Mines here.");
+#endif
                 break;
             case DNGN_ENTER_HIVE:
+#ifdef JP
+                mpr("ここには蜂の巣への階段がある。");
+#else
                 mpr("There is a staircase to the Hive here.");
+#endif
                 break;
             case DNGN_ENTER_LAIR:
+#ifdef JP
+                mpr("ここには獣の棲み処への階段がある。");
+#else
                 mpr("There is a staircase to the Lair here.");
+#endif
                 break;
             case DNGN_ENTER_SLIME_PITS:
+#ifdef JP
+                mpr("ここにはスライムの穴ぐらへの階段がある。");
+#else
                 mpr("There is a staircase to the Slime Pits here.");
+#endif
                 break;
             case DNGN_ENTER_VAULTS:
+#ifdef JP
+                mpr("ここには宝物庫への階段がある。");
+#else
                 mpr("There is a staircase to the Vaults here.");
+#endif
                 break;
             case DNGN_ENTER_CRYPT:
+#ifdef JP
+                mpr("ここには地下墓地への階段がある。");
+#else
                 mpr("There is a staircase to the Crypt here.");
+#endif
                 break;
             case DNGN_ENTER_HALL_OF_BLADES:
+#ifdef JP
+                mpr("ここには刃の広間への階段がある。");
+#else
                 mpr("There is a staircase to the Hall of Blades here.");
+#endif
                 break;
             case DNGN_ENTER_ZOT:
+#ifdef JP
+                mpr("ここにはゾットの領域への門がある。");
+#else
                 mpr("There is a gate to the Realm of Zot here.");
+#endif
                 break;
             case DNGN_ENTER_TEMPLE:
+#ifdef JP
+                mpr("ここには諸宗派の寺院への階段がある。");
+#else
                 mpr("There is a staircase to the Ecumenical Temple here.");
+#endif
                 break;
             case DNGN_ENTER_SNAKE_PIT:
+#ifdef JP
+                mpr("ここには蛇穴への階段がある。");
+#else
                 mpr("There is a staircase to the Snake Pit here.");
+#endif
                 break;
             case DNGN_ENTER_ELVEN_HALLS:
+#ifdef JP
+                mpr("ここにはエルフの大広間への階段がある。");
+#else
                 mpr("There is a staircase to the Elven Halls here.");
+#endif
                 break;
             case DNGN_ENTER_TOMB:
+#ifdef JP
+                mpr("ここには霊廟への階段がある。");
+#else
                 mpr("There is a staircase to the Tomb here.");
+#endif
                 break;
             case DNGN_ENTER_SWAMP:
+#ifdef JP
+                mpr("ここには沼への階段がある。");
+#else
                 mpr("There is a staircase to the Swamp here.");
+#endif
                 break;
             case DNGN_RETURN_FROM_ORCISH_MINES:
             case DNGN_RETURN_FROM_HIVE:
             case DNGN_RETURN_FROM_LAIR:
             case DNGN_RETURN_FROM_VAULTS:
             case DNGN_RETURN_FROM_TEMPLE:
+#ifdef JP
+                mpr("ここにはダンジョンに戻る出口の階段がある。");
+#else
                 mpr("There is a staircase back to the Dungeon here.");
+#endif
                 break;
             case DNGN_RETURN_FROM_SLIME_PITS:
             case DNGN_RETURN_FROM_SNAKE_PIT:
             case DNGN_RETURN_FROM_SWAMP:
+#ifdef JP
+                mpr("ここには獣の棲み処に戻る出口の階段がある。");
+#else
                 mpr("There is a staircase back to the Lair here.");
+#endif
                 break;
             case DNGN_RETURN_FROM_CRYPT:
             case DNGN_RETURN_FROM_HALL_OF_BLADES:
+#ifdef JP
+                mpr("ここには宝物庫に戻る出口の階段がある。");
+#else
                 mpr("There is a staircase back to the Vaults here.");
+#endif
                 break;
             case DNGN_RETURN_FROM_TOMB:
+#ifdef JP
+                mpr("ここには地下墓地に戻る出口の階段がある。");
+#else
                 mpr("There is a staircase back to the Crypt here.");
+#endif
                 break;
             case DNGN_RETURN_FROM_ELVEN_HALLS:
+#ifdef JP
+                mpr("ここには坑道に戻る出口の階段がある。");
+#else
                 mpr("There is a staircase back to the Mines here.");
+#endif
                 break;
             case DNGN_RETURN_FROM_ZOT:
+#ifdef JP
+                mpr("ここにはこの場所から外に出る門がある。");
+#else
                 mpr("There is a gate leading back out of this place here.");
+#endif
                 break;
             case DNGN_ALTAR_ZIN:
+#ifdef JP
+                mpr("ここには『ジン』の輝く白い大理石の祭壇がある。");
+#else
                 mpr("There is a glowing white marble altar of Zin here.");
+#endif
                 break;
             case DNGN_ALTAR_SHINING_ONE:
+#ifdef JP
+                mpr("ここには『輝けるもの』の輝く黄金の祭壇がある。");
+#else
                 mpr("There is a glowing golden altar of the Shining One here.");
+#endif
                 break;
             case DNGN_ALTAR_KIKUBAAQUDGHA:
+#ifdef JP
+                mpr("ここには『キクバークッグァ』の古代の骨で造られた祭壇がある。");
+#else
                 mpr("There is an ancient bone altar of Kikubaaqudgha here.");
+#endif
                 break;
             case DNGN_ALTAR_YREDELEMNUL:
+#ifdef JP
+                mpr("ここには『イレデレンヌル』の玄武岩で造られた祭壇がある。");
+#else
                 mpr("There is a basalt altar of Yredelemnul here.");
+#endif
                 break;
             case DNGN_ALTAR_XOM:
+#ifdef JP
+                mpr("ここには『ゾム』の微光が揺らめく祭壇がある。");
+#else
                 mpr("There is a shimmering altar of Xom here.");
+#endif
                 break;
             case DNGN_ALTAR_VEHUMET:
+#ifdef JP
+                mpr("ここには『ヴェフメット』の輝きを放つ祭壇がある。");
+#else
                 mpr("There is a shining altar of Vehumet here.");
+#endif
                 break;
             case DNGN_ALTAR_OKAWARU:
+#ifdef JP
+                mpr("ここには『オカワル』の鉄の祭壇がある。");
+#else
                 mpr("There is an iron altar of Okawaru here.");
+#endif
                 break;
             case DNGN_ALTAR_MAKHLEB:
+#ifdef JP
+                mpr("ここには『マクレブ』の炎を上げる祭壇がある。");
+#else
                 mpr("There is a burning altar of Makhleb here.");
+#endif
                 break;
             case DNGN_ALTAR_SIF_MUNA:
+#ifdef JP
+                mpr("ここには『シフ・ムーナ』の紺碧の祭壇がある。");
+#else
                 mpr("There is a deep blue altar of Sif Muna here.");
+#endif
                 break;
             case DNGN_ALTAR_TROG:
+#ifdef JP
+                mpr("ここには『トログ』の血に染まった祭壇がある。");
+#else
                 mpr("There is a bloodstained altar of Trog here.");
+#endif
                 break;
             case DNGN_ALTAR_NEMELEX_XOBEH:
+#ifdef JP
+                mpr("ここには『ネメレクス・ソベー』の煌く祭壇がある。");
+#else
                 mpr("There is a sparkling altar of Nemelex Xobeh here.");
+#endif
                 break;
             case DNGN_ALTAR_ELYVILON:
+#ifdef JP
+                mpr("ここには『エリヴィロン』の銀の祭壇がある。");
+#else
                 mpr("There is a silver altar of Elyvilon here.");
+#endif
                 break;
             case DNGN_BLUE_FOUNTAIN:
+#ifdef JP
+                mpr("ここには泉がある。 (q 飲む)");
+#else
                 mpr("There is a fountain here (q to drink).");
+#endif
                 break;
             case DNGN_SPARKLING_FOUNTAIN:
+#ifdef JP
+                mpr("ここには泡立つ泉がある。 (q 飲む)");
+#else
                 mpr("There is a sparkling fountain here (q to drink).");
+#endif
                 break;
             case DNGN_DRY_FOUNTAIN_I:
             case DNGN_DRY_FOUNTAIN_II:
@@ -694,7 +905,11 @@ void item_check(char keyin)
             case DNGN_DRY_FOUNTAIN_VI:
             case DNGN_DRY_FOUNTAIN_VIII:
             case DNGN_PERMADRY_FOUNTAIN:
+#ifdef JP
+                mpr("ここには枯れた泉がある。");
+#else
                 mpr("There is a dry fountain here.");
+#endif
                 break;
             }
         }
@@ -702,7 +917,11 @@ void item_check(char keyin)
 
     if (igrd[you.x_pos][you.y_pos] == NON_ITEM && keyin == ';')
     {
+#ifdef JP
+        mpr("ここには何もない。");
+#else
         mpr("There are no items here.");
+#endif
         return;
     }
 
@@ -716,7 +935,11 @@ void item_check(char keyin)
 
         if (counter > 45)
         {
+#ifdef JP
+            strcpy(item_show[counter], "アイテムが多すぎる。");
+#else
             strcpy(item_show[counter], "Too many items.");
+#endif
             break;
         }
 
@@ -724,9 +947,16 @@ void item_check(char keyin)
         {
             itoa(mitm[objl].quantity, temp_quant, 10);
             strcpy(item_show[counter], temp_quant);
+#ifdef JP
+            strcat(item_show[counter], "枚の金貨");
+#else
             strcat(item_show[counter], " gold piece");
+#endif
+#ifdef JP
+#else
             if (mitm[objl].quantity > 1)
                 strcat(item_show[counter], "s");
+#endif
 
         }
         else
@@ -744,10 +974,18 @@ void item_check(char keyin)
 
     if (counter_max == 1)
     {
+#ifdef JP
+        strcpy(info, "ここには");  // remember 'an'.
+#else
         strcpy(info, "You see here ");  // remember 'an'.
+#endif
 
         strcat(info, item_show[counter_max]);
+#ifdef JP
+        strcat(info, "がある。");
+#else
         strcat(info, ".");
+#endif
         mpr(info);
 
         counter++;
@@ -758,7 +996,11 @@ void item_check(char keyin)
     if ((counter_max > 0 && counter_max < 6)
         || (counter_max > 1 && keyin == ';'))
     {
+#ifdef JP
+        mpr("ここには以下の物がある:");
+#else
         mpr("Things that are here:");
+#endif
 
         while (counter < counter_max)
         {
@@ -769,7 +1011,11 @@ void item_check(char keyin)
     }
 
     if (counter_max > 5 && keyin != ';')
+#ifdef JP
+        mpr("ここには幾つかの物がある。");
+#else
         mpr("There are several objects here.");
+#endif
 }
 
 
@@ -782,16 +1028,24 @@ void pickup(void)
     int next;
     char str_pass[ ITEMNAME_SIZE ];
 
-    if (you.attribute[ATTR_TRANSFORMATION] == TRAN_AIR 
+    if (you.attribute[ATTR_TRANSFORMATION] == TRAN_AIR
         && you.duration[DUR_TRANSFORMATION] > 0)
     {
+#ifdef JP
+        mpr("あなたは現在の形態では物を拾うことができない！");
+#else
         mpr("You can't pick up anything in this form!");
+#endif
         return;
     }
 
     if (player_is_levitating() && !wearing_amulet(AMU_CONTROLLED_FLIGHT))
     {
+#ifdef JP
+        mpr("あなたは今いる高さから床に手が届かない。");
+#else
         mpr("You can't reach the floor from up here.");
+#endif
         return;
     }
 
@@ -802,13 +1056,21 @@ void pickup(void)
     {
         if (inv_count() >= ENDOFPACK)
         {
+#ifdef JP
+            mpr("ここには携帯用の祭壇がある。しかしあなたはこれ以上物を持てない。");
+#else
             mpr("There is a portable altar here, but you can't carry anything else.");
+#endif
             return;
         }
 
+#ifdef JP
+        if (yesno("ここには携帯用の祭壇がある。拾いますか？"))
+#else
         if (yesno("There is a portable altar here. Pick it up?"))
+#endif
         {
-            for (m = 0; m < ENDOFPACK; m++)
+            for (m = Options.pick_items_start; m < ENDOFPACK; m++)
             {
                 if (!is_valid_item( you.inv[m] ))
                 {
@@ -842,20 +1104,44 @@ void pickup(void)
 
     if (o == NON_ITEM)
     {
+#ifdef JP
+        mpr("ここにアイテムはない。");
+#else
         mpr("There are no items here.");
+#endif
     }
     else if (mitm[o].link == NON_ITEM)      // just one item?
     {
+        mitm[o].flags &= ~(ISFLAG_THROWN | ISFLAG_DROPPED);
         num = move_item_to_player( o, mitm[o].quantity );
 
         if (num == -1)
+#ifdef JP
+            mpr("あなたはこれ以上多くのアイテムを持つことはできない。");
+#else
             mpr("You can't carry that many items.");
+#endif
         else if (num == 0)
+#ifdef JP
+            mpr("あなたはこれ以上の重量を持ち歩くことはできない。");
+#else
             mpr("You can't carry that much weight.");
+#endif
     }                           // end of if items_here
     else
-    { 
+    {
+#ifdef JP
+        mpr("ここには幾つかの物がある。");
+#else
         mpr("There are several objects here.");
+#endif
+
+#if 1 //Slot
+#ifdef USE_TILE
+        TilePickMenu();
+        return;
+#endif
+#endif
 
         while (o != NON_ITEM)
         {
@@ -863,17 +1149,27 @@ void pickup(void)
 
             if (keyin != 'a')
             {
+#ifdef JP
+                strcpy(info, "");
+#else
                 strcpy(info, "Pick up ");
+#endif
 
                 if (mitm[o].base_type == OBJ_GOLD)
                 {
                     char st_prn[20];
                     itoa(mitm[o].quantity, st_prn, 10);
                     strcat(info, st_prn);
+#ifdef JP
+                    strcat(info, "枚の金貨を拾いますか");
+#else
                     strcat(info, " gold piece");
-
+#endif
+#ifdef JP
+#else
                     if (mitm[o].quantity > 1)
                         strcat(info, "s");
+#endif
                 }
                 else
                 {
@@ -881,7 +1177,11 @@ void pickup(void)
                     strcat(info, str_pass);
                 }
 
+#ifdef JP
+                strcat(info, "？ (y:拾う n:放置 a:全て q:中断)");
+#else
                 strcat(info, "\? (y,n,a,q)");
+#endif
                 mpr( info, MSGCH_PROMPT );
 
                 keyin = get_ch();
@@ -892,16 +1192,25 @@ void pickup(void)
 
             if (keyin == 'y' || keyin == 'a')
             {
+                mitm[o].flags &= ~(ISFLAG_THROWN | ISFLAG_DROPPED);
                 int result = move_item_to_player( o, mitm[o].quantity );
 
                 if (result == 0)
                 {
+#ifdef JP
+                    mpr("あなたはこれ以上の重量を持ち歩くことはできない。");
+#else
                     mpr("You can't carry that much weight.");
+#endif
                     keyin = 'x';        // resets from 'a'
                 }
                 else if (result == -1)
                 {
+#ifdef JP
+                    mpr("あなたはこれ以上多くのアイテムを持つことはできない。");
+#else
                     mpr("You can't carry that many items.");
+#endif
                     break;
                 }
             }
@@ -921,7 +1230,7 @@ static bool is_stackable_item( const item_def &item )
         || item.base_type == OBJ_SCROLLS
         || item.base_type == OBJ_POTIONS
         || item.base_type == OBJ_UNKNOWN_II
-        || (item.base_type == OBJ_MISCELLANY 
+        || (item.base_type == OBJ_MISCELLANY
             && item.sub_type == MISC_RUNE_OF_ZOT))
     {
         return (true);
@@ -959,16 +1268,16 @@ bool items_stack( const item_def &item1, const item_def &item2 )
             || item1.base_type == OBJ_SCROLLS
             || item1.base_type == OBJ_POTIONS)
     {
-        if ((item1.flags & ~ISFLAG_IDENT_MASK) 
-                != (item2.flags & ~ISFLAG_IDENT_MASK))
+        if ((item1.flags & ~ISFLAG_IDENT_MASK & ~ISFLAG_DROPPED & ~ISFLAG_THROWN)
+                != (item2.flags & ~ISFLAG_IDENT_MASK & ~ISFLAG_DROPPED & ~ISFLAG_THROWN))
         {
             return (false);
         }
 
-        // Thanks to mummy cursing, we can have potions of decay 
-        // that don't look alike... so we don't stack potions 
+        // Thanks to mummy cursing, we can have potions of decay
+        // that don't look alike... so we don't stack potions
         // if either isn't identified and they look different.  -- bwr
-        if (item1.base_type == OBJ_POTIONS 
+        if (item1.base_type == OBJ_POTIONS
             && item1.special != item2.special
             && (item_not_ident( item1, ISFLAG_KNOW_TYPE )
                 || item_not_ident( item2, ISFLAG_KNOW_TYPE )))
@@ -978,13 +1287,13 @@ bool items_stack( const item_def &item1, const item_def &item2 )
     }
     else if (item1.flags != item2.flags)
     {
-        return (false); 
+        return (false);
     }
 
     return (true);
 }
 
-// Returns quantity of items moved into player's inventory and -1 if 
+// Returns quantity of items moved into player's inventory and -1 if
 // the player's inventory is full.
 int move_item_to_player( int obj, int quant_got, bool quiet )
 {
@@ -1005,8 +1314,13 @@ int move_item_to_player( int obj, int quant_got, bool quiet )
 
         if (!quiet)
         {
-            snprintf( info, INFO_SIZE, "You pick up %d gold piece%s.", 
+#ifdef JP
+            snprintf( info, INFO_SIZE, "あなたは%d枚の金貨を拾った。",
+                     quant_got );
+#else
+            snprintf( info, INFO_SIZE, "You pick up %d gold piece%s.",
                      quant_got, (quant_got > 1) ? "s" : "" );
+#endif
 
             mpr(info);
         }
@@ -1039,12 +1353,16 @@ int move_item_to_player( int obj, int quant_got, bool quiet )
 
     if (is_stackable_item( mitm[obj] ))
     {
-        for (m = 0; m < ENDOFPACK; m++)
+        for (m = Options.pick_items_start; m < ENDOFPACK; m++)
         {
             if (items_stack( you.inv[m], mitm[obj] ))
             {
                 if (!quiet && partialPickup)
+#ifdef JP
+                    mpr("あなたはここにある物の一部しか運ぶことができない。");
+#else
                     mpr("You can only carry some of what is here.");
+#endif
 
                 inc_inv_item_quantity( m, quant_got );
                 dec_mitm_item_quantity( obj, quant_got );
@@ -1068,9 +1386,13 @@ int move_item_to_player( int obj, int quant_got, bool quiet )
         return (-1);
 
     if (!quiet && partialPickup)
+#ifdef JP
+        mpr("あなたはここにある物の一部しか持つことができない。");
+#else
         mpr("You can only carry some of what is here.");
+#endif
 
-    for (m = 0; m < ENDOFPACK; m++)
+    for (m = Options.pick_items_start; m < ENDOFPACK; m++)
     {
         // find first empty slot
         if (!is_valid_item( you.inv[m] ))
@@ -1095,7 +1417,11 @@ int move_item_to_player( int obj, int quant_got, bool quiet )
                 && you.char_direction == DIR_DESCENDING)
             {
                 if (!quiet)
+#ifdef JP
+                    mpr("今やあなたの為すべきことはダンジョンからの脱出を残すのみだ！");
+#else
                     mpr("Now all you have to do is get back out of the dungeon!");
+#endif
                 you.char_direction = DIR_ASCENDING;
             }
             break;
@@ -1108,8 +1434,8 @@ int move_item_to_player( int obj, int quant_got, bool quiet )
 }                               // end move_item_to_player()
 
 
-// Moves mitm[obj] to (x,y)... will modify the value of obj to 
-// be the index of the final object (possibly different).  
+// Moves mitm[obj] to (x,y)... will modify the value of obj to
+// be the index of the final object (possibly different).
 //
 // Done this way in the hopes that it will be obvious from
 // calling code that "obj" is possibly modified.
@@ -1127,11 +1453,11 @@ void move_item_to_grid( int *const obj, int x, int y )
         {
             // check if item already linked here -- don't want to unlink it
             if (*obj == i)
-                return;            
+                return;
 
             if (items_stack( mitm[*obj], mitm[i] ))
             {
-                // Add quantity to item already here, and dispose 
+                // Add quantity to item already here, and dispose
                 // of obj, while returning the found item. -- bwr
                 inc_mitm_item_quantity( i, mitm[*obj].quantity );
                 destroy_item( *obj );
@@ -1143,7 +1469,7 @@ void move_item_to_grid( int *const obj, int x, int y )
 
     ASSERT( *obj != NON_ITEM );
 
-    // Need to actually move object, so first unlink from old position. 
+    // Need to actually move object, so first unlink from old position.
     unlink_item( *obj );
 
     // move item to coord:
@@ -1159,7 +1485,7 @@ void move_item_to_grid( int *const obj, int x, int y )
 
 void move_item_stack_to_grid( int x, int y, int targ_x, int targ_y )
 {
-    // Tell all items in stack what the new coordinate is. 
+    // Tell all items in stack what the new coordinate is.
     for (int o = igrd[x][y]; o != NON_ITEM; o = mitm[o].link)
     {
         mitm[o].x = targ_x;
@@ -1172,8 +1498,8 @@ void move_item_stack_to_grid( int x, int y, int targ_x, int targ_y )
 
 
 // returns quantity dropped
-bool copy_item_to_grid( const item_def &item, int x_plos, int y_plos, 
-                        int quant_drop )
+bool copy_item_to_grid( const item_def &item, int x_plos, int y_plos,
+                        int quant_drop, bool mark_dropped )
 {
     if (quant_drop == 0)
         return (false);
@@ -1209,6 +1535,13 @@ bool copy_item_to_grid( const item_def &item, int x_plos, int y_plos,
     mitm[new_item].y = 0;
     mitm[new_item].link = NON_ITEM;
 
+    if (mark_dropped)
+    {
+        mitm[new_item].flags |= ISFLAG_DROPPED;
+        mitm[new_item].flags &= ~ISFLAG_THROWN;
+    }
+
+
     move_item_to_grid( &new_item, x_plos, y_plos );
 
     return (true);
@@ -1234,6 +1567,31 @@ bool move_top_item( int src_x, int src_y, int dest_x, int dest_y )
 }
 
 
+int prompt_for_int( const char *prompt, bool nonneg )
+{
+    char specs[80];
+
+    mpr( prompt, MSGCH_PROMPT );
+#ifdef USE_TILE
+    mpr_on(MODE_MPR);
+    get_input_line( specs, sizeof( specs ) );
+    mpr_on(MODE_CRT);
+#else
+    get_input_line( specs, sizeof( specs ) );
+#endif
+    if (specs[0] == '\0')
+        return (nonneg ? -1 : 0);
+
+    char *end;
+    int   ret = strtol( specs, &end, 10 );
+
+    if ((ret < 0 && nonneg) || (ret == 0 && end == specs))
+        ret = (nonneg ? -1 : 0);
+
+    return (ret);
+}
+
+
 //---------------------------------------------------------------
 //
 // drop_gold
@@ -1246,8 +1604,13 @@ static void drop_gold(unsigned int amount)
         if (amount > you.gold)
             amount = you.gold;
 
-        snprintf( info, INFO_SIZE, "You drop %d gold piece%s.", 
+#ifdef JP
+        snprintf( info, INFO_SIZE, "あなたは%d枚の金貨を落とした。",
+                 amount );
+#else
+        snprintf( info, INFO_SIZE, "You drop %d gold piece%s.",
                  amount, (amount > 1) ? "s" : "" );
+#endif
         mpr(info);
 
         // loop through items at grid location, look for gold
@@ -1271,7 +1634,11 @@ static void drop_gold(unsigned int amount)
         i = get_item_slot(10);
         if (i == NON_ITEM)
         {
+#ifdef JP
+            mpr( "ここにはアイテムが多すぎるので、金貨を落すことができない。" );
+#else
             mpr( "Too many items on this level, not dropping the gold." );
+#endif
             return;
         }
 
@@ -1286,7 +1653,11 @@ static void drop_gold(unsigned int amount)
     }
     else
     {
+#ifdef JP
+        mpr("あなたは全く所持金を持っていない。");
+#else
         mpr("You don't have any money.");
+#endif
     }
 }                               // end drop_gold()
 
@@ -1302,7 +1673,7 @@ void drop(void)
 {
     int i;
 
-    int item_dropped; 
+    int item_dropped;
     int quant_drop = -1;
 
     char str_pass[ ITEMNAME_SIZE ];
@@ -1314,7 +1685,11 @@ void drop(void)
     }
 
     // XXX: Need to handle quantities:
-    item_dropped = prompt_invent_item( "Drop which item?", -1, true, true, 
+#ifdef JP
+    item_dropped = prompt_invent_item( "どのアイテムを落しますか？ ", -1, true, true,
+#else
+    item_dropped = prompt_invent_item( "Drop which item? ", -1, true, true,
+#endif
                                        true, '$', &quant_drop );
 
     if (item_dropped == PROMPT_ABORT || quant_drop == 0)
@@ -1325,13 +1700,50 @@ void drop(void)
     else if (item_dropped == PROMPT_GOT_SPECIAL)  // ie '$' for gold
     {
         // drop gold
-        if (quant_drop < 0 || quant_drop > static_cast< int >( you.gold ))
+        // quantity
+        if (quant_drop < 0)
+        {
+#ifdef JP
+            snprintf(str_pass, ITEMNAME_SIZE, "%d枚の金貨", you.gold);
+            mpr( str_pass );
+            mpr ("何枚ですか: ");
+#else
+            snprintf(str_pass, ITEMNAME_SIZE, "%dGold", you.gold);
+            mpr( str_pass );
+            mpr ("Quantity: ");
+#endif
+            get_invent_quant( quant_drop );
+        }
+        if (quant_drop < 0 || quant_drop > static_cast< int >( you.gold ) )
             quant_drop = you.gold;
+        if (quant_drop == 0)
+        {
+            canned_msg( MSG_OK );
+            return;
+        }
 
         drop_gold( quant_drop );
+        you.turn_is_over = 1;
         return;
     }
 
+    //quantity
+    if ( (you.inv[item_dropped].quantity != 1) && (quant_drop < 0) )
+    {
+        quant_name( you.inv[item_dropped], you.inv[item_dropped].quantity, DESC_NOCAP_A, str_pass );
+        mpr( str_pass );
+#ifdef JP
+        mpr ("幾つですか: ");
+#else
+        mpr ("Quantity: ");
+#endif
+        get_invent_quant( quant_drop );
+        if (quant_drop == 0)
+        {
+            canned_msg( MSG_OK );
+            return;
+        }
+    }
     if (quant_drop < 0 || quant_drop > you.inv[item_dropped].quantity)
         quant_drop = you.inv[item_dropped].quantity;
 
@@ -1339,15 +1751,23 @@ void drop(void)
         || item_dropped == you.equip[EQ_RIGHT_RING]
         || item_dropped == you.equip[EQ_AMULET])
     {
+#ifdef JP
+        mpr("まず最初に、あなたはそれを外さなくてはならない。");
+#else
         mpr("You will have to take that off first.");
+#endif
         return;
     }
 
-    if (item_dropped == you.equip[EQ_WEAPON] 
+    if (item_dropped == you.equip[EQ_WEAPON]
         && you.inv[item_dropped].base_type == OBJ_WEAPONS
         && item_cursed( you.inv[item_dropped] ))
     {
+#ifdef JP
+        mpr("そのアイテムはあなたから離れない！");
+#else
         mpr("That object is stuck to you!");
+#endif
         return;
     }
 
@@ -1357,9 +1777,13 @@ void drop(void)
         {
             if (!Options.easy_armour)
             {
+#ifdef JP
+                mpr("まず最初に、あなたはそれを脱がなくてはならない。");
+#else
                 mpr("You will have to take that off first.");
+#endif
             }
-            else 
+            else
             {
                 // If we take off the item, cue up the item being dropped
                 if (takeoff_armour( item_dropped ))
@@ -1370,7 +1794,7 @@ void drop(void)
             }
 
             // Regardless, we want to return here because either we're
-            // aborting the drop, or the drop is delayed until after 
+            // aborting the drop, or the drop is delayed until after
             // the armour is removed. -- bwr
             return;
         }
@@ -1385,26 +1809,38 @@ void drop(void)
         canned_msg( MSG_EMPTY_HANDED );
     }
 
-    if (!copy_item_to_grid( you.inv[item_dropped], 
-                            you.x_pos, you.y_pos, quant_drop ))
+    if (!copy_item_to_grid( you.inv[item_dropped],
+                            you.x_pos, you.y_pos, quant_drop, true ))
     {
+#ifdef JP
+        mpr( "ここにはアイテムが多すぎるので、そのアイテムを落すことはできない。" );
+#else
         mpr( "Too many items on this level, not dropping the item." );
+#endif
         return;
     }
 
     quant_name( you.inv[item_dropped], quant_drop, DESC_NOCAP_A, str_pass );
+#ifdef JP
+    snprintf( info, INFO_SIZE, "あなたは%sを落とした。", str_pass );
+#else
     snprintf( info, INFO_SIZE, "You drop %s.", str_pass );
+#endif
     mpr(info);
-   
+
     dec_inv_item_quantity( item_dropped, quant_drop );
     you.turn_is_over = 1;
+#ifdef USE_TILE
+    if (Options.use_tile)
+        TilePlayerRefresh();
+#endif
 }                               // end drop()
 
 //---------------------------------------------------------------
 //
 // shift_monster
 //
-// Moves a monster to approximately (x,y) and returns true 
+// Moves a monster to approximately (x,y) and returns true
 // if monster was moved.
 //
 //---------------------------------------------------------------
@@ -1573,14 +2009,14 @@ void update_corpses(double elapsedTime)
     }
 }
 
-static bool remove_enchant_levels( struct monsters *mon, int slot, int min, 
+static bool remove_enchant_levels( struct monsters *mon, int slot, int min,
                                    int levels )
 {
     const int new_level = mon->enchantment[slot] - levels;
 
     if (new_level < min)
     {
-        mons_del_ench( mon, 
+        mons_del_ench( mon,
                        mon->enchantment[slot], mon->enchantment[slot], true );
         return (true);
     }
@@ -1599,20 +2035,20 @@ static bool remove_enchant_levels( struct monsters *mon, int slot, int min,
 // Update a monster's enchantments when the player returns
 // to the level.
 //
-// Management for enchantments... problems with this are the oddities 
-// (monster dying from poison several thousands of turns later), and 
-// game balance.  
+// Management for enchantments... problems with this are the oddities
+// (monster dying from poison several thousands of turns later), and
+// game balance.
 //
-// Consider: Poison/Sticky Flame a monster at range and leave, monster 
-// dies but can't leave level to get to player (implied game balance of 
-// the delayed damage is that the monster could be a danger before 
-// it dies).  This could be fixed by keeping some monsters active 
+// Consider: Poison/Sticky Flame a monster at range and leave, monster
+// dies but can't leave level to get to player (implied game balance of
+// the delayed damage is that the monster could be a danger before
+// it dies).  This could be fixed by keeping some monsters active
 // off level and allowing them to take stairs (a very serious change).
 //
-// Compare this to the current abuse where the player gets 
-// effectively extended duration of these effects (although only 
-// the actual effects only occur on level, the player can leave 
-// and heal up without having the effect disappear).  
+// Compare this to the current abuse where the player gets
+// effectively extended duration of these effects (although only
+// the actual effects only occur on level, the player can leave
+// and heal up without having the effect disappear).
 //
 // This is a simple compromise between the two... the enchantments
 // go away, but the effects don't happen off level.  -- bwr
@@ -1630,49 +2066,49 @@ static void update_enchantments( struct monsters *mon, int levels )
         case ENCH_YOUR_POISON_II:
         case ENCH_YOUR_POISON_III:
         case ENCH_YOUR_POISON_IV:
-            remove_enchant_levels( mon, i, ENCH_YOUR_POISON_I, levels );  
+            remove_enchant_levels( mon, i, ENCH_YOUR_POISON_I, levels );
             break;
 
         case ENCH_YOUR_SHUGGOTH_I:
         case ENCH_YOUR_SHUGGOTH_II:
         case ENCH_YOUR_SHUGGOTH_III:
         case ENCH_YOUR_SHUGGOTH_IV:
-            remove_enchant_levels( mon, i, ENCH_YOUR_SHUGGOTH_I, levels );  
+            remove_enchant_levels( mon, i, ENCH_YOUR_SHUGGOTH_I, levels );
             break;
 
         case ENCH_YOUR_ROT_I:
         case ENCH_YOUR_ROT_II:
         case ENCH_YOUR_ROT_III:
         case ENCH_YOUR_ROT_IV:
-            remove_enchant_levels( mon, i, ENCH_YOUR_ROT_I, levels );  
+            remove_enchant_levels( mon, i, ENCH_YOUR_ROT_I, levels );
             break;
 
         case ENCH_BACKLIGHT_I:
         case ENCH_BACKLIGHT_II:
         case ENCH_BACKLIGHT_III:
         case ENCH_BACKLIGHT_IV:
-            remove_enchant_levels( mon, i, ENCH_BACKLIGHT_I, levels );  
+            remove_enchant_levels( mon, i, ENCH_BACKLIGHT_I, levels );
             break;
 
         case ENCH_YOUR_STICKY_FLAME_I:
         case ENCH_YOUR_STICKY_FLAME_II:
         case ENCH_YOUR_STICKY_FLAME_III:
         case ENCH_YOUR_STICKY_FLAME_IV:
-            remove_enchant_levels( mon, i, ENCH_YOUR_STICKY_FLAME_I, levels );  
+            remove_enchant_levels( mon, i, ENCH_YOUR_STICKY_FLAME_I, levels );
             break;
 
         case ENCH_POISON_I:
         case ENCH_POISON_II:
         case ENCH_POISON_III:
         case ENCH_POISON_IV:
-            remove_enchant_levels( mon, i, ENCH_POISON_I, levels );  
+            remove_enchant_levels( mon, i, ENCH_POISON_I, levels );
             break;
 
         case ENCH_STICKY_FLAME_I:
         case ENCH_STICKY_FLAME_II:
         case ENCH_STICKY_FLAME_III:
         case ENCH_STICKY_FLAME_IV:
-            remove_enchant_levels( mon, i, ENCH_STICKY_FLAME_I, levels );  
+            remove_enchant_levels( mon, i, ENCH_STICKY_FLAME_I, levels );
             break;
 
         case ENCH_FRIEND_ABJ_I:
@@ -1729,7 +2165,7 @@ static void update_enchantments( struct monsters *mon, int levels )
         case ENCH_INVIS:
         case ENCH_CHARM:
         case ENCH_SLEEP_WARY:
-            // delete enchantment (using function to get this done cleanly) 
+            // delete enchantment (using function to get this done cleanly)
             mons_del_ench(mon, mon->enchantment[i], mon->enchantment[i], true);
             break;
         }
@@ -1752,7 +2188,11 @@ void update_level( double elapsedTime )
 #if DEBUG_DIAGNOSTICS
     int mons_total = 0;
 
+#ifdef JP
     snprintf( info, INFO_SIZE, "turns: %d", turns );
+#else
+    snprintf( info, INFO_SIZE, "turns: %d", turns );
+#endif
     mpr( info, MSGCH_DIAGNOSTICS );
 #endif
 
@@ -1779,11 +2219,11 @@ void update_level( double elapsedTime )
         // This is the monster healing code, moved here from tag.cc:
         if (monster_descriptor( mon->type, MDSC_REGENERATES )
             || mon->type == MONS_PLAYER_GHOST)
-        {   
+        {
             heal_monster( mon, turns, false );
         }
         else
-        {   
+        {
             heal_monster( mon, (turns / 10), false );
         }
 
@@ -1805,24 +2245,28 @@ void update_level( double elapsedTime )
         // const bool short_time = (range >= 5 + random2(10));
         const bool long_time  = (range >= (500 + roll_dice( 2, 500 )));
 
-        const bool ranged_attack = (mons_has_ranged_spell( mon ) 
-                                    || mons_has_ranged_attack( mon )); 
+        const bool ranged_attack = (mons_has_ranged_spell( mon )
+                                    || mons_has_ranged_attack( mon ));
 
 #if DEBUG_DIAGNOSTICS
         // probably too annoying even for DEBUG_DIAGNOSTICS
-        snprintf( info, INFO_SIZE, 
-                  "mon #%d: range %d; long %d; pos (%d,%d); targ %d(%d,%d); flags %d", 
-                  m, range, long_time, mon->x, mon->y, 
+        snprintf( info, INFO_SIZE,
+#ifdef JP
+                  "mon #%d: range %d; long %d; pos (%d,%d); targ %d(%d,%d); flags %d",
+#else
+                  "mon #%d: range %d; long %d; pos (%d,%d); targ %d(%d,%d); flags %d",
+#endif
+                  m, range, long_time, mon->x, mon->y,
                   mon->foe, mon->target_x, mon->target_y, mon->flags );
 
         mpr( info, MSGCH_DIAGNOSTICS );
-#endif 
+#endif
 
         if (range <= 0)
             continue;
 
-        if (long_time 
-            && (mon->behaviour == BEH_FLEE 
+        if (long_time
+            && (mon->behaviour == BEH_FLEE
                 || mon->behaviour == BEH_CORNERED
                 || testbits( mon->flags, MF_BATTY )
                 || ranged_attack
@@ -1832,20 +2276,20 @@ void update_level( double elapsedTime )
             {
                 mon->behaviour = BEH_WANDER;
                 mon->foe = MHITNOT;
-                mon->target_x = 10 + random2( GXM - 10 ); 
-                mon->target_y = 10 + random2( GYM - 10 ); 
+                mon->target_x = 10 + random2( GXM - 10 );
+                mon->target_y = 10 + random2( GYM - 10 );
             }
-            else 
+            else
             {
                 // monster will be sleeping after we move it
-                mon->behaviour = BEH_SLEEP; 
+                mon->behaviour = BEH_SLEEP;
             }
         }
         else if (ranged_attack)
         {
-            // if we're doing short time movement and the monster has a 
+            // if we're doing short time movement and the monster has a
             // ranged attack (missile or spell), then the monster will
-            // flee to gain distance if its "too close", else it will 
+            // flee to gain distance if its "too close", else it will
             // just shift its position rather than charge the player. -- bwr
             if (grid_distance(mon->x, mon->y, mon->target_x, mon->target_y) < 3)
             {
@@ -1869,7 +2313,11 @@ void update_level( double elapsedTime )
                 }
 
 #if DEBUG_DIAGNOSTICS
+#ifdef JP
                 mpr( "backing off...", MSGCH_DIAGNOSTICS );
+#else
+                mpr( "backing off...", MSGCH_DIAGNOSTICS );
+#endif
 #endif
             }
             else
@@ -1877,7 +2325,11 @@ void update_level( double elapsedTime )
                 shift_monster( mon, mon->x, mon->y );
 
 #if DEBUG_DIAGNOSTICS
+#ifdef JP
                 snprintf(info, INFO_SIZE, "shifted to (%d,%d)", mon->x, mon->y);
+#else
+                snprintf(info, INFO_SIZE, "shifted to (%d,%d)", mon->x, mon->y);
+#endif
                 mpr( info, MSGCH_DIAGNOSTICS );
 #endif
                 continue;
@@ -1889,12 +2341,12 @@ void update_level( double elapsedTime )
         // dirt simple movement:
         for (i = 0; i < moves; i++)
         {
-            int mx = (pos_x > mon->target_x) ? -1 : 
-                     (pos_x < mon->target_x) ?  1 
+            int mx = (pos_x > mon->target_x) ? -1 :
+                     (pos_x < mon->target_x) ?  1
                                              :  0;
 
-            int my = (pos_y > mon->target_y) ? -1 : 
-                     (pos_y < mon->target_y) ?  1 
+            int my = (pos_y > mon->target_y) ? -1 :
+                     (pos_y < mon->target_y) ?  1
                                              :  0;
 
             if (mon->behaviour == BEH_FLEE)
@@ -1923,13 +2375,21 @@ void update_level( double elapsedTime )
             shift_monster( mon, mon->x, mon->y );
 
 #if DEBUG_DIAGNOSTICS
+#ifdef JP
         snprintf( info, INFO_SIZE, "moved to (%d,%d)", mon->x, mon->y );
+#else
+        snprintf( info, INFO_SIZE, "moved to (%d,%d)", mon->x, mon->y );
+#endif
         mpr( info, MSGCH_DIAGNOSTICS );
 #endif
     }
 
 #if DEBUG_DIAGNOSTICS
+#ifdef JP
     snprintf( info, INFO_SIZE, "total monsters on level = %d", mons_total );
+#else
+    snprintf( info, INFO_SIZE, "total monsters on level = %d", mons_total );
+#endif
     mpr( info, MSGCH_DIAGNOSTICS );
 #endif
 
@@ -1942,7 +2402,7 @@ void update_level( double elapsedTime )
 //
 // handle_time
 //
-// Do various time related actions... 
+// Do various time related actions...
 // This function is called about every 20 turns.
 //
 //---------------------------------------------------------------
@@ -1963,6 +2423,29 @@ void handle_time( long time_delta )
     {
         temp_rand = random2(17);
 
+#ifdef JP
+        mpr((temp_rand == 0) ? "「お前はここから生きては出られぬ」" :
+            (temp_rand == 1) ? "「死ね、定命の者よ！」" :
+            (temp_rand == 2) ? "「我らに背いた者は決して許さぬ！」" :
+            (temp_rand == 3) ? "「侵入者はここでは歓迎されぬ！」" :
+            (temp_rand == 4) ? "「お前はここにいていい者ではない！」" :
+            (temp_rand == 5) ? "「さっさと失せろ。ぐずぐずするな！」" :
+            (temp_rand == 6) ? "「お前はもう我らの物だ！」" :
+            (temp_rand == 7) ? "あなたは恐ろしい死の予感を感じた……。" :
+            (temp_rand == 8) ? "あなたは奇怪で恐ろしい言葉を耳にした……。" :
+
+            (temp_rand == 9) ? ((you.species != SP_MUMMY)
+                    ? "あなたは硫黄の臭いを嗅いだ。" : "硫黄が雨のように降り注いだ。") :
+
+            (temp_rand == 10) ? "何か恐ろしいことが起きた。" :
+            (temp_rand == 11) ? "あなたは古代の悪霊に監視されていることを意識した。" :
+            (temp_rand == 12) ? "あなたは迷子になって、帰るには長い長い道のりがあるように感じた。" :
+            (temp_rand == 13) ? "あなたは突然、矮小さと脆さを意識した。" :
+            (temp_rand == 14) ? "内臓に響くような絶叫が大気を満たした。" :
+            (temp_rand == 15) ? "あなたは恐怖に打ち震えた。" :
+            (temp_rand == 16) ? "あなたは敵対的な存在を感じた。"
+                              : "あなたは悪魔のような笑い声を耳にした！", MSGCH_TALK);
+#else
         mpr((temp_rand == 0) ? "\"You will not leave this place.\"" :
             (temp_rand == 1) ? "\"Die, mortal!\"" :
             (temp_rand == 2) ? "\"We do not forgive those who trespass against us!\"" :
@@ -1984,6 +2467,7 @@ void handle_time( long time_delta )
             (temp_rand == 15) ? "You shiver with fear." :
             (temp_rand == 16) ? "You sense a hostile presence."
                               : "You hear diabolical laughter!", MSGCH_TALK);
+#endif
 
         temp_rand = random2(27);
 
@@ -2001,7 +2485,11 @@ void handle_time( long time_delta )
                 which_miscast = SPTYP_ENCHANTMENT;
 
             miscast_effect( which_miscast, 4 + random2(6), random2avg(97, 3),
+#ifdef JP
+                            100, "地獄による効果" );
+#else
                             100, "the effects of Hell" );
+#endif
         }
         else if (temp_rand > 7) // 10 in 27 odds {dlb}
         {
@@ -2050,7 +2538,11 @@ void handle_time( long time_delta )
             else
             {
                 miscast_effect( which_miscast, 4 + random2(6),
+#ifdef JP
+                                random2avg(97, 3), 100, "地獄による効果" );
+#else
                                 random2avg(97, 3), 100, "the effects of Hell" );
+#endif
             }
         }
 
@@ -2062,7 +2554,7 @@ void handle_time( long time_delta )
         // try to summon at least one and up to five random monsters {dlb}
         if (one_chance_in(3))
         {
-            create_monster( RANDOM_MONSTER, 0, BEH_HOSTILE, 
+            create_monster( RANDOM_MONSTER, 0, BEH_HOSTILE,
                             you.x_pos, you.y_pos, MHITYOU, 250 );
 
             for (i = 0; i < 4; i++)
@@ -2082,21 +2574,33 @@ void handle_time( long time_delta )
     {
         if (you.strength < you.max_strength && one_chance_in(100))
         {
+#ifdef JP
+            mpr("あなたは腕力が回復した。", MSGCH_RECOVERY);
+#else
             mpr("You feel your strength returning.", MSGCH_RECOVERY);
+#endif
             you.strength++;
             you.redraw_strength = 1;
         }
 
         if (you.dex < you.max_dex && one_chance_in(100))
         {
+#ifdef JP
+            mpr("あなたは器用さが回復した。", MSGCH_RECOVERY);
+#else
             mpr("You feel your dexterity returning.", MSGCH_RECOVERY);
+#endif
             you.dex++;
             you.redraw_dexterity = 1;
         }
 
         if (you.intel < you.max_intel && one_chance_in(100))
         {
+#ifdef JP
+            mpr("あなたは知性が回復した。", MSGCH_RECOVERY);
+#else
             mpr("You feel your intelligence returning.", MSGCH_RECOVERY);
+#endif
             you.intel++;
             you.redraw_intelligence = 1;
         }
@@ -2105,7 +2609,11 @@ void handle_time( long time_delta )
     {
         if (one_chance_in(30))
         {
+#ifdef JP
+            mpr("あなたの病気が体力を奪っていく。", MSGCH_WARN);
+#else
             mpr("Your disease is taking its toll.", MSGCH_WARN);
+#endif
             lose_stat(STAT_RANDOM, 1);
         }
     }
@@ -2146,7 +2654,11 @@ void handle_time( long time_delta )
         if (you.magic_contamination >= 5
             /* && random2(150) <= you.magic_contamination */)
         {
+#ifdef JP
+            mpr("あなたの肉体は激しく放出された強烈なエネルギーに震えた！", MSGCH_WARN);
+#else
             mpr("Your body shudders with the violent release of wild energies!", MSGCH_WARN);
+#endif
 
             // for particularly violent releases,  make a little boom
             if (you.magic_contamination > 25 && one_chance_in(3))
@@ -2159,11 +2671,19 @@ void handle_time( long time_delta )
                 boom.target_y = you.y_pos;
                 boom.damage = dice_def( 3, (you.magic_contamination / 2) );
                 boom.thrower = KILL_MISC;
+#ifdef JP
+                boom.aux_source = "魔力の爆発";
+#else
                 boom.aux_source = "a magical explosion";
+#endif
                 boom.beam_source = NON_MONSTER;
                 boom.isBeam = false;
                 boom.isTracer = false;
+#ifdef JP
+                strcpy(boom.beam_name, "魔力の嵐");
+#else
                 strcpy(boom.beam_name, "magical storm");
+#endif
 
                 boom.ench_power = (you.magic_contamination * 5);
                 boom.ex_size = (you.magic_contamination / 15);
@@ -2248,7 +2768,11 @@ void handle_time( long time_delta )
 
             char str_pass[ ITEMNAME_SIZE ];
             in_name(you.equip[EQ_WEAPON], DESC_NOCAP_A, str_pass);
+#ifdef JP
+            snprintf( info, INFO_SIZE, "あなたが使っている武器は%sだ。", str_pass );
+#else
             snprintf( info, INFO_SIZE, "You are wielding %s.", str_pass );
+#endif
             mpr(info);
             more();
 
@@ -2302,7 +2826,11 @@ void handle_time( long time_delta )
                     you.wield_change = true;
                 }
 
+#ifdef JP
+                mpr( "あなたの荷物が突如として軽くなった。", MSGCH_ROTTEN_MEAT );
+#else
                 mpr( "Your equipment suddenly weighs less.", MSGCH_ROTTEN_MEAT );
+#endif
                 you.inv[i].quantity = 0;
                 burden_change();
                 continue;
@@ -2324,7 +2852,7 @@ void handle_time( long time_delta )
                 continue;
             }
 
-            you.inv[i].sub_type = 1;
+            you.inv[i].sub_type = CORPSE_SKELETON;
             you.inv[i].special = 0;
             you.inv[i].colour = LIGHTGREY;
             you.wield_change = true;
@@ -2335,7 +2863,8 @@ void handle_time( long time_delta )
 
         if (you.inv[i].special < 100 && (you.inv[i].special + (time_delta / 20)>=100))
         {
-            new_rotting_item = true; 
+            if (you.inv[i].sub_type != CORPSE_SKELETON)
+                new_rotting_item = true;
         }
     }
 
@@ -2345,17 +2874,25 @@ void handle_time( long time_delta )
         switch (you.species)
         {
         // XXX: should probably still notice?
-        case SP_MUMMY: // no smell 
+        case SP_MUMMY: // no smell
         case SP_TROLL: // stupid, living in mess - doesn't care about it
             break;
 
         case SP_GHOUL: //likes it
             temp_rand = random2(8);
+#ifdef JP
+            mpr( ((temp_rand  < 5) ? "あなたは何かが腐る臭いを嗅いだ。" :
+                  (temp_rand == 5) ? "腐った肉の臭いがあなたに食欲を沸き起こさせた。" :
+                  (temp_rand == 6) ? "あなたは腐敗の臭いを嗅いだ。うまそうだ。"
+                                   : "ワォ！あなたの荷物の中に、何かうまそうなものがある。"),
+                MSGCH_ROTTEN_MEAT );
+#else
             mpr( ((temp_rand  < 5) ? "You smell something rotten." :
                   (temp_rand == 5) ? "Smell of rotting flesh makes you more hungry." :
                   (temp_rand == 6) ? "You smell decay. Yum-yum."
                                    : "Wow! There is something tasty in your inventory."),
                 MSGCH_ROTTEN_MEAT );
+#endif
             break;
 
         case SP_KOBOLD: //mv: IMO these race aren't so "touchy"
@@ -2363,23 +2900,41 @@ void handle_time( long time_delta )
         case SP_MINOTAUR:
         case SP_HILL_ORC:
             temp_rand = random2(8);
+#ifdef JP
+            mpr( ((temp_rand  < 5) ? "あなたは何かが腐る臭いを嗅いだ。" :
+                  (temp_rand == 5) ? "あなたは肉が腐る臭いを嗅いだ。" :
+                  (temp_rand == 6) ? "あなたは腐敗の臭いを嗅いだ。"
+                                   : "あなたの荷物の中に何か腐ったものがある。"),
+                MSGCH_ROTTEN_MEAT );
+#else
             mpr( ((temp_rand  < 5) ? "You smell something rotten." :
                   (temp_rand == 5) ? "You smell rotting flesh." :
                   (temp_rand == 6) ? "You smell decay."
                                    : "There is something rotten in your inventory."),
                 MSGCH_ROTTEN_MEAT );
+#endif
             break;
 
         default:
             temp_rand = random2(8);
+#ifdef JP
+            mpr( ((temp_rand  < 5) ? "あなたは何かが腐る臭いを嗅いだ。" :
+                  (temp_rand == 5) ? "あなたは肉の腐る臭いで気分が悪くなった。" :
+                  (temp_rand == 6) ? "あなたは腐敗の臭いを嗅いだ。うぐ……。"
+                                   : "うぐ！ あなたの荷物の中に何か胸の悪くなるようなものがある。"),
+                MSGCH_ROTTEN_MEAT );
+#else
             mpr( ((temp_rand  < 5) ? "You smell something rotten." :
                   (temp_rand == 5) ? "Smell of rotting flesh makes you sick." :
                   (temp_rand == 6) ? "You smell decay. Yuk..."
-                                   : "Ugh! There is something really disgusting in your inventory."), 
+                                   : "Ugh! There is something really disgusting in your inventory."),
                 MSGCH_ROTTEN_MEAT );
+#endif
             break;
         }
     }
+
+    burden_change();
 
     // exercise armour *xor* stealth skill: {dlb}
     if (!player_light_armour())
@@ -2415,16 +2970,29 @@ void handle_time( long time_delta )
 
 int autopickup_on = 1;
 
+static bool is_banned(const item_def &item) {
+    static char name[ITEMNAME_SIZE];
+    item_name(item, DESC_INVENTORY, name, false);
+
+    std::string iname = name;
+    for (unsigned i = 0; i < Options.banned_objects.size(); ++i) {
+        if (iname.find(Options.banned_objects[i], 0) != std::string::npos)
+            return true;
+    }
+    return false;
+}
+
 static void autopickup(void)
 {
     //David Loewenstern 6/99
     int result, o, next;
     bool did_pickup = false;
 
-    if (autopickup_on == 0 || Options.autopickups == 0L)
+    if (autopickup_on == 0 || Options.autopickups == 0L
+        /* || you.running < 0  (enable autopic while traveling) */ )
         return;
 
-    if (you.attribute[ATTR_TRANSFORMATION] == TRAN_AIR 
+    if (you.attribute[ATTR_TRANSFORMATION] == TRAN_AIR
         && you.duration[DUR_TRANSFORMATION] > 0)
     {
         return;
@@ -2439,18 +3007,34 @@ static void autopickup(void)
     {
         next = mitm[o].link;
 
-        if (Options.autopickups & (1L << mitm[o].base_type))
+        if ( ((mitm[o].flags & ISFLAG_THROWN) && Options.pickup_thrown) ||
+            (Options.autopickups & (1L << mitm[o].base_type)
+              && (Options.pickup_dropped || !(mitm[o].flags & ISFLAG_DROPPED))
+              && !is_banned(mitm[o])))
         {
+            mitm[o].flags &= ~(ISFLAG_THROWN | ISFLAG_DROPPED);
+
             result = move_item_to_player( o, mitm[o].quantity);
+
+        // 何かあれば走るのをストップ
+            you.running = 0;
 
             if (result == 0)
             {
+#ifdef JP
+                mpr("あなたはこれ以上は何も運べない。");
+#else
                 mpr("You can't carry any more.");
+#endif
                 break;
             }
             else if (result == -1)
             {
+#ifdef JP
+                mpr("あなたの荷袋はすでにいっぱいだ。");
+#else
                 mpr("Your pack is full.");
+#endif
                 break;
             }
 
@@ -2472,9 +3056,9 @@ static void autopickup(void)
 
 int inv_count(void)
 {
-    int count=0;
+    int count= Options.pick_items_start;
 
-    for(int i=0; i< ENDOFPACK; i++)
+    for(int i = Options.pick_items_start; i< ENDOFPACK; i++)
     {
         if (is_valid_item( you.inv[i] ))
             count += 1;
@@ -2484,11 +3068,11 @@ int inv_count(void)
 }
 
 #ifdef ALLOW_DESTROY_ITEM_COMMAND
-// Started with code from AX-crawl, although its modified to fix some 
+// Started with code from AX-crawl, although its modified to fix some
 // serious problems.  -- bwr
 //
 // Issues to watch for here:
-// - no destroying things from the ground since that includes corpses 
+// - no destroying things from the ground since that includes corpses
 //   which might be animated by monsters (butchering takes a few turns).
 //   This code provides a quicker way to get rid of a corpse, but
 //   the player has to be able to lift it first... something that was
@@ -2502,13 +3086,13 @@ int inv_count(void)
 //   but the original code would leave all the equiped items properties
 //   (including weight) which would cause a bit of a mess to state.
 //
-// - no item does anything for just carrying it... if that changes then 
+// - no item does anything for just carrying it... if that changes then
 //   this code will have to deal with that.
 //
-// - Do we want the player to be able to remove items from the game?  
-//   This would make things considerably easier to keep weapons (esp 
+// - Do we want the player to be able to remove items from the game?
+//   This would make things considerably easier to keep weapons (esp
 //   those of distortion) from falling into the hands of monsters.
-//   Right now the player has to carry them to a safe area, or otherwise 
+//   Right now the player has to carry them to a safe area, or otherwise
 //   ingeniously dispose of them... do we care about this gameplay aspect?
 //
 // - Prompt for number to destroy?
@@ -2519,8 +3103,12 @@ void cmd_destroy_item( void )
     char str_pass[ ITEMNAME_SIZE ];
 
     // ask the item to destroy
+#ifdef JP
+    int item = prompt_invent_item( "どのアイテムを壊しますか？ ", -1, true, false );
+#else
     int item = prompt_invent_item( "Destroy which item? ", -1, true, false );
-    if (item == PROMPT_ABORT) 
+#endif
+    if (item == PROMPT_ABORT)
         return;
 
     // Used to check for cursed... but that's not the real problem -- bwr
@@ -2529,7 +3117,11 @@ void cmd_destroy_item( void )
         if (you.equip[i] == item)
         {
             mesclr( true );
+#ifdef JP
+            mpr( "装備中のアイテムを壊すことはできない！" );
+#else
             mpr( "You cannot destroy equipped items!" );
+#endif
             return;
         }
     }
@@ -2537,12 +3129,20 @@ void cmd_destroy_item( void )
     // ask confirmation
     // quant_name(you.inv[item], you.inv[item].quantity, DESC_NOCAP_A, str_pass );
     item_name( you.inv[item], DESC_NOCAP_THE, str_pass );
+#ifdef JP
+    snprintf( info, INFO_SIZE, "%sを壊しますか？", str_pass );
+#else
     snprintf( info, INFO_SIZE, "Destroy %s? ", str_pass );
-    
-    if (yesno( info, true )) 
+#endif
+
+    if (yesno( info, true ))
     {
        //destroy it!!
+#ifdef JP
+        snprintf( info, INFO_SIZE, "あなたは%sを壊した。", str_pass );
+#else
         snprintf( info, INFO_SIZE, "You destroy %s.", str_pass );
+#endif
         mpr( info );
         dec_inv_item_quantity( item, you.inv[item].quantity );
         burden_change();

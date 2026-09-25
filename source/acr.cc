@@ -55,6 +55,7 @@
 #include <stdio.h>
 
 #ifdef DOS
+#include <dos.h>
 #include <conio.h>
 #include <file.h>
 #endif
@@ -122,8 +123,18 @@
 #include "stuff.h"
 #include "tags.h"
 #include "transfor.h"
+#include "travel.h"
 #include "view.h"
 #include "wpn-misc.h"
+#include "stash.h"
+
+#ifdef USE_TILE
+#include "tiles.h"
+#endif
+
+#ifdef WINDOWS
+#include "winclass.h"
+#endif
 
 struct crawl_environment env;
 struct player you;
@@ -140,8 +151,8 @@ FixedVector< char, NUM_STATUE_TYPES >  Visible_Statue;
 bool game_has_started = false;
 
 // Clockwise, around the compass from north (same order as enum RUN_DIR)
-static const struct coord_def Compass[8] = 
-{ 
+static const struct coord_def Compass[8] =
+{
     {  0, -1 }, {  1, -1 }, {  1,  0 }, {  1,  1 },
     {  0,  1 }, { -1,  1 }, { -1,  0 }, { -1, -1 },
 };
@@ -171,6 +182,8 @@ unsigned char mapchar(unsigned char ldfk);
 unsigned char mapchar2(unsigned char ldfk);
 unsigned char mapchar3(unsigned char ldfk);
 unsigned char mapchar4(unsigned char ldfk);
+unsigned char mapchar5(unsigned char ldfk);
+unsigned char mapchar6(unsigned char ldfk);
 
 /*
    Function pointers are used to make switching between Linux and DOS char sets
@@ -181,6 +194,11 @@ unsigned char mapchar4(unsigned char ldfk);
 // (changed for shapechanging)
 extern unsigned char your_sign;
 extern unsigned char your_colour;
+
+#ifdef WINDOWS
+extern WinClass    *win_main;
+extern quit_wingame();
+#endif
 
 // Functions in main module
 static void close_door(char move_x, char move_y);
@@ -194,27 +212,51 @@ static void open_door(char move_x, char move_y);
    It all starts here. Some initialisations are run first, then straight to
    new_game and then input.
 */
+#ifdef WINDOWS
+int old_main( /*int argc, char *argv[] */ )
+#else
 int main( int argc, char *argv[] )
+#endif
 {
 #ifdef USE_ASCII_CHARACTERS
     // Default to the non-ibm set when it makes sense.
+    //通常の半角地図もこちら。
     viewwindow = &viewwindow3;
-    mapch = &mapchar3;
+    mapch  = &mapchar3;
     mapch2 = &mapchar4;
 #else
     // Use the standard ibm default
     viewwindow = &viewwindow2;
-    mapch = &mapchar;
+    mapch  = &mapchar;
     mapch2 = &mapchar2;
 #endif
 
     // Load in the system environment variables
     get_system_environment();
 
+#ifndef WINDOWS
     // parse command line args -- look only for initfile & crawl_dir entries
     if (!parse_args(argc, argv, true))
     {
         // print help
+#ifdef JP
+        puts("コマンドラインオプション:");
+        puts("  -name <string>   キャラクターの名前");
+        puts("  -race <arg>      種族を初期設定 (アルファベット, 省略形, もしくは名称)");
+        puts("  -class <arg>     職業を初期設定 (アルファベット, 省略形, もしくは名称)");
+        puts("  -pizza <string>  好物を設定");
+        puts("  -plain           IBMの拡張文字キャラクターを使用しない");
+        puts("  -dir <path>      crawlのディレクトリ");
+        puts("  -rc <file>       initファイルの指定");
+        puts("");
+        puts("コマンドラインオプションはinitファイルより優先され, initファイルは以下の");
+        puts("環境オプションより優先される。(CRAWL_NAME, CRAWL_PIZZA, CRAWL_DIR, CRAWL_RC).");
+        puts("");
+        puts("ハイスコアリストオプション: (より多くの情報を書き出す,など)");
+        puts("  -scores [N]      ハイスコアリスト");
+        puts("  -tscores [N]     簡潔なハイスコアリスト");
+        puts("  -vscores [N]     詳細なハイスコアリスト");
+#else
         puts("Command line options:");
         puts("  -name <string>   character name");
         puts("  -race <arg>      preselect race (by letter, abbreviation, or name)");
@@ -231,24 +273,47 @@ int main( int argc, char *argv[] )
         puts("  -scores [N]      highscore list");
         puts("  -tscores [N]     terse highscore list");
         puts("  -vscores [N]     verbose highscore list");
+#endif
         exit(1);
     }
+#endif
 
+#ifndef WINDOWS
     // Read the init file
     read_init_file();
 
     // now parse the args again, looking for everything else.
     parse_args( argc, argv, false );
+#endif
+
+#ifdef JP
+//    if (Options.use_zenkaku)
+//    {
+      mapch  = &mapchar5;
+      mapch2 = &mapchar6;
+//    }
+#endif
+#ifdef USE_TILE
+      if (Options.use_tile) viewwindow = &viewwindow_tile;
+#endif
 
     if (Options.sc_entries > 0)
     {
+#ifdef JP
+        printf( " スコアランキング" EOL );
+#else
         printf( " Best Crawlers -" EOL );
+#endif
         hiscores_print_list( Options.sc_entries, Options.sc_format );
         exit(0);
     }
 
 #ifdef LINUX
+#ifdef USE_X11
+    libx11_init();
+#else
     lincurses_startup();
+#endif
 #endif
 
 #ifdef MAC
@@ -271,10 +336,16 @@ int main( int argc, char *argv[] )
 
     if (game_start || Options.always_greet)
     {
-        snprintf( info, INFO_SIZE, "Welcome, %s the %s %s.", 
+#ifdef JP
+        snprintf( info, INFO_SIZE, "ようこそ、%sにして%sの『%s』。",
+                   species_name( you.species,you.experience_level ), you.class_name, you.your_name );
+#else
+        snprintf( info, INFO_SIZE, "Welcome, %s the %s %s.",
                   you.your_name, species_name( you.species,you.experience_level ), you.class_name );
-
+#endif
         mpr( info );
+
+        //cprintf( "%s", Options.banned_objects[15].c_str() ); //print banned objects
 
         // Starting messages can go here as this should only happen
         // at the start of a new game -- bwr
@@ -292,7 +363,11 @@ int main( int argc, char *argv[] )
                 // the game (one or two skills should be easily guessed
                 // from starting equipment)... Anyways, we'll give the
                 // player a message to warn them (and give a reason why). -- bwr
+#ifdef JP
+                mpr("あなたは茫然と覚醒したばかりで、まだ十分な力を取り戻していない。");
+#else
                 mpr("You wake up in a daze, and can't recall much.");
+#endif
             }
         }
 
@@ -301,37 +376,77 @@ int main( int argc, char *argv[] )
         switch (you.religion)
         {
         case GOD_ZIN:
+#ifdef JP
+            simple_god_message( "は命じた。『わが信徒よ、光の版図を広めよ』" );
+#else
             simple_god_message( " says: Spread the light, my child." );
+#endif
             break;
         case GOD_SHINING_ONE:
+#ifdef JP
+            simple_god_message( "は命じた。『異教徒どもを処罰せよ！』" );
+#else
             simple_god_message( " says: Smite the infidels!" );
+#endif
             break;
         case GOD_KIKUBAAQUDGHA:
         case GOD_YREDELEMNUL:
         case GOD_NEMELEX_XOBEH:
+#ifdef JP
+            simple_god_message( "は告げた。『よくぞ参った……』");
+#else
             simple_god_message( " says: Welcome..." );
+#endif
             break;
         case GOD_XOM:
             if (game_start)
+#ifdef JP
+                simple_god_message( "は告げた。『お前が新しいオモチャだ！』" );
+#else
                 simple_god_message( " says: A new plaything!" );
+#endif
             break;
         case GOD_VEHUMET:
+#ifdef JP
+            god_speaks( you.religion, "『殺して地獄の火にくべよ！』");
+#else
             god_speaks( you.religion, "Let it end in hellfire!");
+#endif
             break;
         case GOD_OKAWARU:
+#ifdef JP
+            simple_god_message("は告げた。『ようこそ、わが使徒よ』");
+#else
             simple_god_message(" says: Welcome, disciple.");
+#endif
             break;
         case GOD_MAKHLEB:
+#ifdef JP
+            god_speaks( you.religion, "『血と魂をマクレブに捧げよ！』" );
+#else
             god_speaks( you.religion, "Blood and souls for Makhleb!" );
+#endif
             break;
         case GOD_SIF_MUNA:
+#ifdef JP
+            simple_god_message( "は囁いた『わたしは数多の秘密を知っている……』");
+#else
             simple_god_message( " whispers: I know many secrets...");
+#endif
             break;
         case GOD_TROG:
+#ifdef JP
+            simple_god_message( "は命じた。『皆殺しだ！』" );
+#else
             simple_god_message( " says: Kill them all!" );
+#endif
             break;
         case GOD_ELYVILON:
+#ifdef JP
+            simple_god_message( "は命じた。『世界を旅し弱き者を助けよ！』" );
+#else
             simple_god_message( " says: Go forth and aid the weak!" );
+#endif
             break;
         default:
             break;
@@ -350,7 +465,11 @@ int main( int argc, char *argv[] )
     // Should never reach this stage, right?
 
 #ifdef LINUX
+#ifdef USE_X11
+    libx11_shutdown();
+#else
     lincurses_shutdown();
+#endif
 #endif
 
 #ifdef MAC
@@ -377,32 +496,59 @@ static void handle_wizard_command( void )
 
     if (!you.wizard)
     {
+#ifdef JP
+        mpr( "警告: ウィザードモードに突入します！", MSGCH_WARN );
+#else
         mpr( "WARNING: ABOUT TO ENTER WIZARD MODE!", MSGCH_WARN );
-
-#ifndef SCORE_WIZARD_MODE
-        mpr( "If you continue, your game will not be scored!", MSGCH_WARN );
 #endif
 
+#ifndef SCORE_WIZARD_MODE
+#ifdef JP
+        mpr( "もしも続けるのなら、今回のゲームのスコアは無効なります！", MSGCH_WARN );
+#else
+        mpr( "If you continue, your game will not be scored!", MSGCH_WARN );
+#endif
+#endif
+
+#ifdef JP
+        if (!yesno( "本当にウィザードモードに突入しますか？", false ))
+#else
         if (!yesno( "Do you really want to enter wizard mode?", false ))
+#endif
             return;
 
         you.wizard = true;
         redraw_screen();
     }
 
+#ifdef JP
+    mpr( "ウィザードコマンドの入力: ", MSGCH_PROMPT );
+#else
     mpr( "Enter Wizard Command: ", MSGCH_PROMPT );
+#endif
     wiz_command = getch();
 
     switch (wiz_command)
-    { 
+    {
+#ifdef USE_TILE
+    case '-':
+        if (Options.use_tile)
+            TileLoadWall(true);
+        break;
+    case 'P':
+        if (Options.use_qv_mode)
+            TileEditPandem();
+        break;
+#endif
     case '?':
+    case '\r':
         list_commands(true);        // tell it to list wizard commands
         redraw_screen();
         break;
 
     case CONTROL('G'):
         save_ghost(true);
-        break; 
+        break;
 
     case 'x':
         you.experience = 1 + exp_needed( 2 + you.experience_level );
@@ -433,7 +579,11 @@ static void handle_wizard_command( void )
 
     case 'v':
         // this command isn't very exciting... feel free to replace
+#ifdef JP
+        i = prompt_invent_item( "どの☆の強度を見ますか？", -1 );
+#else
         i = prompt_invent_item( "Value of which item?", -1 );
+#endif
         if (i == PROMPT_ABORT || !is_random_artefact( you.inv[i] ))
         {
             canned_msg( MSG_OK );
@@ -441,13 +591,21 @@ static void handle_wizard_command( void )
         }
         else
         {
-            snprintf( info, INFO_SIZE, "randart val: %d", randart_value( you.inv[i] ) ); 
+#ifdef JP
+            snprintf( info, INFO_SIZE, "randart val: %d", randart_value( you.inv[i] ) );
+#else
+            snprintf( info, INFO_SIZE, "randart val: %d", randart_value( you.inv[i] ) );
+#endif
             mpr( info );
         }
         break;
 
     case '+':
+#ifdef JP
+        i = prompt_invent_item( "どのアイテムを☆にしますか？", -1 );
+#else
         i = prompt_invent_item( "Make an artefact out of which item?", -1 );
+#endif
         if (i == PROMPT_ABORT)
         {
             canned_msg( MSG_OK );
@@ -496,7 +654,7 @@ static void handle_wizard_command( void )
         }
 
         // create all fixed artefacts
-        for (tmp = SPWPN_SINGING_SWORD; tmp <= SPWPN_STAFF_OF_WUCAD_MU; tmp++) 
+        for (tmp = SPWPN_SINGING_SWORD; tmp <= SPWPN_STAFF_OF_WUCAD_MU; tmp++)
         {
             int islot = get_item_slot();
             if (islot == NON_ITEM)
@@ -617,12 +775,16 @@ static void handle_wizard_command( void )
         break;
 
     case 'i':
+#ifdef JP
+        mpr( "あなたは知識の奔流に触れた。" );
+#else
         mpr( "You feel a rush of knowledge." );
+#endif
         for (i = 0; i < ENDOFPACK; i++)
         {
             if (is_valid_item( you.inv[i] ))
             {
-                set_ident_type( you.inv[i].base_type, you.inv[i].sub_type, 
+                set_ident_type( you.inv[i].base_type, you.inv[i].sub_type,
                                 ID_KNOWN_TYPE );
 
                 set_ident_flags( you.inv[i], ISFLAG_IDENT_MASK );
@@ -632,12 +794,16 @@ static void handle_wizard_command( void )
         break;
 
     case 'I':
+#ifdef JP
+        mpr( "あなたは無知の奔流に触れた。" );
+#else
         mpr( "You feel a rush of antiknowledge." );
+#endif
         for (i = 0; i < ENDOFPACK; i++)
         {
             if (is_valid_item( you.inv[i] ))
             {
-                set_ident_type( you.inv[i].base_type, you.inv[i].sub_type, 
+                set_ident_type( you.inv[i].base_type, you.inv[i].sub_type,
                                 ID_UNKNOWN_TYPE );
 
                 unset_ident_flags( you.inv[i], ISFLAG_IDENT_MASK );
@@ -659,8 +825,19 @@ static void handle_wizard_command( void )
         break;              /* cast spell by name */
 
     case '(':
+#ifdef JP
+        mpr( "どの地形を作りますか？(番号指定) ", MSGCH_PROMPT );
+#else
         mpr( "Create which feature (by number)? ", MSGCH_PROMPT );
+#endif
+
+#ifdef USE_TILE
+        mpr_on(MODE_MPR);
         get_input_line( specs, sizeof( specs ) );
+        mpr_on(MODE_CRT);
+#else
+        get_input_line( specs, sizeof( specs ) );
+#endif
 
         if (specs[0] != '\0')
             grd[you.x_pos][you.y_pos] = atoi(specs);
@@ -668,7 +845,11 @@ static void handle_wizard_command( void )
 
     case ']':
         if (!debug_add_mutation())
+#ifdef JP
+            mpr( "変異の追加は失敗した。" );
+#else
             mpr( "Failure to give mutation." );
+#endif
         break;
 
     case '[':
@@ -682,7 +863,11 @@ static void handle_wizard_command( void )
             if (you.branch_stairs[i] == 0)
                 continue;
 
-            snprintf( info, INFO_SIZE, "Branch %2d is on level %2d", 
+#ifdef JP
+            snprintf( info, INFO_SIZE, "分岐%2dは%2d階に存在する。",
+#else
+            snprintf( info, INFO_SIZE, "Branch %2d is on level %2d",
+#endif
                      i, you.branch_stairs[i] + 1 );
 
             mpr(info);
@@ -698,15 +883,23 @@ static void handle_wizard_command( void )
             int old_piety = you.piety;
 
             gain_piety(50);
+#ifdef JP
+            snprintf( info, INFO_SIZE, "おめでとう、あなたの信仰値は%dから%dに上昇した！",
+#else
             snprintf( info, INFO_SIZE, "Congratulations, your piety went from %d to %d!",
+#endif
                     old_piety, you.piety);
             mpr(info);
         }
         break;
 
     case '=':
-        snprintf( info, INFO_SIZE, 
-                  "Cost level: %d  Skill points: %d  Next cost level: %d", 
+        snprintf( info, INFO_SIZE,
+#ifdef JP
+                  "Cost level: %d  Skill points: %d  Next cost level: %d",
+#else
+                  "Cost level: %d  Skill points: %d  Next cost level: %d",
+#endif
                   you.skill_cost_level, you.total_skill_points,
                   skill_cost_needed( you.skill_cost_level + 1 ) );
 
@@ -722,17 +915,25 @@ static void handle_wizard_command( void )
         {
             if (mitm[i].link == NON_ITEM)
                 continue;
-    
+
+#ifdef JP
             snprintf( info, INFO_SIZE, "item:%3d link:%3d cl:%3d ty:%3d pl:%3d pl2:%3d sp:%3ld q:%3d",
-                     i, mitm[i].link, 
+#else
+            snprintf( info, INFO_SIZE, "item:%3d link:%3d cl:%3d ty:%3d pl:%3d pl2:%3d sp:%3ld q:%3d",
+#endif
+                     i, mitm[i].link,
                      mitm[i].base_type, mitm[i].sub_type,
-                     mitm[i].plus, mitm[i].plus2, mitm[i].special, 
+                     mitm[i].plus, mitm[i].plus2, mitm[i].special,
                      mitm[i].quantity );
 
             mpr(info);
         }
 
+#ifdef JP
         strcpy(info, "igrid:");
+#else
+        strcpy(info, "igrid:");
+#endif
         mpr(info);
 
         for (i = 0; i < GXM; i++)
@@ -741,10 +942,14 @@ static void handle_wizard_command( void )
             {
                 if (igrd[i][j] != NON_ITEM)
                 {
-                    snprintf( info, INFO_SIZE, "%3d at (%2d,%2d), cl:%3d ty:%3d pl:%3d pl2:%3d sp:%3ld q:%3d", 
+#ifdef JP
+                    snprintf( info, INFO_SIZE, "%3d at (%2d,%2d), cl:%3d ty:%3d pl:%3d pl2:%3d sp:%3ld q:%3d",
+#else
+                    snprintf( info, INFO_SIZE, "%3d at (%2d,%2d), cl:%3d ty:%3d pl:%3d pl2:%3d sp:%3ld q:%3d",
+#endif
                              igrd[i][j], i, j,
                              mitm[i].base_type, mitm[i].sub_type,
-                             mitm[i].plus, mitm[i].plus2, mitm[i].special, 
+                             mitm[i].plus, mitm[i].plus2, mitm[i].special,
                              mitm[i].quantity );
 
                     mpr(info);
@@ -752,9 +957,62 @@ static void handle_wizard_command( void )
             }
         }
         break;
+    case 'C':
+    {
+        clrscr();
+        gotoxy(1,1);
+        int i;
+#ifdef JP
+        cprintf("攻撃速度       : %d" EOL, check_weapon_speed() );
+        cprintf("移動速度       : %d" EOL, player_movement_speed() );
+        cprintf("魔法抵抗       : %d" EOL, player_res_magic(true) );
+        cprintf("隠密性         : %d" EOL, check_stealth(true) );
+        cprintf(EOL);
+        cprintf("魔力汚染       : %d" EOL, you.magic_contamination);
+        cprintf("現在の階       : %d" EOL, you.your_level);
+        cprintf(EOL);
+
+        cprintf("信仰 : %s (信仰値:%d)" EOL, god_name(you.religion), you.piety);
+        for(i = 1; i < NUM_GODS; i+=2)
+        {
+            cprintf("%-18s懲罰 : %3d    ",
+                    god_name(i), you.penance[i]);
+            cprintf("%-18s懲罰 : %3d" EOL,
+                    god_name(i +1 ), you.penance[i + 1]);
+        }
+#else //JP
+        cprintf("attack speed   : %d" EOL, check_weapon_speed() );
+        cprintf("movement speed : %d" EOL, player_movement_speed() );
+        cprintf("res_magic      : %d" EOL, player_res_magic(true) );
+        cprintf("stealth        : %d" EOL, check_stealth(true) );
+        cprintf(EOL);
+        cprintf("contamination  : %d" EOL, you.magic_contamination);
+        cprintf("dungeon level  : %d" EOL, you.your_level);
+        cprintf(EOL);
+        cprintf("worship : %s (piety:%d)" EOL, god_name(you.religion), you.piety);
+        for(i = 1; i < NUM_GODS; i+=2)
+        {
+            cprintf("%-18s penance : %3d    ",
+                    god_name(i), you.penance[i]);
+            cprintf("%-18s penance : %3d" EOL,
+                    god_name(i +1 ), you.penance[i + 1]);
+        }
+#endif //JP
+
+#ifndef USE_MULTIWIN // skip getch
+        if (getch() == 0)
+            getch();
+#endif
+        redraw_screen();
+        break;
+    }
 
     default:
+#ifdef JP
+        mpr("そのようなウィザードコマンドはありません。");
+#else
         mpr("Not a Wizard Command.");
+#endif
         break;
     }
 }
@@ -778,8 +1036,8 @@ static char base_grid_type( char grid )
 // Set up the front facing array for detecting terrain based stops
 static void set_run_check( int index, int dir )
 {
-    you.run_check[index].dx = Compass[dir].x;   
-    you.run_check[index].dy = Compass[dir].y;   
+    you.run_check[index].dx = Compass[dir].x;
+    you.run_check[index].dy = Compass[dir].y;
 
     const int targ_x = you.x_pos + Compass[dir].x;
     const int targ_y = you.y_pos + Compass[dir].y;
@@ -878,14 +1136,19 @@ static void input(void)
     }
     else
     {
-        handle_delay(); 
-
+        handle_delay();
+#ifdef USE_TILE
+        if (!Options.use_tile)
+            gotoxy(18, 9);
+#else
         gotoxy(18, 9);
-
+#endif
         if (you_are_delayed())
             keyin = '.';
         else
         {
+            if (you.running < 0)        // Travel and explore
+                travel(&keyin, &move_x, &move_y);
 
             if (you.running > 0)
             {
@@ -906,13 +1169,13 @@ static void input(void)
                     keyin = '.';
                 }
             }
-            else
+            else if (!you.running)
             {
 
 #if DEBUG_DIAGNOSTICS
                 // save hunger at start of round
                 // for use with hunger "delta-meter" in  output.cc
-                you.old_hunger = you.hunger;        
+                you.old_hunger = you.hunger;
 #endif
 
 #if DEBUG_ITEM_SCAN
@@ -921,9 +1184,38 @@ static void input(void)
 
               gutch:
                 flush_input_buffer( FLUSH_BEFORE_COMMAND );
-                keyin = getch_with_command_macros();
-            }
 
+#ifdef USE_TILE
+
+#if 1 //Slot
+                if (Options.use_tile)
+                {
+                    TileDrawInvenAux(-1, 1);
+#ifdef LINUX
+                    update_screen();
+#endif
+                }
+#endif
+                set_keyin_mode(KEYIN_MODE_COMMAND);
+                while(1)
+                {
+                    keyin = getch_with_command_macros();
+                    if (keyin == CMD_MOUSE_WHEEL_UP ||
+                        keyin == CMD_MOUSE_WHEEL_DOWN)
+                        continue;
+                    break;
+                }
+                set_keyin_mode(KEYIN_MODE_NONE);
+
+                if (Options.use_tile && Options.rotate_numpad
+                     && Options.use_qv_mode)
+                {
+                    rotate_qv_key(&keyin);
+                }
+#else
+                keyin = getch_with_command_macros();
+#endif
+            }
             mesclr();
 
 #ifdef LINUX
@@ -994,10 +1286,39 @@ static void input(void)
   get_keyin_again:
 #endif //jmf: just stops an annoying gcc warning
 
+#if 1 //Slot
+    int keyin2 = 0;
+    if (keyin >= CMD_USE_ITEM && keyin <= CMD_USE_ITEM + 51)
+    {
+        keyin2 = keyin - CMD_USE_ITEM;
+        keyin = CMD_USE_ITEM;
+    }
 
+    if (keyin >= CMD_VIEW_ITEM && keyin <= CMD_VIEW_ITEM + 51)
+    {
+        keyin2 = keyin - CMD_VIEW_ITEM;
+        keyin = CMD_VIEW_ITEM;
+    }
+#endif
 
     switch (keyin)
     {
+#if 1 // Slot
+    case CMD_USE_ITEM:
+        use_item (keyin2);
+        break;
+
+    case CMD_VIEW_ITEM:
+        describe_item( you.inv[keyin2]);
+        redraw_screen();
+        break;
+#endif
+
+#ifdef USE_TILE
+    case CMD_DO_NOTHING:
+    // // Travel has been activated in libtile.cc: Do nothing
+        break;
+#endif
     case CONTROL('Y'):
     case CMD_OPEN_DOOR_UP_RIGHT:
         open_door(-1, -1); move_x = 0; move_y = 0; break;
@@ -1057,28 +1378,28 @@ static void input(void)
 #endif
         break;
 
-    case 'B': case CMD_RUN_DOWN_LEFT:   
+    case 'B': case CMD_RUN_DOWN_LEFT:
         start_running( RDIR_DOWN_LEFT, 2 ); break;
 
-    case 'J': case CMD_RUN_DOWN:        
+    case 'J': case CMD_RUN_DOWN:
         start_running( RDIR_DOWN, 2 ); break;
 
-    case 'U': case CMD_RUN_UP_RIGHT:    
+    case 'U': case CMD_RUN_UP_RIGHT:
         start_running( RDIR_UP_RIGHT, 2 ); break;
 
-    case 'K': case CMD_RUN_UP:          
+    case 'K': case CMD_RUN_UP:
         start_running( RDIR_UP, 2 ); break;
 
-    case 'Y': case CMD_RUN_UP_LEFT:     
+    case 'Y': case CMD_RUN_UP_LEFT:
         start_running( RDIR_UP_LEFT, 2 ); break;
 
-    case 'H': case CMD_RUN_LEFT:        
+    case 'H': case CMD_RUN_LEFT:
         start_running( RDIR_LEFT, 2 ); break;
 
-    case 'N': case CMD_RUN_DOWN_RIGHT:  
+    case 'N': case CMD_RUN_DOWN_RIGHT:
         start_running( RDIR_DOWN_RIGHT, 2 ); break;
 
-    case 'L': case CMD_RUN_RIGHT:       
+    case 'L': case CMD_RUN_RIGHT:
         start_running( RDIR_RIGHT, 2 ); break;
 
 #ifdef LINUX
@@ -1100,30 +1421,40 @@ static void input(void)
     case CONTROL('A'):
     case CMD_TOGGLE_AUTOPICKUP:
         autopickup_on = !autopickup_on;
+#ifdef JP
+        strcpy(info, "自動拾い機能は現在");
+        strcat(info, (autopickup_on) ? "オン" : "オフ");
+        strcat(info, "。");
+#else
         strcpy(info, "Autopickup is now ");
         strcat(info, (autopickup_on) ? "on" : "off");
         strcat(info, ".");
+#endif
         mpr(info);
         break;
 
     case '<':
     case CMD_GO_UPSTAIRS:
         if (grd[you.x_pos][you.y_pos] == DNGN_ENTER_SHOP)
-        {   
+        {
             shop();
             break;
         }
         else if ((grd[you.x_pos][you.y_pos] < DNGN_STONE_STAIRS_UP_I
                     || grd[you.x_pos][you.y_pos] > DNGN_ROCK_STAIRS_UP)
-                && (grd[you.x_pos][you.y_pos] < DNGN_RETURN_FROM_ORCISH_MINES 
+                && (grd[you.x_pos][you.y_pos] < DNGN_RETURN_FROM_ORCISH_MINES
                     || grd[you.x_pos][you.y_pos] >= 150))
-        {   
+        {
+#ifdef JP
+            mpr( "ここからは上の階に行くことはできない。" );
+#else
             mpr( "You can't go up here!" );
+#endif
             break;
         }
 
         tag_followers();  // only those beside us right now can follow
-        start_delay( DELAY_ASCENDING_STAIRS, 
+        start_delay( DELAY_ASCENDING_STAIRS,
                      1 + (you.burden_state > BS_UNENCUMBERED) );
         break;
 
@@ -1138,7 +1469,11 @@ static void input(void)
             && !(grd[you.x_pos][you.y_pos] >= DNGN_ENTER_ORCISH_MINES
                 && grd[you.x_pos][you.y_pos] < DNGN_RETURN_FROM_ORCISH_MINES))
         {
+#ifdef JP
+            mpr( "ここからは下の階に行くことはできない。" );
+#else
             mpr( "You can't go down here!" );
+#endif
             break;
         }
 
@@ -1165,7 +1500,25 @@ static void input(void)
     case 'd':
     case CMD_DROP:
         drop();
+#ifdef STASH_TRACKING
+        if (Options.stash_tracking >= STM_DROPPED)
+            stashes.add_stash();
+#endif
         break;
+
+#ifdef STASH_TRACKING
+    case CONTROL('S'):
+    case CMD_MARK_STASH:
+        if (Options.stash_tracking >= STM_EXPLICIT)
+            stashes.add_stash();
+        break;
+
+    case CONTROL('E'):
+    case CMD_FORGET_STASH:
+        if (Options.stash_tracking >= STM_EXPLICIT)
+            stashes.no_stash();
+        break;
+#endif
 
     case 'D':
     case CMD_BUTCHER:
@@ -1174,7 +1527,15 @@ static void input(void)
 
     case 'i':
     case CMD_DISPLAY_INVENTORY:
+#if 0 //Slot
+    {
+        int ix = get_invent(-1);
+        if (isalpha(ix))
+            use_item(letter_to_index(ix));
+    }
+#else
         get_invent(-1);
+#endif
         break;
 
     case 'I':
@@ -1182,9 +1543,13 @@ static void input(void)
         // We'll leave this message in for a while.  Eventually, this
         // might be some special for of inventory command, or perhaps
         // actual god invocations will be split to here from abilities. -- bwr
+#ifdef JP
+        mpr( "装備しているアイテムの発動は、現在では'E'vokeになりました。", MSGCH_WARN );
+#else
         mpr( "This command is now 'E'voke wielded item.", MSGCH_WARN );
+#endif
         break;
-    
+
     case 'E':
     case CMD_EVOKE:
         if (!evoke_wielded())
@@ -1227,7 +1592,11 @@ static void input(void)
         {
             int index=0;
 
+#ifdef JP
+            if (armour_prompt("どの装備を外しますか？", &index))
+#else
             if (armour_prompt("Take off which item?", &index))
+#endif
                 takeoff_armour(index);
         }
         break;
@@ -1310,8 +1679,14 @@ static void input(void)
 
     case 'x':
     case CMD_LOOK_AROUND:
+#ifdef JP
+        mpr("カーソルを動かして周囲を観察してください。", MSGCH_PROMPT);
+        mpr("[?]を押すことでモンスターの解説が表示されます。", MSGCH_PROMPT);
+        mpr("[+]を押すことでカーソルがモンスターに移動します。", MSGCH_PROMPT);
+#else
         mpr("Move the cursor around to observe a square.", MSGCH_PROMPT);
         mpr("Press '?' for a monster description.", MSGCH_PROMPT);
+#endif
 
         struct dist lmove;
         look_around( lmove, true );
@@ -1328,13 +1703,19 @@ static void input(void)
         /* randart wpns */
         if (scan_randarts(RAP_PREVENT_SPELLCASTING))
         {
+#ifdef JP
+            mpr("何かがあなたの魔法を妨害している！");
+#else
             mpr("Something interferes with your magic!");
+#endif
             flush_input_buffer( FLUSH_ON_FAILURE );
             break;
         }
 
         if (!cast_a_spell())
+        {
             flush_input_buffer( FLUSH_ON_FAILURE );
+        }
         break;
 
     case '\'':
@@ -1342,18 +1723,70 @@ static void input(void)
         wield_weapon(true);
         break;
 
+    case CMD_FIX_WAYPOINT:
+    case CONTROL('F'):
+        if (you.level_type == LEVEL_LABYRINTH || you.level_type == LEVEL_ABYSS
+                || you.level_type == LEVEL_PANDEMONIUM)
+        {
+#ifdef JP
+            mpr("残念ながら、この場所は登録できない。");
+#else
+            mpr("Sorry, you can't set a waypoint here.");
+#endif
+            break;
+        }
+        travel_cache.add_waypoint();
+        break;
+
+    case CMD_INTERLEVEL_TRAVEL:
+    case CONTROL('G'):
+        if (you.level_type == LEVEL_LABYRINTH || you.level_type == LEVEL_ABYSS
+                || you.level_type == LEVEL_PANDEMONIUM)
+        {
+#ifdef JP
+            mpr("残念ながら、自動操作でここから脱出することはできない。");
+#else
+            mpr("Sorry, you can't auto-travel out of here.");
+#endif
+            break;
+        }
+        start_translevel_travel();
+        redraw_screen();
+        break;
+
+    case CONTROL('O'):
+    case CMD_EXPLORE:
+        if (you.level_type == LEVEL_LABYRINTH || you.level_type == LEVEL_ABYSS)
+        {
+#ifdef JP
+            mpr("あなたが地形を憶えていられるのなら、何よりも脱出の助けとなるのだが。");
+#else
+            mpr("It would help if you knew where you were, first.");
+#endif
+            break;
+        }
+        // Start exploring
+        start_explore();
+        break;
+
     case 'X':
     case CMD_DISPLAY_MAP:
 #if (!DEBUG_DIAGNOSTICS)
         if (you.level_type == LEVEL_LABYRINTH || you.level_type == LEVEL_ABYSS)
         {
+#ifdef JP
+            mpr("あなたが地形を憶えていられるのなら、何よりも脱出の助けとなるのだが。");
+#else
             mpr("It would help if you knew where you were, first.");
+#endif
             break;
         }
 #endif
         plox[0] = 0;
         show_map(plox);
         redraw_screen();
+        if (plox[0] > 0)
+            start_travel(plox[0], plox[1]);
         break;
 
     case '\\':
@@ -1361,6 +1794,17 @@ static void input(void)
         check_item_knowledge(); //nothing = check_item_knowledge();
         redraw_screen();
         break;
+
+#ifdef USE_TILE
+    case '-': //着せ替えコマンド
+        if (Options.use_tile)
+        {
+            set_keyin_mode(KEYIN_MODE_PAPER_DOLL);
+            TilePlayerEdit();
+            set_keyin_mode(KEYIN_MODE_NONE);
+        }
+        break;
+#endif
 
 #ifdef ALLOW_DESTROY_ITEM_COMMAND
     case CONTROL('D'):
@@ -1380,10 +1824,26 @@ static void input(void)
         redraw_screen();
         break;
 
+#if defined(WINDOWS) && defined(USE_TILE)
+    case CONTROL('T'):
+        change_font();
+        break;
+#endif
+
     case CONTROL('X'):
     case CMD_SAVE_GAME_NOW:
+#ifdef JP
+        mpr("セーブしています……お待ちください。");
+#else
         mpr("Saving game... please wait.");
+#endif
+
+#ifdef WINDOWS
         save_game(true);
+        quit_wingame();
+#else
+        save_game(true);
+#endif
         break;
 
 #ifdef USE_UNIX_SIGNALS
@@ -1391,16 +1851,21 @@ static void input(void)
     case CMD_SUSPEND_GAME:
         // CTRL-Z suspend behaviour is implemented here,
         // because we want to have CTRL-Y available...
-        // and unfortuantely they tend to be stuck together. 
+        // and unfortuantely they tend to be stuck together.
         clrscr();
+#ifndef USE_X11
         lincurses_shutdown();
+#endif
         kill(0, SIGTSTP);
+#ifndef USE_X11
         lincurses_startup();
+#endif
         redraw_screen();
         break;
 #endif
 
     case '?':
+    case '\r':
     case CMD_DISPLAY_COMMANDS:
         list_commands(false);
         redraw_screen();
@@ -1408,24 +1873,76 @@ static void input(void)
 
     case 'C':
     case CMD_EXPERIENCE_CHECK:
+#if 1
+    {
+        clrscr();
+        gotoxy(1,1);
+        char buffer[25*3][45];
+        int i;
+        int dump_x = 1;
+        int dump_y = 1;
+
+        get_full_detail(&buffer[0][0], false);
+
+        for(i=0; i<25; i++)
+        {
+            gotoxy(1, i + 1);
+            if (buffer[i][0] != '\0')
+                cprintf ("%s\0", &buffer[i][0]);
+
+            gotoxy(29, i + 1);
+            if (buffer[i + 25][0] != '\0')
+                cprintf ("%s\0", &buffer[i + 25][0]);
+
+            gotoxy(49, i + 1);
+            if (buffer[i + 50][0] != '\0')
+                cprintf ("%s\0", &buffer[i + 50][0]);
+        }
+    }
+
+#ifndef USE_MULTIWIN // skip getch
+        if (getch() == 0)
+            getch();
+#endif
+        redraw_screen();
+        break;
+//!!!!
+#else
+#ifdef JP
+        snprintf( info, INFO_SIZE, "あなたはレベル%dの%sで職業は%sです。", you.experience_level,
+                species_name(you.species,you.experience_level), you.class_name);
+#else
         snprintf( info, INFO_SIZE, "You are a level %d %s %s.", you.experience_level,
                 species_name(you.species,you.experience_level), you.class_name);
+#endif
         mpr(info);
 
         if (you.experience_level < 27)
         {
             int xp_needed = (exp_needed(you.experience_level+2) - you.experience) + 1;
-            snprintf( info, INFO_SIZE, "Level %d requires %ld experience (%d point%s to go!)",
-                    you.experience_level + 1, 
+#ifdef JP
+            snprintf( info, INFO_SIZE, "レベル%dになるには%ldの経験値が必要です。(あと%d必要)",
+                    you.experience_level + 1,
                     exp_needed(you.experience_level + 2) + 1,
-                    xp_needed, 
+                    xp_needed);
+#else
+            snprintf( info, INFO_SIZE, "Level %d requires %ld experience (%d point%s to go!)",
+                    you.experience_level + 1,
+                    exp_needed(you.experience_level + 2) + 1,
+                    xp_needed,
                     (xp_needed > 1) ? "s" : "");
+#endif
             mpr(info);
         }
         else
         {
+#ifdef JP
+            mpr( "残念ながら、レベル27が到達可能な最高レベルです。" );
+            mpr( "ここまで生き延びるとは、あなたの手腕には驚きを禁じえません。" );
+#else
             mpr( "I'm sorry, level 27 is as high as you can go." );
             mpr( "With the way you've been playing, I'm surprised you got this far." );
+#endif
         }
 
         if (you.real_time != -1)
@@ -1435,13 +1952,17 @@ static void input(void)
 
             make_time_string( curr, buff, sizeof(buff) );
 
-            snprintf( info, INFO_SIZE, "Play time: %s (%ld turns)", 
+#ifdef JP
+            snprintf( info, INFO_SIZE, "プレイ時間: %s (%ldターン)",
+#else
+            snprintf( info, INFO_SIZE, "Play time: %s (%ld turns)",
+#endif
                       buff, you.num_turns );
 
             mpr( info );
         }
         break;
-
+#endif
 
     case '!':
     case CMD_SHOUT:
@@ -1466,9 +1987,17 @@ static void input(void)
         strncpy(name_your, you.your_name, kNameLen);
         name_your[kNameLen] = '\0';
         if (dump_char( name_your, false ))
+#ifdef JP
+            strcpy(info, "キャラクターのダンプは成功しました。");
+#else
             strcpy(info, "Char dumped successfully.");
+#endif
         else
+#ifdef JP
+            strcat(info, "残念ながらキャラクターのダンプは失敗しました。");
+#else
             strcat(info, "Char dump unsuccessful! Sorry about that.");
+#endif
         mpr(info);
         break;
 
@@ -1479,7 +2008,11 @@ static void input(void)
         break;
     case '~':
     case CMD_MACRO_SAVE:
+#ifdef JP
+        mpr("マクロを保存します。");
+#else
         mpr("Saving macros.");
+#endif
         macro_save();
         break;
 #endif
@@ -1509,8 +2042,19 @@ static void input(void)
 
     case 'S':
     case CMD_SAVE_GAME:
+#ifdef JP
+        if (yesno("セーブして終了しますか？", false))
+#else
         if (yesno("Save game and exit?", false))
+#endif
+#ifdef WINDOWS
+        {
             save_game(true);
+            quit_wingame();
+        }
+#else
+            save_game(true);
+#endif
         break;
 
     case 'Q':
@@ -1528,17 +2072,29 @@ static void input(void)
 
     default:
     case CMD_NO_CMD:
+#ifdef JP
+        mpr("そのコマンドは存在しません。");
+#else
         mpr("Unknown command.");
+#endif
         break;
 
     }
+
+#ifdef STASH_TRACKING
+    if (Options.stash_tracking)
+        stashes.update_visible_stashes(
+                Options.stash_tracking == STM_ALL?
+                        StashTracker::ST_AGGRESSIVE :
+                        StashTracker::ST_PASSIVE);
+#endif
 
 #ifdef LINUX
     // New Unix keypad stuff
     if (running)
     {
         int dir = -1;
-        
+
         // XXX: ugly hack to interface this with the new running code. -- bwr
         for (int i = 0; i < 8; i++)
         {
@@ -1592,10 +2148,10 @@ static void input(void)
         special_wielded();
 
     if (one_chance_in(10))
-    {   
+    {
         // this is instantaneous
         if (player_teleport() > 0 && one_chance_in(100 / player_teleport()))
-            you_teleport2( true ); 
+            you_teleport2( true );
         else if (you.level_type == LEVEL_ABYSS && one_chance_in(30))
             you_teleport2( false, true ); // to new area of the Abyss
     }
@@ -1608,13 +2164,21 @@ static void input(void)
 
     if (you.duration[DUR_REPEL_UNDEAD] == 4)
     {
+#ifdef JP
+        mpr( "あなたの纏った神聖な霊気は減衰し始めた。", MSGCH_DURATION );
+#else
         mpr( "Your holy aura is starting to fade.", MSGCH_DURATION );
+#endif
         you.duration[DUR_REPEL_UNDEAD] -= random2(3);
     }
 
     if (you.duration[DUR_REPEL_UNDEAD] == 1)
     {
+#ifdef JP
+        mpr( "あなたの纏っていた神聖な霊気は消え去った。", MSGCH_DURATION );
+#else
         mpr( "Your holy aura fades away.", MSGCH_DURATION );
+#endif
         you.duration[DUR_REPEL_UNDEAD] = 0;
     }
 
@@ -1629,7 +2193,11 @@ static void input(void)
     {
         const int res_fire = player_res_fire();
 
+#ifdef JP
+        mpr( "あなたは燃えたぎる液体に焼かれている！", MSGCH_WARN );
+#else
         mpr( "You are covered in liquid flames!", MSGCH_WARN );
+#endif
         scrolls_burn(8, OBJ_SCROLLS);
 
         if (res_fire > 0)
@@ -1652,7 +2220,11 @@ static void input(void)
 
         if (you.duration[DUR_CONDENSATION_SHIELD] > 0)
         {
+#ifdef JP
+            mpr("あなたの氷の盾は砕け散ってしまった！", MSGCH_DURATION);
+#else
             mpr("Your icy shield dissipates!", MSGCH_DURATION);
+#endif
             you.duration[DUR_CONDENSATION_SHIELD] = 0;
             you.redraw_armour_class = 1;
         }
@@ -1665,7 +2237,11 @@ static void input(void)
     }
     else if (you.duration[DUR_ICY_ARMOUR] == 1)
     {
+#ifdef JP
+        mpr("あなたの氷の鎧は蒸発してしまった！", MSGCH_DURATION);
+#else
         mpr("Your icy armour evaporates.", MSGCH_DURATION);
+#endif
         you.redraw_armour_class = 1;     // is this needed? 2apr2000 {dlb}
         you.duration[DUR_ICY_ARMOUR] = 0;
     }
@@ -1675,14 +2251,22 @@ static void input(void)
         you.duration[DUR_REPEL_MISSILES]--;
         if (you.duration[DUR_REPEL_MISSILES] == 6)
         {
+#ifdef JP
+            mpr("あなたの飛来物防御の呪文は効果が切れそうだ……。", MSGCH_DURATION);
+#else
             mpr("Your repel missiles spell is about to expire...", MSGCH_DURATION);
+#endif
             if (coinflip())
                 you.duration[DUR_REPEL_MISSILES]--;
         }
     }
     else if (you.duration[DUR_REPEL_MISSILES] == 1)
     {
+#ifdef JP
+        mpr("飛来物からの保護が消え去った。", MSGCH_DURATION);
+#else
         mpr("You feel less protected from missiles.", MSGCH_DURATION);
+#endif
         you.duration[DUR_REPEL_MISSILES] = 0;
     }
 
@@ -1691,14 +2275,22 @@ static void input(void)
         you.duration[DUR_DEFLECT_MISSILES]--;
         if (you.duration[DUR_DEFLECT_MISSILES] == 6)
         {
+#ifdef JP
+            mpr("あなたの飛来物阻止の呪文は効果が切れそうだ……。", MSGCH_DURATION);
+#else
             mpr("Your deflect missiles spell is about to expire...", MSGCH_DURATION);
+#endif
             if (coinflip())
                 you.duration[DUR_DEFLECT_MISSILES]--;
         }
     }
     else if (you.duration[DUR_DEFLECT_MISSILES] == 1)
     {
+#ifdef JP
+        mpr("飛来物を阻止する力が消え去った。", MSGCH_DURATION);
+#else
         mpr("You feel less protected from missiles.", MSGCH_DURATION);
+#endif
         you.duration[DUR_DEFLECT_MISSILES] = 0;
     }
 
@@ -1708,14 +2300,22 @@ static void input(void)
 
         if (you.duration[DUR_REGENERATION] == 6)
         {
+#ifdef JP
+            mpr("皮膚があまりむずむずしなくなってきた。", MSGCH_DURATION);
+#else
             mpr("Your skin is crawling a little less now.", MSGCH_DURATION);
+#endif
             if (coinflip())
                 you.duration[DUR_REGENERATION]--;
         }
     }
     else if (you.duration[DUR_REGENERATION] == 1)
     {
+#ifdef JP
+        mpr("皮膚のむずむずは完全に消えた。", MSGCH_DURATION);
+#else
         mpr("Your skin stops crawling.", MSGCH_DURATION);
+#endif
         you.duration[DUR_REGENERATION] = 0;
     }
 
@@ -1723,7 +2323,11 @@ static void input(void)
         you.duration[DUR_PRAYER]--;
     else if (you.duration[DUR_PRAYER] == 1)
     {
+#ifdef JP
+        god_speaks(you.religion, "あなたは祈りを終えた。");
+#else
         god_speaks(you.religion, "Your prayer is over.");
+#endif
         you.duration[DUR_PRAYER] = 0;
     }
 
@@ -1750,33 +2354,66 @@ static void input(void)
             if (damage_type(you.inv[you.equip[EQ_WEAPON]].base_type,
                      you.inv[you.equip[EQ_WEAPON]].sub_type) != DVORP_CRUSHING)
             {
+#ifdef JP
+                strcat(info, "は切れ味が普通に戻った。");
+#else
                 strcat(info, " seems blunter.");
+#endif
             }
             else
             {
                 //jmf: for Maxwell's Silver Hammer
+#ifdef JP
+                strcat(info, "は重量が元に戻った。");
+#else
                 strcat(info, " feels lighter.");
+#endif
             }
             break;
 
         case SPWPN_FLAMING:
+#ifdef JP
+            strcat(info, "は炎が消えた。");
+#else
             strcat(info, " goes out.");
+#endif
             break;
         case SPWPN_FREEZING:
+#ifdef JP
+            strcat(info, "は輝きが消えた。");
+#else
             strcat(info, " stops glowing.");
+#endif
             break;
         case SPWPN_VENOM:
+#ifdef JP
+            strcat(info, "は毒の滴りが止まった。");
+#else
             strcat(info, " stops dripping with poison.");
+#endif
             break;
         case SPWPN_DRAINING:
+#ifdef JP
+            strcat(info, "の爆ぜる音が止まった。");
+#else
             strcat(info, " stops crackling.");
+#endif
             break;
         case SPWPN_DISTORTION:
+#ifdef JP
+            strcat( info, "はまっすぐに戻った。" );
+            miscast_effect( SPTYP_TRANSLOCATION, 9, 90, 100, "歪曲の効果" );
+#else
             strcat( info, " seems straighter." );
             miscast_effect( SPTYP_TRANSLOCATION, 9, 90, 100, "a distortion effect" );
+#endif
             break;
         default:
+#ifdef JP
+            strcat(info, "は不可解なことに特に変わったところはない。");
+#else
             strcat(info, " seems inexplicably less special.");
+#endif
             break;
         }
 
@@ -1789,7 +2426,11 @@ static void input(void)
         you.duration[DUR_BREATH_WEAPON]--;
     else if (you.duration[DUR_BREATH_WEAPON] == 1)
     {
+#ifdef JP
+        mpr("あなたは再びブレスを吐けるようになった。", MSGCH_RECOVERY);
+#else
         mpr("You have got your breath back.", MSGCH_RECOVERY);
+#endif
         you.duration[DUR_BREATH_WEAPON] = 0;
     }
 
@@ -1799,7 +2440,11 @@ static void input(void)
 
         if (you.duration[DUR_TRANSFORMATION] == 10)
         {
+#ifdef JP
+            mpr("あなたの変身はもうすぐ時間切れだ。", MSGCH_DURATION);
+#else
             mpr("Your transformation is almost over.", MSGCH_DURATION);
+#endif
             you.duration[DUR_TRANSFORMATION] -= random2(3);
         }
     }
@@ -1814,14 +2459,22 @@ static void input(void)
         you.duration[DUR_SWIFTNESS]--;
         if (you.duration[DUR_SWIFTNESS] == 6)
         {
+#ifdef JP
+            mpr("あなたの速度は少しづつ低下し始めた。", MSGCH_DURATION);
+#else
             mpr("You start to feel a little slower.", MSGCH_DURATION);
+#endif
             if (coinflip())
                 you.duration[DUR_SWIFTNESS]--;
         }
     }
     else if (you.duration[DUR_SWIFTNESS] == 1)
     {
+#ifdef JP
+        mpr("あなたの俊足は消失した。", MSGCH_DURATION);
+#else
         mpr("You feel sluggish.", MSGCH_DURATION);
+#endif
         you.duration[DUR_SWIFTNESS] = 0;
     }
 
@@ -1830,14 +2483,22 @@ static void input(void)
         you.duration[DUR_INSULATION]--;
         if (you.duration[DUR_INSULATION] == 6)
         {
+#ifdef JP
+            mpr("あなたは絶縁化の効果が弱まってきたのを感じた。", MSGCH_DURATION);
+#else
             mpr("You start to feel a little less insulated.", MSGCH_DURATION);
+#endif
             if (coinflip())
                 you.duration[DUR_INSULATION]--;
         }
     }
     else if (you.duration[DUR_INSULATION] == 1)
     {
+#ifdef JP
+        mpr("あなたは通電体に戻った。", MSGCH_DURATION);
+#else
         mpr("You feel conductive.", MSGCH_DURATION);
+#endif
         you.duration[DUR_INSULATION] = 0;
     }
 
@@ -1846,7 +2507,11 @@ static void input(void)
         you.duration[DUR_STONEMAIL]--;
         if (you.duration[DUR_STONEMAIL] == 6)
         {
+#ifdef JP
+            mpr("あなたの鱗状の岩石装甲は剥がれ落ちはじめた。", MSGCH_DURATION);
+#else
             mpr("Your scaley stone armour is starting to flake away.", MSGCH_DURATION);
+#endif
             you.redraw_armour_class = 1;
             if (coinflip())
                 you.duration[DUR_STONEMAIL]--;
@@ -1854,7 +2519,11 @@ static void input(void)
     }
     else if (you.duration[DUR_STONEMAIL] == 1)
     {
+#ifdef JP
+        mpr("あなたの鱗状の岩石装甲は消え去ってしまった。", MSGCH_DURATION);
+#else
         mpr("Your scaley stone armour disappears.", MSGCH_DURATION);
+#endif
         you.duration[DUR_STONEMAIL] = 0;
         you.redraw_armour_class = 1;
         burden_change();
@@ -1864,9 +2533,13 @@ static void input(void)
         you.duration[DUR_FORESCRY]--;
     else if (you.duration[DUR_FORESCRY] == 1)
     {
+#ifdef JP
+        mpr("あなたの知覚は現在に引き戻された。", MSGCH_DURATION);
+#else
         mpr("You feel firmly rooted in the present.", MSGCH_DURATION);
+#endif
         you.duration[DUR_FORESCRY] = 0;
-        you.redraw_evasion = 1; 
+        you.redraw_evasion = 1;
     }
 
     if (you.duration[DUR_SEE_INVISIBLE] > 1)    //jmf: added
@@ -1876,7 +2549,11 @@ static void input(void)
         you.duration[DUR_SEE_INVISIBLE] = 0;
 
         if (!player_see_invis())
+#ifdef JP
+            mpr("あなたの視界は少しの間かすんだ。", MSGCH_DURATION);
+#else
             mpr("Your eyesight blurs momentarily.", MSGCH_DURATION);
+#endif
     }
 
     if (you.duration[DUR_SILENCE] > 0)  //jmf: cute message handled elsewhere
@@ -1887,17 +2564,25 @@ static void input(void)
         you.duration[DUR_CONDENSATION_SHIELD]--;
 
         scrolls_burn( 1, OBJ_POTIONS );
-        
+
         if (player_res_cold() < 0)
         {
+#ifdef JP
+            mpr( "あなたは凍えついた。" );
+#else
             mpr( "You feel very cold." );
+#endif
             ouch( 2 + random2avg(13, 2), 0, KILLED_BY_FREEZING );
         }
     }
     else if (you.duration[DUR_CONDENSATION_SHIELD] == 1)
     {
         you.duration[DUR_CONDENSATION_SHIELD] = 0;
+#ifdef JP
+        mpr("あなたの氷の盾は蒸発してしまった。", MSGCH_DURATION);
+#else
         mpr("Your icy shield evaporates.", MSGCH_DURATION);
+#endif
         you.redraw_armour_class = 1;
     }
 
@@ -1905,7 +2590,11 @@ static void input(void)
         you.duration[DUR_STONESKIN]--;
     else if (you.duration[DUR_STONESKIN] == 1)
     {
+#ifdef JP
+        mpr("あなたの皮膚は柔らかくなった。", MSGCH_DURATION);
+#else
         mpr("Your skin feels tender.", MSGCH_DURATION);
+#endif
         you.redraw_armour_class = 1;
         you.duration[DUR_STONESKIN] = 0;
     }
@@ -1923,7 +2612,7 @@ static void input(void)
     else if (you.duration[DUR_TELEPORT] == 1)
     {
         // only to a new area of the abyss sometimes (for abyss teleports)
-        you_teleport2( true, one_chance_in(5) ); 
+        you_teleport2( true, one_chance_in(5) );
         you.duration[DUR_TELEPORT] = 0;
     }
 
@@ -1933,14 +2622,22 @@ static void input(void)
 
         if (you.duration[DUR_CONTROL_TELEPORT] == 6)
         {
+#ifdef JP
+            mpr("あなたは少し不確定になってきたようだ。", MSGCH_DURATION);
+#else
             mpr("You start to feel a little uncertain.", MSGCH_DURATION);
+#endif
             if (coinflip())
                 you.duration[DUR_CONTROL_TELEPORT]--;
         }
     }
     else if (you.duration[DUR_CONTROL_TELEPORT] == 1)
     {
+#ifdef JP
+        mpr("あなたは不確定になった。", MSGCH_DURATION);
+#else
         mpr("You feel uncertain.", MSGCH_DURATION);
+#endif
         you.duration[DUR_CONTROL_TELEPORT] = 0;
         you.attribute[ATTR_CONTROL_TELEPORT]--;
     }
@@ -1950,14 +2647,22 @@ static void input(void)
         you.duration[DUR_RESIST_POISON]--;
         if (you.duration[DUR_RESIST_POISON] == 6)
         {
+#ifdef JP
+            mpr("あなたの毒耐性は効果が切れようとしている。", MSGCH_DURATION);
+#else
             mpr("Your poison resistance is about to expire.", MSGCH_DURATION);
+#endif
             if (coinflip())
                 you.duration[DUR_RESIST_POISON]--;
         }
     }
     else if (you.duration[DUR_RESIST_POISON] == 1)
     {
+#ifdef JP
+        mpr("あなたの毒耐性は効果が切れてしまった。", MSGCH_DURATION);
+#else
         mpr("Your poison resistance expires.", MSGCH_DURATION);
+#endif
         you.duration[DUR_RESIST_POISON] = 0;
     }
 
@@ -1966,14 +2671,22 @@ static void input(void)
         you.duration[DUR_DEATH_CHANNEL]--;
         if (you.duration[DUR_DEATH_CHANNEL] == 6)
         {
+#ifdef JP
+            mpr("あなたの邪悪な霊力が弱まっていく。", MSGCH_DURATION);
+#else
             mpr("Your unholy channel is weakening.", MSGCH_DURATION);
+#endif
             if (coinflip())
                 you.duration[DUR_DEATH_CHANNEL]--;
         }
     }
     else if (you.duration[DUR_DEATH_CHANNEL] == 1)
     {
+#ifdef JP
+        mpr("あなたの邪悪な霊力は尽きてしまった。", MSGCH_DURATION);    // Death channel wore off
+#else
         mpr("Your unholy channel expires.", MSGCH_DURATION);    // Death channel wore off
+#endif
         you.duration[DUR_DEATH_CHANNEL] = 0;
     }
 
@@ -1986,7 +2699,11 @@ static void input(void)
     {
         //jmf: use you.max_hp instead? or would that be too evil?
         you.duration[DUR_INFECTED_SHUGGOTH_SEED] = 0;
+#ifdef JP
+        mpr("おぞましい存在があなたの胸を裂いて飛び出した！", MSGCH_WARN);
+#else
         mpr("A horrible thing bursts from your chest!", MSGCH_WARN);
+#endif
         ouch(1 + you.hp / 2, 0, KILLED_BY_SHUGGOTH);
         make_shuggoth(you.x_pos, you.y_pos, 1 + you.hp / 2);
     }
@@ -1997,14 +2714,22 @@ static void input(void)
 
         if (you.invis == 6)
         {
+#ifdef JP
+            mpr("あなたの姿が一瞬だけ明滅した。", MSGCH_DURATION);
+#else
             mpr("You flicker for a moment.", MSGCH_DURATION);
+#endif
             if (coinflip())
                 you.invis--;
         }
     }
     else if (you.invis == 1)
     {
+#ifdef JP
+        mpr("あなたは再び姿を現した。", MSGCH_DURATION);
+#else
         mpr("You flicker back into view.", MSGCH_DURATION);
+#endif
         you.invis = 0;
     }
 
@@ -2015,7 +2740,11 @@ static void input(void)
         you.paralysis--;
     else if (you.paralysis == 1)
     {
+#ifdef JP
+        mpr("あなたはようやく動けるようになった。", MSGCH_DURATION);
+#else
         mpr("You can move again.", MSGCH_DURATION);
+#endif
         you.paralysis = 0;
     }
 
@@ -2023,7 +2752,11 @@ static void input(void)
         you.exhausted--;
     else if (you.exhausted == 1)
     {
+#ifdef JP
+        mpr("あなたの疲労は軽くなった。", MSGCH_DURATION);
+#else
         mpr("You feel less fatigued.", MSGCH_DURATION);
+#endif
         you.exhausted = 0;
     }
 
@@ -2034,7 +2767,11 @@ static void input(void)
         you.might--;
     else if (you.might == 1)
     {
+#ifdef JP
+        mpr("あなたの腕力が元に戻ったようだ。", MSGCH_DURATION);
+#else
         mpr("You feel a little less mighty now.", MSGCH_DURATION);
+#endif
         you.might = 0;
         modify_stat(STAT_STRENGTH, -5, true);
     }
@@ -2043,7 +2780,11 @@ static void input(void)
         you.berserker--;
     else if (you.berserker == 1)
     {
+#ifdef JP
+        mpr( "あなたのバーサークが解けた。", MSGCH_DURATION );
+#else
         mpr( "You are no longer berserk.", MSGCH_DURATION );
+#endif
         you.berserker = 0;
 
         //jmf: guilty for berserking /after/ berserk
@@ -2053,7 +2794,7 @@ static void input(void)
         // Sometimes berserk leaves us physically drained
         //
 
-        // chance of passing out:  
+        // chance of passing out:
         //     - mutation gives a large plus in order to try and
         //       avoid the mutation being a "death sentence" to
         //       certain characters.
@@ -2063,7 +2804,7 @@ static void input(void)
         //       this should make it a bit more interesting for
         //       Crusaders again.
         //     - similarly for the amulet
-        int chance = 10 + you.mutation[MUT_BERSERK] * 25 
+        int chance = 10 + you.mutation[MUT_BERSERK] * 25
                         + (wearing_amulet( AMU_RAGE ) ? 10 : 0)
                         + (player_has_spell( SPELL_BERSERKER_RAGE ) ? 5 : 0);
 
@@ -2073,11 +2814,19 @@ static void input(void)
             || (you.religion == GOD_TROG && you.piety > random2(150))
             || !one_chance_in( chance ))
         {
+#ifdef JP
+            mpr("あなたは疲労困憊している。");
+#else
             mpr("You are exhausted.");
+#endif
         }
         else
         {
+#ifdef JP
+            mpr("あなたは疲労のあまり気絶してしまった。", MSGCH_WARN);
+#else
             mpr("You pass out from exhaustion.", MSGCH_WARN);
+#endif
             you.paralysis += roll_dice( 1, 4 );
         }
 
@@ -2100,7 +2849,11 @@ static void input(void)
         you.confusing_touch--;
     else if (you.confusing_touch == 1)
     {
+#ifdef JP
+        snprintf( info, INFO_SIZE, "あなたの%sから輝きが失せた。", your_hand(true) );
+#else
         snprintf( info, INFO_SIZE, "Your %s stop glowing.", your_hand(true) );
+#endif
         mpr( info, MSGCH_DURATION );
         you.confusing_touch = 0;
     }
@@ -2109,7 +2862,11 @@ static void input(void)
         you.sure_blade--;
     else if (you.sure_blade == 1)
     {
+#ifdef JP
+        mpr("あなたの剣との結合は消え失せた。", MSGCH_DURATION);
+#else
         mpr("The bond with your blade fades away.", MSGCH_DURATION);
+#endif
         you.sure_blade = 0;
     }
 
@@ -2123,7 +2880,11 @@ static void input(void)
 
         if (you.levitation == 10)
         {
+#ifdef JP
+            mpr("あなたの浮力がなくなり始めた！", MSGCH_DURATION);
+#else
             mpr("You are starting to lose your buoyancy!", MSGCH_DURATION);
+#endif
             you.levitation -= random2(6);
 
             if (you.duration[DUR_CONTROLLED_FLIGHT] > 0)
@@ -2132,7 +2893,11 @@ static void input(void)
     }
     else if (you.levitation == 1)
     {
+#ifdef JP
+        mpr("あなたは優雅に下へと舞い降りていった。", MSGCH_DURATION);
+#else
         mpr("You float gracefully downwards.", MSGCH_DURATION);
+#endif
         you.levitation = 0;
         burden_change();
         you.duration[DUR_CONTROLLED_FLIGHT] = 0;
@@ -2141,10 +2906,14 @@ static void input(void)
             || grd[you.x_pos][you.y_pos] == DNGN_DEEP_WATER
             || grd[you.x_pos][you.y_pos] == DNGN_SHALLOW_WATER)
         {
-            if (you.species == SP_MERFOLK 
+            if (you.species == SP_MERFOLK
                 && grd[you.x_pos][you.y_pos] != DNGN_LAVA)
             {
+#ifdef JP
+                mpr("あなたは水中に飛び込んで、本来の形態に変化した。");
+#else
                 mpr("You dive into the water and return to your normal form.");
+#endif
                 merfolk_start_swimming();
             }
 
@@ -2155,14 +2924,18 @@ static void input(void)
 
     if (you.rotting > 0)
     {
-        // XXX: Mummies have an ability (albeit an expensive one) that 
+        // XXX: Mummies have an ability (albeit an expensive one) that
         // can fix rotted HPs now... it's probably impossible for them
         // to even start rotting right now, but that could be changed. -- bwr
         if (you.species == SP_MUMMY)
             you.rotting = 0;
         else if (random2(20) <= (you.rotting - 1))
         {
+#ifdef JP
+            mpr("あなたの肉体が腐り落ちていった。", MSGCH_WARN);
+#else
             mpr("You feel your flesh rotting away.", MSGCH_WARN);
+#endif
             ouch(1, 0, KILLED_BY_ROTTING);
             rot_hp(1);
             you.rotting--;
@@ -2178,7 +2951,11 @@ static void input(void)
     {
         if (one_chance_in(400))
         {
+#ifdef JP
+            mpr("あなたの肉体が腐り落ちていった。", MSGCH_WARN);
+#else
             mpr("You feel your flesh rotting away.", MSGCH_WARN);
+#endif
             ouch(1, 0, KILLED_BY_ROTTING);
             rot_hp(1);
 
@@ -2196,18 +2973,30 @@ static void input(void)
             if (you.poison > 10 && random2(you.poison) >= 8)
             {
                 ouch(random2(10) + 5, 0, KILLED_BY_POISON);
+#ifdef JP
+                mpr("あなたは極めて重く毒に冒されている。", MSGCH_DANGER);
+#else
                 mpr("You feel extremely sick.", MSGCH_DANGER);
+#endif
             }
             else if (you.poison > 5 && coinflip())
             {
                 ouch((coinflip()? 3 : 2), 0, KILLED_BY_POISON);
+#ifdef JP
+                mpr("あなたは重く毒に冒されている。", MSGCH_WARN);
+#else
                 mpr("You feel very sick.", MSGCH_WARN);
+#endif
             }
             else
             {
                 // the poison running through your veins.");
                 ouch(1, 0, KILLED_BY_POISON);
+#ifdef JP
+                mpr("あなたは毒に冒されている。");
+#else
                 mpr("You feel sick.");
+#endif
             }
 
             if ((you.hp == 1 && one_chance_in(3)) || one_chance_in(8))
@@ -2219,7 +3008,11 @@ static void input(void)
     {
         if (you.hp > allowed_deaths_door_hp())
         {
+#ifdef JP
+            mpr("あなたは生命を取り戻した。", MSGCH_DURATION);
+#else
             mpr("Your life is in your own hands once again.", MSGCH_DURATION);
+#endif
             you.paralysis += 5 + random2(5);
             confuse_player( 10 + random2(10) );
             you.hp_max--;
@@ -2231,12 +3024,20 @@ static void input(void)
 
         if (you.deaths_door == 10)
         {
+#ifdef JP
+            mpr("あなたに残された時間は急速に流れ去っていく！", MSGCH_DURATION);
+#else
             mpr("Your time is quickly running out!", MSGCH_DURATION);
+#endif
             you.deaths_door -= random2(6);
         }
         if (you.deaths_door == 1)
         {
+#ifdef JP
+            mpr("あなたは生命を取り戻した。", MSGCH_DURATION);
+#else
             mpr("Your life is in your own hands again!", MSGCH_DURATION);
+#endif
             more();
         }
     }
@@ -2255,7 +3056,7 @@ static void input(void)
 
     while (tmp >= 100)
     {
-        if (you.hp >= you.hp_max - 1 
+        if (you.hp >= you.hp_max - 1
             && you.running && you.run_x == 0 && you.run_y == 0)
         {
             you.running = 0;
@@ -2277,7 +3078,7 @@ static void input(void)
 
     while (tmp >= 100)
     {
-        if (you.magic_points >= you.max_magic_points - 1 
+        if (you.magic_points >= you.max_magic_points - 1
             && you.running && you.run_x == 0 && you.run_y == 0)
         {
             you.running = 0;
@@ -2320,12 +3121,18 @@ static void input(void)
     // basics for now.  -- bwr
     if (Visible_Statue[ STATUE_SILVER ])
     {
+        if (you.running < 0) you.running = 0;
+
         if ((!you.invis && one_chance_in(3)) || one_chance_in(5))
         {
             char wc[30];
 
             weird_colours( random2(256), wc );
+#ifdef JP
+            snprintf(info, INFO_SIZE, "銀の像の双眸は%sに輝いた", wc);
+#else
             snprintf(info, INFO_SIZE, "The silver statue's eyes glow %s.", wc);
+#endif
             mpr( info, MSGCH_WARN );
 
             create_monster( summon_any_demon((coinflip() ? DEMON_COMMON
@@ -2340,12 +3147,22 @@ static void input(void)
 
     if (Visible_Statue[ STATUE_ORANGE_CRYSTAL ])
     {
+        if (you.running < 0) you.running = 0;
+
         if ((!you.invis && coinflip()) || one_chance_in(4))
         {
+#ifdef JP
+            mpr("敵対的な存在があなたの精神に攻撃を加えた！", MSGCH_WARN);
+#else
             mpr("A hostile presence attacks your mind!", MSGCH_WARN);
+#endif
 
             miscast_effect( SPTYP_DIVINATION, random2(15), random2(150), 100,
+#ifdef JP
+                            "オレンジの水晶像" );
+#else
                             "an orange crystal statue" );
+#endif
         }
 
         Visible_Statue[ STATUE_ORANGE_CRYSTAL ] = 0;
@@ -2356,7 +3173,11 @@ static void input(void)
     {
         if (!you.paralysis && one_chance_in(40))
         {
+#ifdef JP
+            mpr("あなたは意識を失った！", MSGCH_FOOD);
+#else
             mpr("You lose consciousness!", MSGCH_FOOD);
+#endif
             you.paralysis += 5 + random2(8);
 
             if (you.paralysis > 13)
@@ -2365,7 +3186,11 @@ static void input(void)
 
         if (you.hunger <= 100)
         {
+#ifdef JP
+            mpr( "あなたは飢え死にした。", MSGCH_FOOD );
+#else
             mpr( "You have starved to death.", MSGCH_FOOD );
+#endif
             ouch( -9999, 0, KILLED_BY_STARVATION );
         }
     }
@@ -2378,13 +3203,25 @@ static void input(void)
         if (its_quiet)
         {
             if (random2(30))
+#ifdef JP
+                mpr("あなたは深い静寂に包まれた。", MSGCH_WARN);
+#else
                 mpr("You are enveloped in profound silence.", MSGCH_WARN);
+#endif
             else
+#ifdef JP
+                mpr("ダンジョンは静かだ……この静けさは異常だ！", MSGCH_WARN);
+#else
                 mpr("The dungeon seems quiet ... too quiet!", MSGCH_WARN);
+#endif
         }
         else
         {
+#ifdef JP
+            mpr("あなたの周囲に音が戻った。", MSGCH_RECOVERY);
+#else
             mpr("Your hearing returns.", MSGCH_RECOVERY);
+#endif
         }
 
         you.attribute[ATTR_WAS_SILENCED] = its_quiet;
@@ -2400,7 +3237,7 @@ static void input(void)
         && !player_in_branch( BRANCH_ECUMENICAL_TEMPLE )
         && one_chance_in((you.char_direction == DIR_DESCENDING) ? 240 : 10))
     {
-        int prox = (one_chance_in(10) ? PROX_NEAR_STAIRS 
+        int prox = (one_chance_in(10) ? PROX_NEAR_STAIRS
                                       : PROX_AWAY_FROM_PLAYER);
 
         // The rules change once the player has picked up the Orb...
@@ -2462,7 +3299,11 @@ static void open_door(char move_x, char move_y)
         {
             if (env.cgrid[dx][dy] != EMPTY_CLOUD)
             {
+#ifdef JP
+                mpr("目下のところその罠の処理に取り掛かることはできない。");
+#else
                 mpr("You can't get to that trap right now.");
+#endif
                 return;
             }
 
@@ -2470,13 +3311,20 @@ static void open_door(char move_x, char move_y)
             return;
         }
 
-    } 
-    else 
+    }
+    else
     {
+#ifdef JP
+        mpr("どの方向ですか？", MSGCH_PROMPT);
+#else
         mpr("Which direction?", MSGCH_PROMPT);
+#endif
         direction( door_move, DIR_DIR );
         if (!door_move.isValid)
+        {
+            canned_msg(MSG_OK);
             return;
+        }
 
         // convenience
         dx = you.x_pos + door_move.dx;
@@ -2489,13 +3337,22 @@ static void open_door(char move_x, char move_y)
 
         if (one_chance_in(skill) && !silenced(you.x_pos, you.y_pos))
         {
+#ifdef JP
+            mpr( "扉はやかましく軋みながら開いた！" );
+#else
             mpr( "As you open the door, it creaks loudly!" );
+#endif
             noisy( 10, you.x_pos, you.y_pos );
         }
         else
         {
+#ifdef JP
+            mpr( player_is_levitating() ? "あなたは下に向けて手を伸ばし、扉を開けた。"
+                                        : "あなたは扉を開けた。" );
+#else
             mpr( player_is_levitating() ? "You reach down and open the door."
                                         : "You open the door." );
+#endif
         }
 
         grd[dx][dy] = DNGN_OPEN_DOOR;
@@ -2503,7 +3360,11 @@ static void open_door(char move_x, char move_y)
     }
     else
     {
+#ifdef JP
+        mpr("そちらに閉じた扉はない。");
+#else
         mpr("You swing at nothing.");
+#endif
         make_hungry(3, true);
         you.turn_is_over = 1;
     }
@@ -2522,15 +3383,26 @@ static void close_door(char door_x, char door_y)
 
     if (!(door_x || door_y))
     {
+#ifdef JP
+        mpr("どの方向ですか？", MSGCH_PROMPT);
+#else
         mpr("Which direction?", MSGCH_PROMPT);
+#endif
         direction( door_move, DIR_DIR );
         if (!door_move.isValid)
+        {
+            canned_msg(MSG_OK);
             return;
+        }
     }
 
     if (door_move.dx == 0 && door_move.dy == 0)
     {
+#ifdef JP
+        mpr("戸口の上に立ったまま扉を閉めることは不可能だ！");
+#else
         mpr("You can't close doors on yourself!");
+#endif
         return;
     }
 
@@ -2543,7 +3415,11 @@ static void close_door(char door_x, char door_y)
         if (mgrd[dx][dy] != NON_MONSTER)
         {
             // Need to make sure that turn_is_over = 1 if creature is invisible
+#ifdef JP
+            mpr("戸口にはモンスターがいる！");
+#else
             mpr("There's a creature in the doorway!");
+#endif
             door_move.dx = 0;
             door_move.dy = 0;
             return;
@@ -2551,7 +3427,11 @@ static void close_door(char door_x, char door_y)
 
         if (igrd[dx][dy] != NON_ITEM)
         {
+#ifdef JP
+            mpr("何かが戸口を塞いでしまっている。");
+#else
             mpr("There's something blocking the doorway.");
+#endif
             door_move.dx = 0;
             door_move.dy = 0;
             return;
@@ -2561,13 +3441,22 @@ static void close_door(char door_x, char door_y)
 
         if (one_chance_in(skill) && !silenced(you.x_pos, you.y_pos))
         {
+#ifdef JP
+            mpr("扉はやかましく軋みながら閉じた！");
+#else
             mpr("As you close the door, it creaks loudly!");
+#endif
             noisy( 10, you.x_pos, you.y_pos );
         }
         else
         {
+#ifdef JP
+            mpr( player_is_levitating() ? "あなたは下に向けて手を伸ばし、扉を閉じた。"
+                                        : "あなたは扉を閉じた。" );
+#else
             mpr( player_is_levitating() ? "You reach down and close the door."
                                         : "You close the door." );
+#endif
         }
 
         grd[dx][dy] = DNGN_CLOSED_DOOR;
@@ -2575,7 +3464,11 @@ static void close_door(char door_x, char door_y)
     }
     else
     {
+#ifdef JP
+        mpr("そちらに開いた扉はない。");
+#else
         mpr("There isn't anything that you can close there!");
+#endif
     }
 }                               // end open_door()
 
@@ -2661,6 +3554,7 @@ static bool initialise(void)
 
     // sets up a new game:
     bool newc = new_game();
+    delay(500);
     ret = newc;  // newc will be mangled later so we'll take a copy --bwr
 
     if (!newc)
@@ -2671,12 +3565,22 @@ static bool initialise(void)
     calc_hp();
     calc_mp();
 
-    load( 82, (newc ? LOAD_START_GAME : LOAD_RESTART_GAME), false, 0, 
+    load( 82, (newc ? LOAD_START_GAME : LOAD_RESTART_GAME), false, 0,
           you.where_are_you );
 
 #if DEBUG_DIAGNOSTICS
     // Debug compiles display a lot of "hidden" information, so we auto-wiz
     you.wizard = true;
+#endif
+
+#ifdef USE_TILE
+    if (Options.use_tile)
+    {
+        TilePlayerInit();
+        TileInitItems();
+        TileLoadWall(false);
+        tile_clear_buf();
+    }
 #endif
 
     init_properties();
@@ -2732,13 +3636,25 @@ static void do_berserk_no_combat_penalty(void)
         switch (you.berserk_penalty)
         {
         case 2:
+#ifdef JP
+            mpr("あなたは激しい攻撃衝動に駆られている。", MSGCH_DURATION);
+#else
             mpr("You feel a strong urge to attack something.", MSGCH_DURATION);
+#endif
             break;
         case 4:
+#ifdef JP
+            mpr("あなたの怒りは流れ去っていった。", MSGCH_DURATION);
+#else
             mpr("You feel your anger subside.", MSGCH_DURATION);
+#endif
             break;
         case 6:
+#ifdef JP
+            mpr("あなたの血に飢えた激情は速やかに消え去った。", MSGCH_DURATION);
+#else
             mpr("Your blood rage is quickly leaving you.", MSGCH_DURATION);
+#endif
             break;
         }
 
@@ -2785,26 +3701,38 @@ static void move_player(char move_x, char move_y)
         if (new_targ_grid < MINMOVE)
         {
             you.turn_is_over = 1;
+#ifdef JP
+            mpr("痛い！");
+#else
             mpr("Ouch!");
+#endif
             return;
         }
 
-        if (new_targ_grid == DNGN_LAVA 
+        if (new_targ_grid == DNGN_LAVA
             && you.duration[DUR_CONDENSATION_SHIELD] > 0)
         {
+#ifdef JP
+            mpr("あなたの氷の盾は砕け散ってしまった！", MSGCH_DURATION);
+#else
             mpr("Your icy shield dissipates!", MSGCH_DURATION);
+#endif
             you.duration[DUR_CONDENSATION_SHIELD] = 0;
             you.redraw_armour_class = 1;
         }
 
-        if ((new_targ_grid == DNGN_LAVA 
+        if ((new_targ_grid == DNGN_LAVA
                 || new_targ_grid == DNGN_DEEP_WATER
                 || new_targ_grid == DNGN_SHALLOW_WATER)
              && !player_is_levitating())
         {
             if (you.species == SP_MERFOLK && new_targ_grid != DNGN_LAVA)
             {
+#ifdef JP
+                mpr("あなたは水の中に入り、本来の形態に変化した。");
+#else
                 mpr("You stumble into the water and return to your normal form.");
+#endif
                 merfolk_start_swimming();
             }
 
@@ -2863,13 +3791,17 @@ static void move_player(char move_x, char move_y)
   break_out:
     if (targ_grid == DNGN_LAVA && you.duration[DUR_CONDENSATION_SHIELD] > 0)
     {
+#ifdef JP
+        mpr("あなたの氷の盾は砕け散ってしまった！", MSGCH_DURATION);
+#else
         mpr("Your icy shield dissipates!", MSGCH_DURATION);
+#endif
         you.duration[DUR_CONDENSATION_SHIELD] = 0;
         you.redraw_armour_class = 1;
     }
 
     // Handle dangerous tiles
-    if ((targ_grid == DNGN_LAVA 
+    if ((targ_grid == DNGN_LAVA
             || targ_grid == DNGN_DEEP_WATER
             || targ_grid == DNGN_SHALLOW_WATER)
         && !attacking && !player_is_levitating() && moving)
@@ -2881,13 +3813,21 @@ static void move_player(char move_x, char move_y)
             // Only mention diving if we just entering the water.
             if (!player_in_water())
             {
+#ifdef JP
+                mpr("あなたは水中に飛び込んで、本来の形態に変化した。");
+#else
                 mpr("You dive into the water and return to your normal form.");
+#endif
                 merfolk_start_swimming();
             }
         }
         else if (targ_grid != DNGN_SHALLOW_WATER)
         {
+#ifdef JP
+            bool enter = yesno("本当にそこに踏み込むのですか？", false);
+#else
             bool enter = yesno("Do you really want to step there?", false);
+#endif
 
             if (enter)
             {
@@ -2909,15 +3849,19 @@ static void move_player(char move_x, char move_y)
         if (targ_grid == DNGN_UNDISCOVERED_TRAP
                 && random2(you.skills[SK_TRAPS_DOORS] + 1) > 3)
         {
+#ifdef JP
+            strcpy(info, "本当にそこに踏み込むのですか？");
+#else
             strcpy(info, "Wait a moment, ");
             strcat(info, you.your_name);
             strcat(info, "! Do you really want to step there?");
+#endif
             mpr(info, MSGCH_WARN);
             more();
             you.turn_is_over = 0;
 
             i = trap_at_xy( targ_x, targ_y );
-            if (i != -1)  
+            if (i != -1)
                 grd[ targ_x ][ targ_y ] = trap_category(env.trap[i].type);
             return;
         }
@@ -2931,7 +3875,11 @@ static void move_player(char move_x, char move_y)
             {
                 if (one_chance_in(3) && !silenced(you.x_pos, you.y_pos))
                 {
+#ifdef JP
+                    mpr("ザブン！");
+#else
                     mpr("Splash!");
+#endif
                     noisy( 10, you.x_pos, you.y_pos );
                 }
 
@@ -2940,17 +3888,30 @@ static void move_player(char move_x, char move_y)
 
                 if (old_grid != DNGN_SHALLOW_WATER)
                 {
+#ifdef JP
+                    mpr( "あなたは浅い水場に入った。"
+                         "水場では足を取られて歩みが遅くなる。" );
+#else
                     mpr( "You enter the shallow water. "
                          "Moving in this stuff is going to be slow." );
+#endif
 
                     if (you.invis)
+#ifdef JP
+                        mpr( "そして、音に気付かれずに動くことは期待できない。" );
+#else
                         mpr( "And don't expect to remain undetected." );
+#endif
                 }
             }
             else if (old_grid != DNGN_SHALLOW_WATER
                     && old_grid != DNGN_DEEP_WATER)
             {
+#ifdef JP
+                mpr("水の中に入った瞬間、あなたは本来の姿に戻った。");
+#else
                 mpr("You return to your normal form as you enter the water.");
+#endif
                 merfolk_start_swimming();
             }
         }
@@ -3016,7 +3977,11 @@ static void move_player(char move_x, char move_y)
         you.pet_target = MHITNOT;
 
 #if DEBUG_DIAGNOSTICS
+#ifdef JP
         mpr( "Shifting.", MSGCH_DIAGNOSTICS );
+#else
+        mpr( "Shifting.", MSGCH_DIAGNOSTICS );
+#endif
         int igly = 0;
         int ig2 = 0;
 
@@ -3026,7 +3991,11 @@ static void move_player(char move_x, char move_y)
                 ig2++;
         }
 
+#ifdef JP
         snprintf( info, INFO_SIZE, "Number of items present: %d", ig2 );
+#else
+        snprintf( info, INFO_SIZE, "Number of items present: %d", ig2 );
+#endif
         mpr( info, MSGCH_DIAGNOSTICS );
 
         ig2 = 0;
@@ -3036,10 +4005,18 @@ static void move_player(char move_x, char move_y)
                 ig2++;
         }
 
+#ifdef JP
         snprintf( info, INFO_SIZE, "Number of monsters present: %d", ig2 );
+#else
+        snprintf( info, INFO_SIZE, "Number of monsters present: %d", ig2 );
+#endif
         mpr( info, MSGCH_DIAGNOSTICS );
 
+#ifdef JP
         snprintf( info, INFO_SIZE, "Number of clouds present: %d", env.cloud_no );
+#else
+        snprintf( info, INFO_SIZE, "Number of clouds present: %d", env.cloud_no );
+#endif
         mpr( info, MSGCH_DIAGNOSTICS );
 #endif
     }

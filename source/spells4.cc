@@ -76,36 +76,68 @@ const char *your_hand( bool plural )
     switch (you.attribute[ATTR_TRANSFORMATION])
     {
     default:
+#ifdef JP 
         mpr("ERROR: unknown transformation in your_hand() (spells4.cc)");
+#else
+        mpr("ERROR: unknown transformation in your_hand() (spells4.cc)");
+#endif
     case TRAN_NONE:
     case TRAN_STATUE:
         if (you.species == SP_TROLL || you.species == SP_GHOUL)
         {
+#ifdef JP 
+            strcpy(hand_buff, "爪");
+#else
             strcpy(hand_buff, "claw");
+#endif
             break;
         }
         // or fall-through
     case TRAN_ICE_BEAST:
     case TRAN_LICH:
+#ifdef JP 
+        strcpy(hand_buff, "手");
+#else
         strcpy(hand_buff, "hand");
+#endif
         break;
     case TRAN_SPIDER:
+#ifdef JP 
+        strcpy(hand_buff, "前脚");
+#else
         strcpy(hand_buff, "front leg");
+#endif
         break;
     case TRAN_SERPENT_OF_HELL:
     case TRAN_DRAGON:
+#ifdef JP 
+        strcpy(hand_buff, "前脚の爪");
+#else
         strcpy(hand_buff, "foreclaw");
+#endif
         break;
     case TRAN_BLADE_HANDS:
+#ifdef JP 
+        strcpy(hand_buff, "鎌状の刃");
+#else
         strcpy(hand_buff, "scythe-like blade");
+#endif
         break;
     case TRAN_AIR:
+#ifdef JP 
+        strcpy(hand_buff, "霧の蔓");
+#else
         strcpy(hand_buff, "misty tendril");
+#endif
         break;
     }
 
     if (plural)
+#ifdef JP 
+        strcat(hand_buff, "");
+#else
         strcat(hand_buff, "s");
+#endif
 
     return (hand_buff);
 }
@@ -298,7 +330,11 @@ static int shatter_items(int x, int y, int pow, int garbage)
     if (broke_stuff)
     {
         if (!silenced(x, y) && !silenced(you.x_pos, you.y_pos))
+#ifdef JP 
+            mpr("あなたはガラスが割れる音を耳にした。");
+#else
             mpr("You hear glass break.");
+#endif
 
         return 1;
     }
@@ -321,7 +357,11 @@ static int shatter_walls(int x, int y, int pow, int garbage)
     {
     case DNGN_SECRET_DOOR:
         if (see_grid(x, y))
+#ifdef JP 
+            mpr("秘密のドアが砕け散った！");
+#else
             mpr("A secret door shatters!");
+#endif
         grd[x][y] = DNGN_FLOOR;
         stuff = DEBRIS_WOOD;
         chance = 100;
@@ -330,7 +370,11 @@ static int shatter_walls(int x, int y, int pow, int garbage)
     case DNGN_CLOSED_DOOR:
     case DNGN_OPEN_DOOR:
         if (see_grid(x, y))
+#ifdef JP 
+            mpr("ドアが砕け散った！");
+#else
             mpr("A door shatters!");
+#endif
         grd[x][y] = DNGN_FLOOR;
         stuff = DEBRIS_WOOD;
         chance = 100;
@@ -393,7 +437,11 @@ void cast_shatter(int pow)
     if (!sil)
         noisy( 30, you.x_pos, you.y_pos );
 
+#ifdef JP 
+    snprintf(info, INFO_SIZE, "ダンジョンが%s！", (sil ? "揺れ動いた" : "轟音をあげた"));
+#else
     snprintf(info, INFO_SIZE, "The dungeon %s!", (sil ? "shakes" : "rumbles"));
+#endif
     mpr(info);
 
     switch (you.attribute[ATTR_TRANSFORMATION])
@@ -415,12 +463,20 @@ void cast_shatter(int pow)
         break;
 
     case TRAN_BLADE_HANDS:      // 2d3 damage
+#ifdef JP 
+        mpr("あなたの鎌状の刃はひどく振動した！");
+#else
         mpr("Your scythe-like blades vibrate painfully!");
+#endif
         damage = 2 + random2avg(5, 2);
         break;
 
     default:
+#ifdef JP 
         mpr("cast_shatter(): unknown transformation in spells4.cc");
+#else
+        mpr("cast_shatter(): unknown transformation in spells4.cc");
+#endif
     }
 
     if (damage)
@@ -434,14 +490,22 @@ void cast_shatter(int pow)
                                          pow, rad, 0 );
 
     if (dest && !sil)
+#ifdef JP 
+        mpr("ドッカーン！");
+#else
         mpr("Ka-crash!");
+#endif
 }                               // end cast_shatter()
 
 // cast_forescry: raises evasion (by 8 currently) via divination
 void cast_forescry(int pow)
 {
     if (!you.duration[DUR_FORESCRY])
+#ifdef JP 
+        mpr("あなたはごく近い未来の予見を垣間見ている……。");
+#else
         mpr("You begin to receive glimpses of the immediate future...");
+#endif
 
     you.duration[DUR_FORESCRY] += 5 + random2(pow);
 
@@ -454,9 +518,17 @@ void cast_forescry(int pow)
 void cast_see_invisible(int pow)
 {
     if (player_see_invis())
+#ifdef JP 
+        mpr("何も起こらなかったようだ。");
+#else
         mpr("Nothing seems to happen.");
+#endif
     else
+#ifdef JP 
+        mpr("あなたの視覚は鋭くなった。");
+#else
         mpr("Your vision seems to sharpen.");
+#endif
 
     // no message if you already are under the spell
     you.duration[DUR_SEE_INVISIBLE] += 10 + random2(2 + (pow / 2));
@@ -491,7 +563,11 @@ static void cast_detect_magic(int pow)
         found[next] = 0;
     }
 
+#ifdef JP 
+    mpr("どの方向？", MSGCH_PROMPT);
+#else
     mpr("Which direction?", MSGCH_PROMPT);
+#endif
     direction( bmove, DIR_DIR );
 
     if (!bmove.isValid)
@@ -502,7 +578,11 @@ static void cast_detect_magic(int pow)
 
     if (bmove.dx == 0 && bmove.dy == 0)
     {
+#ifdef JP 
+        mpr("あなたは直感的察知を行った。");
+#else
         mpr("You detect a divination in progress.");
+#endif
         return;
     }
 
@@ -554,11 +634,19 @@ static void cast_detect_magic(int pow)
   all_done:
     if (monster)
     {
+#ifdef JP 
+        mpr("あなたはモンスターらしき形態形成フィールドを察知した。");
+#else
         mpr("You detect a morphogenic field, such as a monster might have.");
+#endif
     }
     if (strong)
     {
+#ifdef JP 
+        mpr("あなたは非常に強力な魔力を察知した。");
+#else
         mpr("You detect very strong enchantments.");
+#endif
         return;
     }
     else
@@ -597,8 +685,12 @@ void cast_detect_secret_doors(int pow)
     {
         redraw_screen();
 
+#ifdef JP 
+        snprintf( info, INFO_SIZE, "あなたは秘密のドアを察知した。" );
+#else
         snprintf( info, INFO_SIZE, "You detect %s secret door%s.", 
                  (found > 1) ? "some" : "a", (found > 1) ? "s" : "" );
+#endif
         mpr( info );
     }
 }                               // end cast_detect_secret_doors()
@@ -670,7 +762,11 @@ void cast_sticks_to_snakes(int pow)
 
     if (weapon == -1)
     {
+#ifdef JP 
+        snprintf( info, INFO_SIZE, "あなたの%sが蛇のように這いはじめた！", your_hand(true));
+#else
         snprintf( info, INFO_SIZE, "Your %s feel slithery!", your_hand(true));
+#endif
         mpr(info);
         return;
     }
@@ -746,7 +842,11 @@ void cast_sticks_to_snakes(int pow)
     {
         // this is how you get multiple big snakes
         how_many = 1;
+#ifdef JP 
         mpr("FIXME: implement OBJ_DEBRIS conversion! (spells4.cc)");
+#else
+        mpr("FIXME: implement OBJ_DEBRIS conversion! (spells4.cc)");
+#endif
     }
 #endif // USE_DEBRIS_CODE
 
@@ -757,12 +857,25 @@ void cast_sticks_to_snakes(int pow)
     {
         dec_inv_item_quantity( you.equip[EQ_WEAPON], how_many );
 
+#ifdef USE_TILE
+        if (Options.use_tile)
+            TilePlayerRefresh();
+#endif
+
+#ifdef JP 
+        snprintf( info, INFO_SIZE, "あなたは蛇を造りだした！" );
+#else
         snprintf( info, INFO_SIZE, "You create %s snake%s!",
                 how_many > 1 ? "some" : "a", how_many > 1 ? "s" : "");
+#endif
     }
     else
     {
+#ifdef JP 
+        snprintf( info, INFO_SIZE, "あなたの%sが蛇になったように感じる！", your_hand(true));
+#else
         snprintf( info, INFO_SIZE, "Your %s feel slithery!", your_hand(true));
+#endif
     }
 
     mpr(info);
@@ -784,13 +897,25 @@ void cast_summon_dragon(int pow)
                         (happy ? BEH_FRIENDLY : BEH_HOSTILE),
                         you.x_pos, you.y_pos, MHITYOU, 250 ) != -1)
     {
+#ifdef JP 
+        strcpy(info, "ドラゴンが現れた。");
+#else
         strcpy(info, "A dragon appears.");
+#endif
 
         if (!happy)
+#ifdef JP 
+            strcat(info, "ドラゴンはあまり機嫌が良さそうには見えない。");
+#else
             strcat(info, " It doesn't look very happy.");
+#endif
     }
     else
+#ifdef JP 
+        strcpy(info, "何も起きなかった。");
+#else
         strcpy(info, "Nothing happens.");
+#endif
 
     mpr(info);
 }                               // end cast_summon_dragon()
@@ -840,7 +965,11 @@ void cast_conjure_ball_lightning( int pow )
     }
 
     if (summoned)
+#ifdef JP 
+        mpr( "あなたは幾つかの球雷をつくりだした！" );
+#else
         mpr( "You create some ball lightning!" );
+#endif
     else
         canned_msg( MSG_NOTHING_HAPPENS );
 }
@@ -904,7 +1033,11 @@ static int tame_beast_monsters(int x, int y, int pow, int garbage)
     // I'd like to make the monsters affected permanently, but that's
     // pretty powerful. Maybe a small (pow/10) chance of being permanently
     // tamed, large chance of just being enslaved.
+#ifdef JP 
+    simple_monster_message(monster, "を飼いならした！");
+#else
     simple_monster_message(monster, " is tamed!");
+#endif
 
     if (random2(100) < random2(pow / 10))
         monster->attitude = ATT_FRIENDLY;       // permanent, right?
@@ -1045,7 +1178,11 @@ static int ignite_poison_monsters(int x, int y, int pow, int garbage)
         damage = mons_adjust_flavoured( mon, beam, damage );
 
 #if DEBUG_DIAGNOSTICS
+#ifdef JP 
         snprintf( info, INFO_SIZE, "Dice: %dd%d; Damage: %d", 
+#else
+        snprintf( info, INFO_SIZE, "Dice: %dd%d; Damage: %d", 
+#endif
                   dam_dice.num, dam_dice.size, damage );    
 
         mpr( info, MSGCH_DIAGNOSTICS );
@@ -1082,7 +1219,11 @@ void cast_ignite_poison(int pow)
         {
             in_name( wpn, DESC_CAP_YOUR, str_pass );
             strcpy( info, str_pass );
+#ifdef JP 
+            strcat( info, "は炎を吹き上げた！" );
+#else
             strcat( info, " bursts into flame!" );
+#endif
             mpr(info);
 
             you.wield_change = true;
@@ -1143,14 +1284,22 @@ void cast_ignite_poison(int pow)
     }
 
     if (acount > 0)
+#ifdef JP 
+        mpr("あなたの飛び道具が炎をあげた！");
+#else
         mpr("Some ammo you are carrying burns!");
+#endif
 
     if (pcount > 0)
     {
+#ifdef JP 
+        snprintf( info, INFO_SIZE, "あなたの持っているポーションが爆発した！" );
+#else
         snprintf( info, INFO_SIZE, "%s potion%s you are carrying explode%s!",
             pcount > 1 ? "Some" : "A",
             pcount > 1 ? "s" : "",
             pcount > 1 ? "" : "s");
+#endif
         mpr(info);
     }
 
@@ -1184,24 +1333,40 @@ void cast_ignite_poison(int pow)
 
         if (resist > 0)
         {
+#ifdef JP 
+            mpr("あなたは血液が沸騰するのを感じた！");
+#else
             mpr("You feel like your blood is boiling!");
+#endif
             damage = damage / 3;
         }
         else if (resist < 0)
         {
             damage *= 3;
+#ifdef JP 
+            mpr("あなたの体内の毒が激しく燃えあがった！");
+#else
             mpr("The poison in your system burns terribly!");
+#endif
         }
         else
         {
+#ifdef JP 
+            mpr("あなたの体内の毒が燃えあがった！");
+#else
             mpr("The poison in your system burns!");
+#endif
         }
 
         ouch( damage, 0, KILLED_BY_TARGETTING );
 
         if (you.poison > 0)
         {
+#ifdef JP 
+            mpr( "あなたは毒が体内から消え失せたのを感じた。" );
+#else
             mpr( "You feel that the poison has left your system." );
+#endif
             you.poison = 0;
         }
     }
@@ -1214,7 +1379,11 @@ void cast_ignite_poison(int pow)
 void cast_silence(int pow)
 {
     if (!you.attribute[ATTR_WAS_SILENCED])
+#ifdef JP 
+        mpr("深い静寂があなたをすっぽり包み込んだ。");
+#else
         mpr("A profound silence engulfs you.");
+#endif
 
     you.attribute[ATTR_WAS_SILENCED] = 1;
 
@@ -1256,7 +1425,11 @@ static int discharge_monsters( int x, int y, int pow, int garbage )
 
     if (x == you.x_pos && y == you.y_pos)
     {
+#ifdef JP 
+        mpr( "あなたは稲妻に撃たれた。" );
+#else
         mpr( "You are struck by lightning." );
+#endif
         damage = 3 + random2( 5 + pow / 10 );
         damage = check_your_resists( damage, BEAM_ELECTRICITY );
         ouch( damage, 0, KILLED_BY_WILD_MAGIC );
@@ -1273,7 +1446,11 @@ static int discharge_monsters( int x, int y, int pow, int garbage )
         if (damage)
         {
             strcpy( info, ptr_monam( &(menv[mon]), DESC_CAP_THE ) );
+#ifdef JP 
+            strcat( info, "は稲妻に撃たれた。" );
+#else
             strcat( info, " is struck by lightning." );
+#endif
             mpr( info );
 
             player_hurt_monster( mon, damage );
@@ -1284,7 +1461,11 @@ static int discharge_monsters( int x, int y, int pow, int garbage )
     // Low power slight chance added for low power characters -- bwr
     if ((pow >= 10 && !one_chance_in(3)) || (pow >= 3 && one_chance_in(10)))
     {
+#ifdef JP 
+        mpr( "稲妻が電弧を成した！" );
+#else
         mpr( "The lightning arcs!" );
+#endif
         pow /= (coinflip() ? 2 : 3);
         damage += apply_random_around_square( discharge_monsters, x, y, 
                                               true, pow, 1 ); 
@@ -1293,7 +1474,11 @@ static int discharge_monsters( int x, int y, int pow, int garbage )
     {
         // Only printed if we did damage, so that the messages in 
         // cast_discharge() are clean. -- bwr
+#ifdef JP 
+        mpr( "稲妻は地面を直撃した。" );
+#else
         mpr( "The lightning grounds out." );
+#endif
     }
 
     return (damage);
@@ -1308,17 +1493,32 @@ void cast_discharge( int pow )
                                       true, pow, num_targs );
 
 #if DEBUG_DIAGNOSTICS
+#ifdef JP 
     snprintf( info, INFO_SIZE, "Arcs: %d Damage: %d", num_targs, dam );
+#else
+    snprintf( info, INFO_SIZE, "Arcs: %d Damage: %d", num_targs, dam );
+#endif
     mpr( info, MSGCH_DIAGNOSTICS );
 #endif
 
     if (dam == 0) 
     {
         if (coinflip())
+#ifdef JP 
+            mpr("あなたの周りの大気が電荷にバチバチと音を立てた。");
+#else
             mpr("The air around you crackles with electrical energy.");
+#endif
         else 
         {
             bool plural = coinflip();
+#ifdef JP 
+            snprintf( info, INFO_SIZE, "%s蒼い電弧があなたには害を及ぼすことなく%s地面に落ちた。",
+                plural ? "幾つかの" : "",
+                plural ? "周りの" : (coinflip() ? "側方の" :
+                                     coinflip() ? "後方の" : "前方の")
+                );
+#else
             snprintf( info, INFO_SIZE, "%s blue arc%s ground%s harmlessly %s you.",
                 plural ? "Some" : "A",
                 plural ? "s" : "",
@@ -1326,6 +1526,7 @@ void cast_discharge( int pow )
                 plural ? "around" : (coinflip() ? "beside" :
                                      coinflip() ? "behind" : "before")
                 );
+#endif
 
             mpr(info);
         }
@@ -1353,12 +1554,20 @@ static int distortion_monsters(int x, int y, int pow, int message)
         if (you.skills[SK_TRANSLOCATIONS] < random2(8))
         {
             miscast_effect( SPTYP_TRANSLOCATION, pow / 9 + 1, pow, 100, 
+#ifdef JP 
+                            "歪曲の効果" );
+#else
                             "a distortion effect" );
+#endif
         }
         else
         {
             miscast_effect( SPTYP_TRANSLOCATION, 1, 1, 100, 
+#ifdef JP 
+                            "歪曲の効果" );
+#else
                             "a distortion effect" );
+#endif
         }
 
         return 1;
@@ -1369,7 +1578,11 @@ static int distortion_monsters(int x, int y, int pow, int message)
         int hp = defender->hit_points;
         int max_hp = defender->max_hit_points;
 
+#ifdef JP 
+        mpr("またたきガエルは転位エネルギーに満たされた。");
+#else
         mpr("The blink frog basks in the translocular energy.");
+#endif
 
         if (hp < max_hp)
             hp += 1 + random2(1 + pow / 4) + random2(1 + pow / 7);
@@ -1382,17 +1595,33 @@ static int distortion_monsters(int x, int y, int pow, int message)
     }
     else if (coinflip())
     {
+#ifdef JP 
+        strcpy(info, "");
+#else
         strcpy(info, "Space bends around ");
+#endif
         strcat(info, ptr_monam(defender, DESC_NOCAP_THE));
+#ifdef JP 
+        strcat(info, "の周りで空間が曲がった。");
+#else
         strcat(info, ".");
+#endif
         mpr(info);
         specdam += 1 + random2avg( 7, 2 ) + random2(pow) / 40;
     }
     else if (coinflip())
     {
+#ifdef JP 
+        strcpy(info, "");
+#else
         strcpy(info, "Space warps horribly around ");
+#endif
         strcat(info, ptr_monam( defender, DESC_NOCAP_THE ));
+#ifdef JP 
+        strcat(info, "の周りで空間が恐ろしく歪んだ！");
+#else
         strcat(info, "!");
+#endif
         mpr(info);
 
         specdam += 3 + random2avg( 12, 2 ) + random2(pow) / 25;
@@ -1414,7 +1643,11 @@ static int distortion_monsters(int x, int y, int pow, int message)
     }
     else if (message)
     {
+#ifdef JP 
+        mpr("何も起こらなかったようだ。");
+#else
         mpr("Nothing seems to happen.");
+#endif
         return 1;
     }
 
@@ -1444,18 +1677,30 @@ int disperse_monsters(int x, int y, int pow, int message)
 
     if (defender->type == MONS_BLINK_FROG)
     {
+#ifdef JP 
+        simple_monster_message(defender, "は呪文に抵抗した。");
+#else
         simple_monster_message(defender, " resists.");
+#endif
         return 1;
     }
     else if (check_mons_resist_magic(defender, pow))
     {
         if (coinflip())
         {
+#ifdef JP 
+            simple_monster_message(defender, "は幾らか呪文に抵抗した。");
+#else
             simple_monster_message(defender, " partially resists.");
+#endif
             monster_blink(defender);
         }
         else
+#ifdef JP 
+            simple_monster_message(defender, "は呪文に抵抗した。");
+#else
             simple_monster_message(defender, " resists.");
+#endif
 
         return 1;
     }
@@ -1473,7 +1718,11 @@ void cast_dispersal(int pow)
     if (apply_area_around_square( disperse_monsters, 
                                   you.x_pos, you.y_pos, pow ) == 0)
     {
+#ifdef JP 
+        mpr( "あなたの周りの大気が短い間ちらちらと光った。" );
+#else
         mpr( "There is a brief shimmering in the air around you." );
+#endif
     }
 }
 
@@ -1491,7 +1740,11 @@ static int spell_swap_func(int x, int y, int pow, int message)
     if (defender->type == MONS_BLINK_FROG
         || check_mons_resist_magic( defender, pow ))
     {
+#ifdef JP 
+        simple_monster_message( defender, "は呪文に抵抗した。" );
+#else
         simple_monster_message( defender, " resists." );
+#endif
     }
     else
     {
@@ -1626,7 +1879,11 @@ static int passwall(int x, int y, int pow, int garbage)
         // are used for impassable walls... I'm not sure we should
         // even allow statues (should be contiguous rock) -- bwr
     {
+#ifdef JP 
+        mpr("その壁は通過が不可能だ。");
+#else
         mpr("That's not a passable wall.");
+#endif
         return 0;
     }
 
@@ -1639,7 +1896,11 @@ static int passwall(int x, int y, int pow, int garbage)
         // FIXME: dungeon border?
         if (nx > (GXM - 1) || ny > (GYM - 1) || nx < 2 || ny < 2)
         {
+#ifdef JP 
+            mpr("あなたは圧倒的な体積の岩を知覚した。");
+#else
             mpr("You sense an overwhelming volume of rock.");
+#endif
             return 0;
         }
 
@@ -1663,9 +1924,17 @@ static int passwall(int x, int y, int pow, int garbage)
 
     if (howdeep > shallow)
     {
+#ifdef JP 
+        mpr("この岩は非常に厚いようだ。");
+#else
         mpr("This rock feels deep.");
+#endif
 
+#ifdef JP 
+        if (yesno("どうしても実行しますか？"))
+#else
         if (yesno("Try anyway?"))
+#endif
         {
             if (howdeep > range)
             {
@@ -1676,7 +1945,11 @@ static int passwall(int x, int y, int pow, int garbage)
         else
         {
             if (one_chance_in(30))
+#ifdef JP 
+                mpr("意気地なし。");
+#else
                 mpr("Wuss.");
+#endif
             else
                 canned_msg(MSG_OK);
             return 1;
@@ -1721,7 +1994,11 @@ void cast_intoxicate(int pow)
     potion_effect( POT_CONFUSION, 10 + (100 - pow) / 10);
 
     if (one_chance_in(20) && lose_stat( STAT_INTELLIGENCE, 1 + random2(3) ))
+#ifdef JP 
+        mpr("あなたの頭はクルクル回った！");
+#else
         mpr("Your head spins!");
+#endif
 
     apply_area_visible(intoxicate_monsters, pow);
 }                               // end cast_intoxicate()
@@ -1797,19 +2074,40 @@ static int glamour_monsters(int x, int y, int pow, int garbage)
         switch (random2(4))
         {
         case 0:
+#ifdef JP 
+            strcat(info, "は茫然とした様子だ。");
+#else
             strcat(info, " looks dazed.");
+#endif
             break;
         case 1:
+#ifdef JP 
+            strcat(info, "パチパチとまばたきした。");
+#else
             strcat(info, " blinks several times.");
+#endif
             break;
         case 2:
+#ifdef JP 
+            strcat(info, "目をこすった");
+#else
             strcat(info, " rubs its eye");
+#endif
             if (menv[mon].type != MONS_CYCLOPS)
+#ifdef JP 
+                strcat(info, "");
+            strcat(info, "。");
+#else
                 strcat(info, "s");
             strcat(info, ".");
+#endif
             break;
         case 4:
+#ifdef JP 
+            strcat(info, "首を傾げた。");
+#else
             strcat(info, " tilts its head.");
+#endif
             break;
         }
 
@@ -1869,14 +2167,26 @@ bool backlight_monsters(int x, int y, int pow, int garbage)
     int lvl = mons_has_ench( &menv[mon], ENCH_BACKLIGHT_I, ENCH_BACKLIGHT_IV );
 
     if (lvl == ENCH_NONE)
+#ifdef JP 
+        simple_monster_message( &menv[mon], "は光で照らし出された。" );
+#else
         simple_monster_message( &menv[mon], " is outlined in light." );
+#endif
     else if (lvl == ENCH_BACKLIGHT_IV)
+#ifdef JP 
+        simple_monster_message( &menv[mon], "は一瞬、より明るく輝いた。" );
+#else
         simple_monster_message( &menv[mon], " glows brighter for a moment." );
+#endif
     else 
     {
         // remove old level
         mons_del_ench( &menv[mon], ENCH_BACKLIGHT_I, ENCH_BACKLIGHT_III, true );
+#ifdef JP 
+        simple_monster_message( &menv[mon], "は、より明るく輝いた。" );
+#else
         simple_monster_message( &menv[mon], " glows brighter." );
+#endif
     }
 
     // this enchantment wipes out invisibility (neat)
@@ -1893,11 +2203,19 @@ void cast_evaporate(int pow)
     struct dist spelld;
     struct bolt beem;
 
+#ifdef JP 
+    const int potion = prompt_invent_item( "どのポーションを投げますか？", OBJ_POTIONS );
+#else
     const int potion = prompt_invent_item( "Throw which potion?", OBJ_POTIONS );
+#endif
 
     if (potion == -1)
     {
+#ifdef JP 
+        snprintf( info, INFO_SIZE, "あなたの%sから蒸気が噴出した！", 
+#else
         snprintf( info, INFO_SIZE, "Wisps of steam play over your %s!", 
+#endif
                   your_hand(true) );
 
         mpr(info);
@@ -1905,7 +2223,11 @@ void cast_evaporate(int pow)
     } 
     else if (you.inv[potion].base_type != OBJ_POTIONS)
     {
+#ifdef JP 
+        mpr( "この呪文はポーションにのみ作用する！" );
+#else
         mpr( "This spell works only on potions!" );
+#endif
         canned_msg(MSG_SPELL_FIZZLES);
         return;
     }
@@ -1928,7 +2250,11 @@ void cast_evaporate(int pow)
     beem.source_x = you.x_pos;
     beem.source_y = you.y_pos;
 
+#ifdef JP 
+    strcpy( beem.beam_name, "ポーション" );
+#else
     strcpy( beem.beam_name, "potion" );
+#endif
     beem.colour = you.inv[potion].colour;
     beem.range = 9;
     beem.rangeMax = 9;
@@ -2054,7 +2380,11 @@ void cast_fulsome_distillation( int powc )
             && mitm[curr_item].sub_type == CORPSE_BODY)
         {
             it_name( curr_item, DESC_NOCAP_THE, str_pass );
+#ifdef JP 
+            snprintf( info, INFO_SIZE, "%sからポーションを精製しますか？", str_pass );
+#else
             snprintf( info, INFO_SIZE, "Distill a potion from %s?", str_pass );
+#endif
 
             if (yesno( info, true, false ))
             {
@@ -2173,14 +2503,22 @@ void cast_fulsome_distillation( int powc )
     item_colour( mitm[corpse] );  // sets special as well
 
     it_name( corpse, DESC_NOCAP_A, str_pass );
+#ifdef JP 
+    snprintf( info, INFO_SIZE, "あなたは死体から%sを抽出した。",
+#else
     snprintf( info, INFO_SIZE, "You extract %s from the corpse.",
+#endif
               str_pass );
     mpr( info );
 
     // try to move the potion to the player (for convenience)
     if (move_item_to_player( corpse, 1 ) != 1)
     {
+#ifdef JP 
+        mpr( "残念ながら、あなたはこれ以上持ち運ぶことができない！" );
+#else
         mpr( "Unfortunately, you can't carry it right now!" );
+#endif
     }
 }
 
@@ -2338,7 +2676,11 @@ static int snake_charm_monsters(int x, int y, int pow, int message)
     if (check_mons_resist_magic(&menv[mon], pow))       return 0;
 
     menv[mon].attitude = ATT_FRIENDLY;
+#ifdef JP 
+    snprintf( info, INFO_SIZE, "%sは前後にふらついた。", ptr_monam( &(menv[mon]), DESC_CAP_THE ));
+#else
     snprintf( info, INFO_SIZE, "%s sways back and forth.", ptr_monam( &(menv[mon]), DESC_CAP_THE ));
+#endif
     mpr(info);
 
     return 1;
@@ -2360,7 +2702,11 @@ void cast_fragmentation(int pow)        // jmf: ripped idea from airstrike
     bool hole = true;
     const char *what = NULL;
 
+#ifdef JP 
+    mpr("何を砕きますか？(例:壁など)", MSGCH_PROMPT);
+#else
     mpr("Fragment what (e.g. a wall)?", MSGCH_PROMPT);
+#endif
     direction( beam, DIR_TARGET, TARG_ENEMY );
 
     if (!beam.isValid)
@@ -2396,7 +2742,11 @@ void cast_fragmentation(int pow)        // jmf: ripped idea from airstrike
         // in case the target dies. -- bwr
         char explode_msg[80];
 
+#ifdef JP 
+        snprintf( explode_msg, sizeof( explode_msg ), "%sは爆発した！",
+#else
         snprintf( explode_msg, sizeof( explode_msg ), "%s explodes!",
+#endif
                   ptr_monam( &(menv[mon]), DESC_CAP_THE ) );
 
         switch (menv[mon].type)
@@ -2405,7 +2755,11 @@ void cast_fragmentation(int pow)        // jmf: ripped idea from airstrike
         case MONS_SIMULACRUM_SMALL:
         case MONS_SIMULACRUM_LARGE:
             explode = true;
+#ifdef JP 
+            strcpy(blast.beam_name, "氷の爆風");
+#else
             strcpy(blast.beam_name, "icy blast");
+#endif
             blast.colour = WHITE;
             blast.damage.num = 2;
             blast.flavour = BEAM_ICE;
@@ -2418,10 +2772,18 @@ void cast_fragmentation(int pow)        // jmf: ripped idea from airstrike
         case MONS_SKELETON_LARGE:       // blast of bone
             explode = true;
 
+#ifdef JP 
+            snprintf( info, INFO_SIZE, "骸骨が爆発し、鋭い骨の破片を撒き散らした！" );
+#else
             snprintf( info, INFO_SIZE, "The sk%s explodes into sharp fragments of bone!",
                     (menv[mon].type == MONS_FLYING_SKULL) ? "ull" : "eleton");
+#endif
 
+#ifdef JP 
+            strcpy(blast.beam_name, "骨片の爆風");
+#else
             strcpy(blast.beam_name, "blast of bone shards");
+#endif
 
             blast.colour = LIGHTGREY;
 
@@ -2440,7 +2802,11 @@ void cast_fragmentation(int pow)        // jmf: ripped idea from airstrike
 
         case MONS_WOOD_GOLEM:
             explode = false;
+#ifdef JP 
+            simple_monster_message(&menv[mon], "は猛烈に振動した！");
+#else
             simple_monster_message(&menv[mon], " shudders violently!");
+#endif
 
             // We use blast.damage not only for inflicting damage here, 
             // but so that later on we'll know that the spell didn't 
@@ -2452,7 +2818,11 @@ void cast_fragmentation(int pow)        // jmf: ripped idea from airstrike
         case MONS_IRON_GOLEM:
         case MONS_METAL_GARGOYLE:
             explode = true;
+#ifdef JP 
+            strcpy( blast.beam_name, "金属片の爆風" );
+#else
             strcpy( blast.beam_name, "blast of metal fragments" );
+#endif
             blast.colour = CYAN;
             blast.damage.num = 4;
             if (player_hurt_monster(mon, roll_dice( blast.damage )))
@@ -2465,7 +2835,11 @@ void cast_fragmentation(int pow)        // jmf: ripped idea from airstrike
         case MONS_GARGOYLE:
             explode = true;
             blast.ex_size = 2;
+#ifdef JP 
+            strcpy(blast.beam_name, "岩石片の爆風");
+#else
             strcpy(blast.beam_name, "blast of rock fragments");
+#endif
             blast.colour = BROWN;
             blast.damage.num = 3;
             if (player_hurt_monster(mon, roll_dice( blast.damage )))
@@ -2475,7 +2849,11 @@ void cast_fragmentation(int pow)        // jmf: ripped idea from airstrike
         case MONS_CRYSTAL_GOLEM:
             explode = true;
             blast.ex_size = 2;
+#ifdef JP 
+            strcpy(blast.beam_name, "水晶片の爆風");
+#else
             strcpy(blast.beam_name, "blast of crystal shards");
+#endif
             blast.colour = WHITE;
             blast.damage.num = 4;
             if (player_hurt_monster(mon, roll_dice( blast.damage )))
@@ -2508,23 +2886,39 @@ void cast_fragmentation(int pow)        // jmf: ripped idea from airstrike
         blast.colour = env.rock_colour;
         // fall-through
     case DNGN_STONE_WALL:
+#ifdef JP 
+        what = "壁";
+#else
         what = "wall";
+#endif
         if (player_in_branch( BRANCH_HALL_OF_ZOT ))
             blast.colour = env.rock_colour;
         // fall-through
     case DNGN_ORCISH_IDOL:
         if (what == NULL)
+#ifdef JP 
+            what = "石像";
+#else
             what = "stone idol";
+#endif
         if (blast.colour == 0)
             blast.colour = DARKGREY;
         // fall-through
     case DNGN_GRANITE_STATUE:   // normal rock -- big explosion
         if (what == NULL)
+#ifdef JP 
+            what = "像";
+#else
             what = "statue";
+#endif
 
         explode = true;
 
+#ifdef JP 
+        strcpy(blast.beam_name, "岩石片の爆風");
+#else
         strcpy(blast.beam_name, "blast of rock fragments");
+#endif
         blast.damage.num = 3;
         if (blast.colour == 0)
             blast.colour = LIGHTGREY;
@@ -2547,18 +2941,30 @@ void cast_fragmentation(int pow)        // jmf: ripped idea from airstrike
     //
 
     case DNGN_METAL_WALL:       
+#ifdef JP 
+        what = "金属の壁";
+#else
         what = "metal wall";
+#endif
         blast.colour = CYAN;
         // fallthru
     case DNGN_SILVER_STATUE:
         if (what == NULL)
         {
+#ifdef JP 
+            what = "銀の像";
+#else
             what = "silver statue";
+#endif
             blast.colour = WHITE;
         }
 
         explode = true;
+#ifdef JP 
+        strcpy( blast.beam_name, "金属片の爆風" );
+#else
         strcpy( blast.beam_name, "blast of metal fragments" );
+#endif
         blast.damage.num = 4;
 
         if (okay_to_dest && pow >= 80 && random2(500) < pow / 5)
@@ -2574,19 +2980,31 @@ void cast_fragmentation(int pow)        // jmf: ripped idea from airstrike
     //
 
     case DNGN_GREEN_CRYSTAL_WALL:       // crystal -- large & nasty explosion
+#ifdef JP 
+        what = "水晶の壁";
+#else
         what = "crystal wall";
+#endif
         blast.colour = GREEN;
         // fallthru
     case DNGN_ORANGE_CRYSTAL_STATUE:
         if (what == NULL)
         {
+#ifdef JP 
+            what = "水晶の像";
+#else
             what = "crystal statue";
+#endif
             blast.colour = LIGHTRED; //jmf: == orange, right?
         }
 
         explode = true;
         blast.ex_size = 2;
+#ifdef JP 
+        strcpy(blast.beam_name, "水晶片の爆風");
+#else
         strcpy(blast.beam_name, "blast of crystal shards");
+#endif
         blast.damage.num = 5;
 
         if (okay_to_dest
@@ -2615,11 +3033,19 @@ void cast_fragmentation(int pow)        // jmf: ripped idea from airstrike
         }
 
         // undiscovered traps appear as exploding from the floor -- bwr
+#ifdef JP 
+        what = ((grid == DNGN_UNDISCOVERED_TRAP) ? "床" : "罠");
+#else
         what = ((grid == DNGN_UNDISCOVERED_TRAP) ? "floor" : "trap");
+#endif
 
         explode = true;
         hole = false;           // to hit monsters standing on traps
+#ifdef JP 
+        strcpy( blast.beam_name, "破片の爆風" );
+#else
         strcpy( blast.beam_name, "blast of fragments" );
+#endif
         blast.colour = env.floor_colour;  // in order to blend in
         blast.damage.num = 2;
 
@@ -2645,7 +3071,11 @@ void cast_fragmentation(int pow)        // jmf: ripped idea from airstrike
     case DNGN_STONE_ARCH:       // floor -- small explosion
         explode = true;
         hole = false;           // to hit monsters standing on doors
+#ifdef JP 
+        strcpy( blast.beam_name, "岩石片の爆風" );
+#else
         strcpy( blast.beam_name, "blast of rock fragments" );
+#endif
         blast.colour = LIGHTGREY;
         blast.damage.num = 2;
         break;
@@ -2656,9 +3086,15 @@ void cast_fragmentation(int pow)        // jmf: ripped idea from airstrike
     case DNGN_PERMAROCK_WALL:
     case DNGN_FLOOR:
         explode = false;
+#ifdef JP 
+        snprintf( info, INFO_SIZE, "%sは不自然に硬いようだ。",
+                  (grid == DNGN_PERMAROCK_WALL) ? "その壁" 
+                                                : "そこの床" );
+#else
         snprintf( info, INFO_SIZE, "%s seems to be unnaturally hard.",
                   (grid == DNGN_PERMAROCK_WALL) ? "That wall" 
                                                 : "The dungeon floor" );
+#endif
         explode = false;
         break;
 
@@ -2673,7 +3109,11 @@ void cast_fragmentation(int pow)        // jmf: ripped idea from airstrike
     {
         if (what != NULL)
         {
+#ifdef JP 
+            snprintf( info, INFO_SIZE, "%sは爆発した！", what);
+#else
             snprintf( info, INFO_SIZE, "The %s explodes!", what);
+#endif
             mpr(info);
         }
 
@@ -2708,14 +3148,22 @@ void cast_twist(int pow)
     // anything there?
     if (mons == NON_MONSTER || targ.isMe)
     {
+#ifdef JP 
+        mpr("そこにはモンスターがいない！");
+#else
         mpr("There is no monster there!");
+#endif
         return;
     }
 
     // Monster can magically save vs attack.
     if (check_mons_resist_magic( &menv[ mons ], pow * 2 ))
     {
+#ifdef JP 
+        simple_monster_message( &menv[ mons ], "は呪文に抵抗した。" );
+#else
         simple_monster_message( &menv[ mons ], " resists." );
+#endif
         return;
     }
 
@@ -2759,7 +3207,11 @@ void cast_far_strike(int pow)
     if (mgrd[targ.tx][targ.ty] == NON_MONSTER
         || targ.isMe)
     {
+#ifdef JP 
+        mpr("そこにはモンスターがいない！");
+#else
         mpr("There is no monster there!");
+#endif
         return;
     }
 
@@ -2849,7 +3301,11 @@ void cast_far_strike(int pow)
     // augmented with an EV check).
     if (check_mons_resist_magic( monster, pow * 2 ))
     {
+#ifdef JP 
+        simple_monster_message( monster, "は呪文に抵抗した。" );
+#else
         simple_monster_message( monster, " resists." );
+#endif
         return;
     }
 
@@ -2867,7 +3323,11 @@ void cast_apportation(int pow)
 {
     struct dist beam;
 
+#ifdef JP 
+    mpr("どこのアイテムを引き寄せますか？");
+#else
     mpr("Pull items from where?");
+#endif
 
     direction( beam, DIR_TARGET );
 
@@ -2880,7 +3340,11 @@ void cast_apportation(int pow)
     // it's already here!
     if (beam.isMe)
     {
+#ifdef JP 
+        mpr( "それは馬鹿げている。" );
+#else
         mpr( "That's just silly." );
+#endif
         return;
     }
 
@@ -2889,7 +3353,11 @@ void cast_apportation(int pow)
 
     if (grid == DNGN_LAVA || grid == DNGN_DEEP_WATER)
     {
+#ifdef JP 
+        mpr( "この地形を越えて引き寄せようというのは馬鹿げている！" );
+#else
         mpr( "That would be silly while over this terrain!" );
+#endif
         return;
     }
 
@@ -2905,7 +3373,11 @@ void cast_apportation(int pow)
     // useful for getting items out of statue rooms or the abyss). -- bwr
     if (!see_grid( beam.tx, beam.ty ))
     {
+#ifdef JP 
+        mpr( "あなたにはそこは見えない！" );
+#else
         mpr( "You cannot see there!" );
+#endif
         return;
     }
 
@@ -2916,15 +3388,27 @@ void cast_apportation(int pow)
         const int  mon = mgrd[ beam.tx ][ beam.ty ];
 
         if (mon == NON_MONSTER)
+#ifdef JP 
+            mpr( "そこにはアイテムはない。" );
+#else
             mpr( "There are no items there." );
+#endif
         else if (mons_is_mimic( menv[ mon ].type ))
         {
+#ifdef JP 
+            snprintf( info, INFO_SIZE, "%sはびくりと引きつった。",
+#else
             snprintf( info, INFO_SIZE, "%s twitches.",
+#endif
                       ptr_monam( &(menv[ mon ]), DESC_CAP_THE ) );
             mpr( info );
         }
         else 
+#ifdef JP 
+            mpr( "この呪文はモンスターには作用しない。" );
+#else
             mpr( "This spell does not work on creatures." );
+#endif
 
         return;
     }
@@ -2945,7 +3429,11 @@ void cast_apportation(int pow)
 
     if (max_units <= 0)
     {
+#ifdef JP 
+        mpr( "アイテムの山はあなたが引き寄せるのに抵抗している。" );
+#else
         mpr( "The mass is resisting your pull." );
+#endif
         return;
     }
 
@@ -2956,18 +3444,31 @@ void cast_apportation(int pow)
         if (max_units < mitm[ item ].quantity)
         {
             mitm[ item ].quantity = max_units;
+#ifdef JP 
+            mpr( "あなたは幾つかのアイテムが虚空に失われたことを感じ取った。" );
+#else
             mpr( "You feel that some mass got lost in the cosmic void." );
+#endif
         }
         else
         {
+#ifdef JP 
+            mpr( "盗った！" );
+            snprintf( info, INFO_SIZE, "あなたはアイテムを自分のところまで引き寄せた。" );
+#else
             mpr( "Yoink!" );
             snprintf( info, INFO_SIZE, "You pull the item%s to yourself.",
                                  (mitm[ item ].quantity > 1) ? "s" : "" );
+#endif
             mpr( info );
         }
     }
     else
+#ifdef JP 
+        mpr( "呪文は失敗した。" );
+#else
         mpr( "The spell fails." );
+#endif
 }
 
 void cast_sandblast(int pow)
@@ -3025,13 +3526,21 @@ void cast_shuggoth_seed(int powc)
     struct dist beam;
     int i;
 
+#ifdef JP 
+    mpr("誰に種子を植え込みますか？", MSGCH_PROMPT);
+#else
     mpr("Sow seed in whom?", MSGCH_PROMPT);
+#endif
 
     direction( beam, DIR_TARGET, TARG_ENEMY );
 
     if (!beam.isValid)
     {
+#ifdef JP 
+        mpr("あなたは冷たい失望感を味わった。");
+#else
         mpr("You feel a distant frustration.");
+#endif
         return;
     }
 
@@ -3040,17 +3549,29 @@ void cast_shuggoth_seed(int powc)
         if (!you.is_undead)
         {
             you.duration[DUR_INFECTED_SHUGGOTH_SEED] = 10;
+#ifdef JP 
+            mpr("死のごとき恐怖の存在があなたの胸をびくりと痙攣させた。");
+#else
             mpr("A deathly dread twitches in your chest.");
+#endif
         }
         else
+#ifdef JP 
+            mpr("あなたは冷たい失望感を味わった。");
+#else
             mpr("You feel a distant frustration.");
+#endif
     }
 
     i = mgrd[beam.tx][beam.ty];
 
     if (i == NON_MONSTER)
     {
+#ifdef JP 
+        mpr("あなたは冷たい失望感を味わった。");
+#else
         mpr("You feel a distant frustration.");
+#endif
         return;
     }
 
@@ -3061,7 +3582,11 @@ void cast_shuggoth_seed(int powc)
         else
             mons_add_ench(&menv[i], ENCH_YOUR_SHUGGOTH_IV);
 
+#ifdef JP 
+        simple_monster_message(&menv[i], "はびくりと痙攣した。");
+#else
         simple_monster_message(&menv[i], " twitches.");
+#endif
     }
 
     return;
@@ -3077,7 +3602,11 @@ void cast_condensation_shield(int pow)
             you.duration[DUR_CONDENSATION_SHIELD] += 5 + roll_dice(2, 3);
         else
         {
+#ifdef JP 
+            mpr("バチバチと音を立てる凝集した気塊が宙に形成された。");
+#else
             mpr("A crackling disc of dense vapour forms in the air!");
+#endif
             you.redraw_armour_class = 1;
 
             you.duration[DUR_CONDENSATION_SHIELD] = 10 + roll_dice(2, pow / 5);
@@ -3090,6 +3619,99 @@ void cast_condensation_shield(int pow)
     return;
 }                               // end cast_condensation_shield()
 
+static int quadrant_blink(int x, int y, int pow, int garbage)
+{
+    UNUSED( garbage );
+
+    if (x == you.x_pos && y == you.y_pos)
+        return (0);
+
+    if (you.level_type == LEVEL_ABYSS)
+    {
+        abyss_teleport( false );
+        you.pet_target = MHITNOT;
+        return (1);
+    }
+
+    if (pow > 100)
+        pow = 100;
+
+    int tx, ty;         // test x,y
+    int rx, ry;         // x,y relative to you.
+    int sx, sy;         // test point in the correct direction
+    int bx = x;         // blank x
+    int by = y;         // blank y
+    int arx, ary;       // abs x, y
+
+    bool vx, vy;        // valid?
+
+    sx = (x - you.x_pos);
+    sy = (y - you.y_pos);
+
+    // for each point (a,b), distance from the line is | la + mb |
+
+
+    if ( random_near_space(you.x_pos, you.y_pos, tx, ty) )
+    {
+        bx = tx;
+        by = ty;
+    }
+
+    for(int tries = pow * pow / 500 + 1; tries > 0; tries--)
+    {
+        if (!random_near_space(you.x_pos, you.y_pos, tx, ty))
+            return 0;
+
+        rx = tx - you.x_pos;
+        ry = ty - you.y_pos;
+
+        arx = abs(rx);
+        ary = abs(ry);
+
+        switch (sx)
+        {
+        case -1:
+            vx = (rx <= -1);
+            break;
+        case  0:
+            vx = (arx*2 <= ary);
+            break;
+        case  1:
+            vx = (rx >= 1);
+            break;
+        default:
+            vx = false;
+        }
+
+        switch (sy)
+        {
+        case -1:
+            vy = (ry <= -1);
+            break;
+        case  0:
+            vy = (ary*2 <= arx);
+            break;
+        case  1:
+            vy = (ry >= 1);
+            break;
+        default:
+            vy = false;
+        }
+
+       if ( (vx)&&(vy) )
+       {
+           bx = tx;
+           by = ty;
+       }
+    }
+
+    you.x_pos = bx;
+    you.y_pos = by;
+
+    return (1);
+}
+
+/*
 static int quadrant_blink(int x, int y, int pow, int garbage)
 {
     UNUSED( garbage );
@@ -3163,6 +3785,7 @@ static int quadrant_blink(int x, int y, int pow, int garbage)
 
     return (1);
 }
+*/
 
 void cast_semi_controlled_blink(int pow)
 {
@@ -3174,7 +3797,11 @@ void cast_stoneskin(int pow)
 {
     if (you.is_undead)
     {
+#ifdef JP 
+        mpr("この呪文はあなたのアンデッドの肉体には作用しない。");
+#else
         mpr("This spell does not affect your undead flesh.");
+#endif
         return;
     }
 
@@ -3182,24 +3809,44 @@ void cast_stoneskin(int pow)
         && you.attribute[ATTR_TRANSFORMATION] != TRAN_STATUE
         && you.attribute[ATTR_TRANSFORMATION] != TRAN_BLADE_HANDS)
     {
+#ifdef JP 
+        mpr("この呪文はあなたの現在の形態には作用しない。");
+#else
         mpr("This spell does not affect your current form.");
+#endif
         return;
     }
 
     if (you.duration[DUR_STONEMAIL] || you.duration[DUR_ICY_ARMOUR])
     {
+#ifdef JP 
+        mpr("この呪文は現在効果中の他の呪文と相容れない。");
+#else
         mpr("This spell conflicts with another spell still in effect.");
+#endif
         return;
     }
 
     if (you.duration[DUR_STONESKIN])
+#ifdef JP 
+        mpr( "あなたの皮膚は固さを増した。" );
+#else
         mpr( "Your skin feels harder." );
+#endif
     else
     {
         if (you.attribute[ATTR_TRANSFORMATION] == TRAN_STATUE)
+#ifdef JP 
+            mpr( "あなたの石の体はより強固になった。" );
+#else
             mpr( "Your stone body feels more resilient." );
+#endif
         else
+#ifdef JP 
+            mpr( "あなたの皮膚は固くなった。" );
+#else
             mpr( "Your skin hardens." );
+#endif
 
         you.redraw_armour_class = 1;
     }

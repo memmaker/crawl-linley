@@ -131,7 +131,1157 @@
 #ifndef SPLDATA_H
 #define SPLDATA_H
 
+#ifdef JP
+{
+    SPELL_IDENTIFY, "鑑定",
+     SPTYP_DIVINATION,
+     6
+},
 
+{
+    SPELL_TELEPORT_SELF, "テレポート",
+     SPTYP_TRANSLOCATION,
+     5
+},
+
+{
+    SPELL_CAUSE_FEAR, "恐慌の喚起",
+     SPTYP_ENCHANTMENT,
+     5
+},
+
+{
+    SPELL_CREATE_NOISE, "騒音の発生",
+     SPTYP_ENCHANTMENT,
+     1
+},
+
+{
+    SPELL_REMOVE_CURSE, "解呪",
+     SPTYP_ENCHANTMENT,
+     5
+},
+
+{
+    SPELL_MAGIC_DART, "魔法の矢",
+     SPTYP_CONJURATION,
+     1
+},
+
+{
+    SPELL_FIREBALL, "ファイアボール",
+     SPTYP_CONJURATION | SPTYP_FIRE,
+     6
+},
+
+{
+  SPELL_SWAP, "位置の交換",
+    SPTYP_TRANSLOCATION,
+    3
+},
+
+{
+  SPELL_APPORTATION, "収拾",
+    SPTYP_TRANSLOCATION,
+    1
+},
+
+{
+  SPELL_TWIST, "捻転",
+    SPTYP_TRANSLOCATION,
+    1
+},
+
+{
+    SPELL_CONJURE_FLAME, "火柱の幻出",
+     SPTYP_CONJURATION | SPTYP_FIRE,
+     3
+},
+
+{
+    SPELL_DIG, "掘削",
+     SPTYP_TRANSMIGRATION | SPTYP_EARTH,
+     4
+},
+
+{
+    SPELL_BOLT_OF_FIRE, "猛火の矢",
+     SPTYP_CONJURATION | SPTYP_FIRE,
+     5
+},
+
+{
+    SPELL_BOLT_OF_COLD, "凍結の矢",
+     SPTYP_CONJURATION | SPTYP_ICE,
+     5
+},
+
+{
+    SPELL_LIGHTNING_BOLT, "稲妻の矢",
+     SPTYP_CONJURATION | SPTYP_AIR,
+     6
+},
+
+{
+    SPELL_BOLT_OF_MAGMA, "溶岩の矢",
+     SPTYP_CONJURATION | SPTYP_FIRE | SPTYP_EARTH,
+     5
+},
+
+{
+    SPELL_POLYMORPH_OTHER, "他者の変容",
+     SPTYP_TRANSMIGRATION,  // removed enchantment, wasn't needed -- bwr
+     5
+},
+
+{
+    SPELL_SLOW, "減速",
+     SPTYP_ENCHANTMENT,
+     3
+},
+
+{
+    SPELL_HASTE, "加速",
+     SPTYP_ENCHANTMENT,
+     6  // lowered to 6 from 8, since its easily available from various items
+        // and Swiftness is level 2 (and gives a similar effect).  Its also
+        // not that much better than Invisibility.  -- bwr
+},
+
+{
+    SPELL_PARALYZE, "金縛り",
+     SPTYP_ENCHANTMENT,
+     4
+},
+
+{
+    SPELL_CONFUSE, "混乱",
+     SPTYP_ENCHANTMENT,
+     3
+},
+
+{
+    SPELL_INVISIBILITY, "透明化",
+     SPTYP_ENCHANTMENT,
+     6
+},
+
+{
+    SPELL_THROW_FLAME, "火炎の投射",
+     SPTYP_CONJURATION | SPTYP_FIRE,
+     2
+},
+
+{
+    SPELL_THROW_FROST, "冷気の投射",
+     SPTYP_CONJURATION | SPTYP_ICE,
+     2
+},
+
+{
+    SPELL_CONTROLLED_BLINK, "精密瞬間移動",
+     SPTYP_TRANSLOCATION,
+     4
+},
+
+{
+    SPELL_FREEZING_CLOUD, "凍気の雲",
+     SPTYP_CONJURATION | SPTYP_ICE | SPTYP_AIR,
+     7
+},
+
+{
+    SPELL_MEPHITIC_CLOUD, "悪臭の雲",
+     SPTYP_CONJURATION | SPTYP_POISON | SPTYP_AIR,
+     3
+},
+
+{
+    SPELL_RING_OF_FLAMES, "炎の円環",
+     SPTYP_ENCHANTMENT | SPTYP_FIRE,
+     8
+},
+
+{
+    SPELL_RESTORE_STRENGTH, "腕力の回復",
+     SPTYP_HOLY,
+     2
+},
+
+{
+    SPELL_RESTORE_INTELLIGENCE, "知力の回復",
+     SPTYP_HOLY,
+     2
+},
+
+{
+    SPELL_RESTORE_DEXTERITY, "器用さの回復",
+     SPTYP_HOLY,
+     2
+},
+
+{
+    SPELL_VENOM_BOLT, "毒液の矢",
+     SPTYP_CONJURATION | SPTYP_POISON,
+     5
+},
+
+{
+    SPELL_OLGREBS_TOXIC_RADIANCE, "オルグレブの毒気の光輪",
+     SPTYP_POISON,
+     4
+},
+
+{
+    SPELL_TELEPORT_OTHER, "他者のテレポート",
+     SPTYP_TRANSLOCATION,
+     4
+},
+
+{
+    SPELL_LESSER_HEALING, "小さき治癒",
+     SPTYP_HOLY,
+     2
+},
+
+{
+    SPELL_GREATER_HEALING, "偉大なる治癒",
+     SPTYP_HOLY,
+     6
+},
+
+{
+    SPELL_CURE_POISON_I, "毒の治療",
+     SPTYP_HOLY,
+     3
+},
+
+{
+    SPELL_PURIFICATION, "聖杯の清め",
+     SPTYP_HOLY,
+     5
+},
+
+{
+    SPELL_DEATHS_DOOR, "死のとば口",
+     SPTYP_ENCHANTMENT | SPTYP_NECROMANCY,
+     8
+},
+
+{
+    SPELL_SELECTIVE_AMNESIA, "選択的記憶除去",
+     SPTYP_ENCHANTMENT,
+     3
+},
+
+{
+    SPELL_MASS_CONFUSION, "集団の混乱",
+     SPTYP_ENCHANTMENT,
+     6
+},
+
+{
+    SPELL_SMITING, "打擲の一撃",
+     SPTYP_HOLY,
+     4
+},
+
+{
+    SPELL_REPEL_UNDEAD, "アンデッドの退散",
+     SPTYP_HOLY,
+     3
+},
+
+{
+    SPELL_HOLY_WORD, "聖なる御言葉",
+     SPTYP_HOLY,
+     7
+},
+
+{
+    SPELL_DETECT_CURSE, "呪いの識別",
+     SPTYP_DIVINATION,
+     3
+},
+
+{
+    SPELL_SUMMON_SMALL_MAMMAL, "小動物の召換",
+     SPTYP_SUMMONING,
+     1
+},
+
+{
+    SPELL_ABJURATION_I, "解放の宣誓",
+     SPTYP_SUMMONING,
+     3
+},
+
+{
+    SPELL_SUMMON_SCORPIONS, "サソリの召換",
+     SPTYP_SUMMONING | SPTYP_POISON,
+     4
+},
+
+{
+    SPELL_LEVITATION, "浮遊",
+     SPTYP_ENCHANTMENT | SPTYP_AIR,
+     2
+},
+
+{
+    SPELL_BOLT_OF_DRAINING, "衰弱の矢",
+     SPTYP_CONJURATION | SPTYP_NECROMANCY,
+     6
+},
+
+{
+    SPELL_LEHUDIBS_CRYSTAL_SPEAR, "レフディブの水晶の槍",
+     SPTYP_CONJURATION | SPTYP_EARTH,
+     8
+},
+
+{
+    SPELL_BOLT_OF_INACCURACY, "不正確の矢",
+     SPTYP_CONJURATION,
+     2
+},
+
+{
+    SPELL_POISONOUS_CLOUD, "猛毒の雲",
+     SPTYP_CONJURATION | SPTYP_POISON | SPTYP_AIR,
+     6
+}
+,
+
+{
+    SPELL_FIRE_STORM, "炎の嵐",
+     SPTYP_CONJURATION | SPTYP_FIRE,
+     9
+},
+
+{
+    SPELL_DETECT_TRAPS, "罠の探知",
+     SPTYP_DIVINATION,
+     2
+},
+
+{
+    SPELL_BLINK, "瞬間移動",
+     SPTYP_TRANSLOCATION,
+     2
+},
+
+
+// The following name was found in the hack.exe file of an early version
+// of PCHACK - credit goes to its creator (whoever that may be):
+{
+    SPELL_ISKENDERUNS_MYSTIC_BLAST, "イスケンデルンの爆破の秘術",
+     SPTYP_CONJURATION,
+     4
+},
+
+{
+    SPELL_SWARM, "蟲の召換",
+     SPTYP_SUMMONING,
+     6
+},
+
+{
+    SPELL_SUMMON_HORRIBLE_THINGS, "おぞましきものの召換",
+     SPTYP_SUMMONING,
+     8
+},
+
+{
+    SPELL_ENSLAVEMENT, "隷属",
+     SPTYP_ENCHANTMENT,
+     4
+},
+
+{
+    SPELL_MAGIC_MAPPING, "魔法の地図",
+     SPTYP_DIVINATION | SPTYP_EARTH,
+     4
+},
+
+{
+    SPELL_HEAL_OTHER, "他者の治癒",
+     SPTYP_HOLY,
+     3
+},
+
+{
+    SPELL_ANIMATE_DEAD, "死霊の蘇生",
+     SPTYP_NECROMANCY,
+     4
+},
+
+{
+    SPELL_PAIN, "苦痛",
+     SPTYP_NECROMANCY,
+     1
+},
+
+{
+    SPELL_EXTENSION, "呪力の延長",
+     SPTYP_ENCHANTMENT,
+     5
+},
+
+{
+    SPELL_CONTROL_UNDEAD, "アンデッドの指揮",
+     SPTYP_ENCHANTMENT | SPTYP_NECROMANCY,
+     6
+},
+
+{
+    SPELL_ANIMATE_SKELETON, "スケルトンの造成",
+     SPTYP_NECROMANCY,
+     1
+},
+
+{
+    SPELL_VAMPIRIC_DRAINING, "ヴァンパイアの吸血",
+     SPTYP_NECROMANCY,
+     3
+},
+
+{
+    SPELL_SUMMON_WRAITHS, "レイスの召換",
+     SPTYP_NECROMANCY | SPTYP_SUMMONING,
+     7
+},
+
+{
+    SPELL_DETECT_ITEMS, "アイテムの探知",
+     SPTYP_DIVINATION,
+     2
+},
+
+{
+    SPELL_BORGNJORS_REVIVIFICATION, "ボーグンジョルの究極治癒",
+     SPTYP_NECROMANCY,
+     6
+},
+
+{
+    SPELL_BURN, "燃焼", // used by wanderers
+     SPTYP_FIRE,
+     1
+},
+
+{
+    SPELL_FREEZE, "氷結",
+     SPTYP_ICE,
+     1
+},
+
+{
+    SPELL_SUMMON_ELEMENTAL, "精霊の召換",
+     SPTYP_SUMMONING,
+     4
+},
+
+{
+    SPELL_OZOCUBUS_REFRIGERATION, "オゾクブの瞬間凍結",
+     SPTYP_ICE,
+     5
+},
+
+{
+    SPELL_STICKY_FLAME, "焼夷の炎",
+     SPTYP_CONJURATION | SPTYP_FIRE,
+     4
+},
+
+{
+    SPELL_SUMMON_ICE_BEAST, "氷の獣の召換",
+     SPTYP_ICE | SPTYP_SUMMONING,
+     5
+},
+
+{
+    SPELL_OZOCUBUS_ARMOUR, "オゾクブの鎧",
+     SPTYP_ENCHANTMENT | SPTYP_ICE,
+     3
+},
+
+{
+    SPELL_CALL_IMP, "インプの召換",
+     SPTYP_SUMMONING,
+     3
+},
+
+{
+    SPELL_REPEL_MISSILES, "飛来物の防御",
+     SPTYP_ENCHANTMENT | SPTYP_AIR,
+     2
+},
+
+{
+    SPELL_BERSERKER_RAGE, "狂戦士の怒り",
+     SPTYP_ENCHANTMENT,
+     3
+},
+
+{
+    SPELL_DISPEL_UNDEAD, "アンデッドの解呪",
+     SPTYP_NECROMANCY,
+     4
+},
+
+{
+    SPELL_GUARDIAN, "守護者",
+     SPTYP_HOLY,
+     7
+},
+
+{
+    SPELL_PESTILENCE, "悪疫の猛威",
+     SPTYP_HOLY,
+     4
+},
+
+{
+    SPELL_THUNDERBOLT, "雷霆の矢",
+     SPTYP_HOLY | SPTYP_AIR,
+     6         // why is this the only holy spell with a secondary? {dlb}
+}
+,
+
+{
+    SPELL_FLAME_OF_CLEANSING, "浄化の炎",
+     SPTYP_HOLY,
+     8
+},
+
+{
+    SPELL_SHINING_LIGHT, "輝ける光",
+     SPTYP_HOLY,
+     7
+},
+
+{
+    SPELL_SUMMON_DAEVA, "デーヴァの召換",
+     SPTYP_HOLY,
+     8
+},
+
+{
+    SPELL_ABJURATION_II, "解放の宣誓",
+     SPTYP_HOLY,
+     4
+},
+
+{
+    SPELL_TWISTED_RESURRECTION, "捻れた蘇生",
+     SPTYP_NECROMANCY,
+     5
+},
+
+{
+    SPELL_REGENERATION, "再生",
+     SPTYP_ENCHANTMENT | SPTYP_NECROMANCY,
+     3
+},
+
+{
+    SPELL_BONE_SHARDS, "骨片の散弾",
+     SPTYP_NECROMANCY,
+     3
+},
+
+{
+    SPELL_BANISHMENT, "追放",
+     SPTYP_TRANSLOCATION,
+     5
+},
+
+{
+    SPELL_CIGOTUVIS_DEGENERATION, "シゴツヴィの変性",
+     SPTYP_TRANSMIGRATION | SPTYP_NECROMANCY,
+     5
+},
+
+{
+    SPELL_STING, "毒針",
+     SPTYP_CONJURATION | SPTYP_POISON,
+     1
+},
+
+{
+    SPELL_SUBLIMATION_OF_BLOOD, "血の昇華",
+     SPTYP_NECROMANCY,
+     2
+},
+
+{
+    SPELL_TUKIMAS_DANCE, "ツキマーの舞踏",
+     SPTYP_ENCHANTMENT,
+     3
+},
+
+{
+    SPELL_HELLFIRE, "地獄の業火",
+     SPTYP_CONJURATION | SPTYP_FIRE,
+     9
+},
+
+{
+    SPELL_SUMMON_DEMON, "デーモンの召換",
+     SPTYP_SUMMONING,
+     5
+},
+
+{
+    SPELL_DEMONIC_HORDE, "小悪魔の群れ",
+     SPTYP_SUMMONING,
+     6
+},
+
+{
+    SPELL_SUMMON_GREATER_DEMON, "上位デーモンの召換",
+     SPTYP_SUMMONING,
+     7
+},
+
+{
+    SPELL_CORPSE_ROT, "死体の腐蝕",
+     SPTYP_NECROMANCY,
+     2
+},
+
+{
+    SPELL_TUKIMAS_VORPAL_BLADE, "ツキマーの死の刃",
+     SPTYP_ENCHANTMENT,
+     2
+},
+
+{
+    SPELL_FIRE_BRAND, "火炎の武器",
+     SPTYP_ENCHANTMENT | SPTYP_FIRE,
+     2
+},
+
+{
+    SPELL_FREEZING_AURA, "凍結の武器",
+     SPTYP_ENCHANTMENT | SPTYP_ICE,
+     2
+},
+
+{
+    SPELL_LETHAL_INFUSION, "死の装填",
+     SPTYP_ENCHANTMENT | SPTYP_NECROMANCY,
+     2
+},
+
+{
+    SPELL_CRUSH, "圧砕", // used by wanderers
+     SPTYP_EARTH,
+     1
+},
+
+{
+    SPELL_BOLT_OF_IRON, "鉄塊の矢",
+     SPTYP_CONJURATION | SPTYP_EARTH,
+     6
+},
+
+{
+    SPELL_STONE_ARROW, "石錐の矢",
+     SPTYP_CONJURATION | SPTYP_EARTH,
+     3
+},
+
+{
+    SPELL_TOMB_OF_DOROKLOHE, "ドルオクロヒの玄室",
+     SPTYP_CONJURATION | SPTYP_EARTH, // conj makes more sense than tmig -- bwr
+     7 
+}
+,
+
+{
+    SPELL_STONEMAIL, "石の甲冑",
+     SPTYP_ENCHANTMENT | SPTYP_EARTH,
+     6
+},
+
+{
+    SPELL_SHOCK, "電撃",
+     SPTYP_CONJURATION | SPTYP_AIR,
+     1
+},
+
+{
+    SPELL_SWIFTNESS, "俊足",
+     SPTYP_ENCHANTMENT | SPTYP_AIR,
+     2
+},
+
+{
+    SPELL_FLY, "飛翔",
+     SPTYP_ENCHANTMENT | SPTYP_AIR,
+     4
+},
+
+{
+    SPELL_INSULATION, "絶縁化",
+     SPTYP_ENCHANTMENT | SPTYP_AIR,
+     4
+},
+
+{
+    SPELL_ORB_OF_ELECTROCUTION, "電撃の爆裂球",
+     SPTYP_CONJURATION | SPTYP_AIR,
+     7
+},
+
+{
+    SPELL_DETECT_CREATURES, "モンスターの探知",
+     SPTYP_DIVINATION,
+     2
+},
+
+{
+    SPELL_CURE_POISON_II, "毒の治療",
+     SPTYP_POISON,
+     2
+}
+,
+
+{
+    SPELL_CONTROL_TELEPORT, "精密テレポート",
+     SPTYP_ENCHANTMENT | SPTYP_TRANSLOCATION,
+     6
+},
+
+{
+    SPELL_POISON_AMMUNITION, "毒の矢弾",
+     SPTYP_ENCHANTMENT | SPTYP_POISON,
+     4 // jmf: SPTYP_TRANSMIGRATION vs SPTYP_ENCHANTMENT?
+}
+,
+
+{
+    SPELL_POISON_WEAPON, "毒の武器",
+     SPTYP_ENCHANTMENT | SPTYP_POISON,
+     4
+},
+
+{
+    SPELL_RESIST_POISON, "毒の耐性",
+     SPTYP_ENCHANTMENT | SPTYP_POISON,
+     4
+},
+
+{
+    SPELL_PROJECTED_NOISE, "騒音の投射",
+     SPTYP_ENCHANTMENT,
+     2
+},
+
+{
+    SPELL_ALTER_SELF, "自己の変容",
+     SPTYP_TRANSMIGRATION,
+     7
+},
+
+{
+    SPELL_DEBUGGING_RAY, "廃棄の光",
+     SPTYP_CONJURATION,
+     7
+},
+
+{
+    SPELL_RECALL, "招来",
+     SPTYP_SUMMONING | SPTYP_TRANSLOCATION,
+     3
+},
+
+{
+    SPELL_PORTAL, "転位の門",
+     SPTYP_TRANSLOCATION,
+     8
+},
+
+{
+    SPELL_AGONY, "苦悶",
+     SPTYP_NECROMANCY,
+     5
+},
+
+{
+    SPELL_SPIDER_FORM, "蜘蛛の躯",
+     SPTYP_TRANSMIGRATION | SPTYP_POISON,
+     3
+},
+
+{
+    SPELL_DISRUPT, "断裂",
+     SPTYP_TRANSMIGRATION,
+     1
+},
+
+{
+    SPELL_DISINTEGRATE, "分解",
+     SPTYP_TRANSMIGRATION,
+     6
+},
+
+{
+    SPELL_BLADE_HANDS, "刃の手",
+     SPTYP_TRANSMIGRATION,
+     5  // only removes weapon, so I raised this from 4 -- bwr
+},
+
+{
+    SPELL_STATUE_FORM, "石像の躯",
+     SPTYP_TRANSMIGRATION | SPTYP_EARTH,
+     6
+},
+
+{
+    SPELL_ICE_FORM, "氷の躯",
+     SPTYP_ICE | SPTYP_TRANSMIGRATION,
+     4 // doesn't allow for equipment, so I lowered this from 5 -- bwr
+},
+
+{
+    SPELL_DRAGON_FORM, "ドラゴンの躯",
+     SPTYP_FIRE | SPTYP_TRANSMIGRATION,
+     8
+},
+
+{
+    SPELL_NECROMUTATION, "死者の躯",
+     SPTYP_TRANSMIGRATION | SPTYP_NECROMANCY,
+     8
+},
+
+{
+    SPELL_DEATH_CHANNEL, "死の霊媒術",
+     SPTYP_NECROMANCY,
+     9
+},
+
+{
+    SPELL_SYMBOL_OF_TORMENT, "苦痛の紋章",
+     SPTYP_NECROMANCY,
+     6
+},
+
+{
+    SPELL_DEFLECT_MISSILES, "飛来物の阻止",
+     SPTYP_ENCHANTMENT | SPTYP_AIR,
+     6
+},
+
+{
+    SPELL_ORB_OF_FRAGMENTATION, "破砕の爆裂球",
+     SPTYP_CONJURATION | SPTYP_EARTH,
+     7
+},
+
+{
+    SPELL_ICE_BOLT, "氷の矢",
+     SPTYP_CONJURATION | SPTYP_ICE,
+     4
+},
+
+{
+    SPELL_ICE_STORM, "凍てつく嵐",
+     SPTYP_CONJURATION | SPTYP_ICE,
+     9
+},
+
+{
+    SPELL_ARC, "電弧",   // used by wanderers
+     SPTYP_AIR,
+     1
+},
+
+{
+    SPELL_AIRSTRIKE, "旋風の一撃",
+     SPTYP_AIR,
+     4
+},
+
+{
+    SPELL_SHADOW_CREATURES, "影の怪物",
+     SPTYP_SUMMONING,  // jmf: or SPTYP_SUMMONING | SPTYP_CONJURATION
+     5
+}
+,
+
+{
+    SPELL_CONFUSING_TOUCH, "混乱の一撃",
+     SPTYP_ENCHANTMENT,
+     1
+},
+
+{
+    SPELL_SURE_BLADE, "確かなる刃",
+     SPTYP_ENCHANTMENT,
+     2
+},
+
+
+
+  //jmf: new spells
+
+
+{
+    SPELL_FLAME_TONGUE, "炎の舌先",
+     SPTYP_CONJURATION | SPTYP_FIRE,
+     1
+},
+
+{
+    SPELL_PASSWALL, "壁の透過",
+     SPTYP_TRANSMIGRATION | SPTYP_EARTH,
+     3
+},
+
+{
+    SPELL_IGNITE_POISON, "毒の燃焼",
+     SPTYP_FIRE | SPTYP_TRANSMIGRATION,
+     7
+},
+
+{
+    SPELL_STICKS_TO_SNAKES, "棒切れの蛇",
+     SPTYP_TRANSMIGRATION | SPTYP_SUMMONING,
+     2
+},
+
+{
+    SPELL_SUMMON_LARGE_MAMMAL, "犬族のしもべ",
+     SPTYP_SUMMONING,
+     3
+},
+
+{
+    SPELL_SUMMON_DRAGON, "ドラゴンの召換",
+     SPTYP_FIRE | SPTYP_SUMMONING,
+     9
+},
+
+{
+    SPELL_TAME_BEASTS, "獣馴らし",
+     SPTYP_ENCHANTMENT,
+     5
+},
+
+{
+    SPELL_SLEEP, "魔法の眠り",
+     SPTYP_ENCHANTMENT | SPTYP_ICE,
+     2
+},
+
+{
+    SPELL_MASS_SLEEP, "代謝の凍結",
+     SPTYP_ENCHANTMENT | SPTYP_ICE,
+     7
+},
+
+{
+    SPELL_DETECT_MAGIC, "魔法の探知",
+     SPTYP_DIVINATION,
+     1
+},
+
+{
+    SPELL_DETECT_SECRET_DOORS, "隠し扉の探知",
+     SPTYP_DIVINATION,
+     1
+},
+
+{
+    SPELL_SEE_INVISIBLE, "透明体の視認",
+     SPTYP_ENCHANTMENT | SPTYP_DIVINATION,
+     4
+},
+
+{
+    SPELL_FORESCRY, "予見術",
+     SPTYP_DIVINATION,
+     5
+},
+
+{
+    SPELL_SUMMON_BUTTERFLIES, "胡蝶の召換",
+     SPTYP_SUMMONING,
+     1
+},
+
+{
+    SPELL_WARP_BRAND, "歪曲の武器",
+     SPTYP_ENCHANTMENT | SPTYP_TRANSLOCATION,
+     7     // this is high for a reason - Warp brands are very powerful.
+},
+
+{
+    SPELL_SILENCE, "静寂",
+     SPTYP_ENCHANTMENT | SPTYP_AIR,
+     3
+},
+
+{
+    SPELL_SHATTER, "粉砕",
+     SPTYP_TRANSMIGRATION | SPTYP_EARTH,
+     9
+},
+
+{
+    SPELL_DISPERSAL, "転送",
+     SPTYP_TRANSLOCATION,
+     7
+},
+
+{
+    SPELL_DISCHARGE, "空電放射",
+     SPTYP_CONJURATION | SPTYP_AIR,
+     4
+},
+
+{
+    SPELL_BEND, "屈曲",
+     SPTYP_TRANSLOCATION,
+     1
+},
+
+{
+    SPELL_BACKLIGHT, "照明",
+     SPTYP_ENCHANTMENT,
+     1
+},
+
+{
+    SPELL_INTOXICATE, "アリステイアの酩酊",
+     SPTYP_TRANSMIGRATION | SPTYP_POISON,
+     4
+},
+
+{
+    SPELL_GLAMOUR, "魅了",
+     SPTYP_ENCHANTMENT,
+     5
+},
+
+{
+    SPELL_EVAPORATE, "蒸散",
+     SPTYP_FIRE | SPTYP_TRANSMIGRATION,
+     2   // XXX: level 2 or 3, what should it be now? -- bwr
+},
+
+{
+    SPELL_ERINGYAS_SURPRISING_BOUQUET, "エリンギャの驚きの花束",
+     SPTYP_TRANSMIGRATION | SPTYP_EARTH,
+     4
+},
+
+{
+    SPELL_FRAGMENTATION, "リーの瞬間解体術",
+     SPTYP_TRANSMIGRATION | SPTYP_EARTH,
+     5
+},
+
+{
+    SPELL_AIR_WALK, "大気の振る舞い",
+     SPTYP_TRANSMIGRATION | SPTYP_AIR,
+     9
+},
+
+{
+    SPELL_SANDBLAST, "砂の突風",
+     SPTYP_TRANSMIGRATION | SPTYP_EARTH,
+     1
+},
+
+{
+    SPELL_ROTTING, "腐敗",
+     SPTYP_TRANSMIGRATION | SPTYP_NECROMANCY,
+     5
+},
+
+{
+    SPELL_SHUGGOTH_SEED, "ショゴスの種子",
+     SPTYP_NECROMANCY | SPTYP_SUMMONING,
+     7
+},
+
+{
+    SPELL_MAXWELLS_SILVER_HAMMER, "マックスウェルの銀のハンマー",
+     SPTYP_ENCHANTMENT | SPTYP_EARTH,
+     2
+},
+
+{
+    SPELL_CONDENSATION_SHIELD, "大気の盾",
+     SPTYP_ICE | SPTYP_TRANSMIGRATION,
+     4
+},
+
+{
+    SPELL_SEMI_CONTROLLED_BLINK, "半制御の瞬間移動",
+     SPTYP_TRANSLOCATION,
+     3
+},
+
+{
+  SPELL_STONESKIN, "石の皮膚",
+    SPTYP_EARTH | SPTYP_TRANSMIGRATION, // was ench -- bwr
+    2
+},
+
+{
+  SPELL_SIMULACRUM, "幻像",
+    SPTYP_ICE | SPTYP_NECROMANCY,
+    7
+},
+
+{
+  SPELL_CONJURE_BALL_LIGHTNING, "魔術の球雷",
+    SPTYP_AIR | SPTYP_CONJURATION,
+    8
+},
+
+{
+  SPELL_FAR_STRIKE, "遠き一撃",
+    SPTYP_TRANSLOCATION,
+    3
+},
+
+{
+  SPELL_DELAYED_FIREBALL, "遅延式ファイアボール",
+    SPTYP_FIRE | SPTYP_CONJURATION,
+    7 
+},
+
+{
+  SPELL_FULSOME_DISTILLATION, "毒物の抽出",
+    SPTYP_TRANSMIGRATION | SPTYP_NECROMANCY,
+    1 
+},
+
+{
+  SPELL_POISON_ARROW, "毒気の矢",
+    SPTYP_CONJURATION | SPTYP_POISON,
+    6 
+},
+
+{
+  SPELL_STRIKING, "力場の矢",
+    0,
+    1 
+},
+
+{
+    SPELL_NO_SPELL, "存在せざる呪文",
+     0,
+     0,
+},
+#else
 {
     SPELL_IDENTIFY, "Identify",
      SPTYP_DIVINATION,
@@ -1281,6 +2431,6 @@
      0,
      0,
 },
-
+#endif  //JP
 
 #endif

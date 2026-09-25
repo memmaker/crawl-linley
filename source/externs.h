@@ -15,12 +15,15 @@
 #define EXTERNS_H
 
 #include <queue>
+#include <vector>
+#include <string>
 
 #include <time.h>
 
 #include "defines.h"
 #include "enum.h"
 #include "FixAry.h"
+#include "Kills.h"
 #include "message.h"
 
 #define INFO_SIZE       200          // size of message buffers
@@ -68,6 +71,13 @@ struct coord_def
     int         y;
 
     // coord_def( int x_in = 0, int y_in = 0 ) : x(x_in), y(y_in) {};
+    bool operator == (const coord_def &other) const {
+        return x == other.x && y == other.y;
+    }
+
+    bool operator != (const coord_def &other) const {
+        return x != other.x || y != other.y;
+    }
 };
 
 struct dice_def
@@ -109,7 +119,7 @@ struct bolt
     char        thrower;               // what kind of thing threw this?
     char        ex_size;               // explosion radius (0==none)
     int         beam_source;           // NON_MONSTER or monster index #
-    char        beam_name[40];
+    char        beam_name[ITEMNAME_SIZE]; //beam_name[40];
     bool        isBeam;                // beams? (can hits multiple targets?)
     const char *aux_source;            // source of KILL_MISC beams
 
@@ -175,8 +185,9 @@ struct player
 
   char run_x;
   char run_y;
+
   FixedVector< run_check_dir, 3 > run_check; // array of grids to check
-  char running;
+  signed char running;                       // Nonzero if running/traveling.
 
   char special_wield;
   char deaths_door;
@@ -291,6 +302,9 @@ struct player
   FixedArray<unsigned char, 5, 50> item_description;
   FixedVector<unsigned char, 50> unique_items;
   FixedVector<unsigned char, 50> unique_creatures;
+
+  Kills kills;
+
   char level_type;
 
   char where_are_you;
@@ -497,10 +511,55 @@ struct game_options
     int         wiz_mode;       // yes, no, never in wiz mode to start
 #endif
 
+#ifdef JP
+    bool        use_zenkaku;    //全角を使用するか否か
+#endif
+
+#ifdef USE_TILE
+    bool        use_tile;       //タイルを使用するか否か
+    bool        use_qv_mode;    //クオータービューを使用するか否か
+    bool        rotate_numpad;
+    bool        rotate_minimap;
+
+#if 1 //Slot
+    char        show_items[20];    // items to show in tile display
+#endif
+
+#endif
+
+#if 1 //JP
+    bool        use_cake;       //トウフを使用するか否か
+#endif //JP
+    bool        stress_cursed;  //呪われたアイテムを赤文字表示するか否か
     // internal use only:
     int         sc_entries;     // # of score entries
     int         sc_format;      // Format for score entries
-};
+
+    std::vector<std::string> banned_objects;  // Objects we'll never pick up
+    bool        pickup_thrown;  // Pickup thrown missiles
+    bool        pickup_dropped; // Pickup dropped objects
+    int         travel_delay;   // How long to pause between travel moves
+    std::vector<std::string> stop_travel;     // Messages that stop travel
+
+    int         stash_tracking; // How stashes are tracked
+
+    bool        travel_colour;  // Colour levelmap using travel information?
+    int         travel_stair_cost;
+
+
+    bool        explore_item_stop; // Stop exploring if a previously unseen
+                                   // item comes into view
+
+    std::vector< FixedVector<std::string, 2> > sound_mappings;
+
+    int         dump_kill_places; // How to dump place information for kills.
+    int         dump_message_count; // How many old messages to dump
+
+    bool        target_zero_exp;    // If true, targeting targets zero-exp
+                                    // monsters.
+    int         pick_items_start; // index of first item for get command
+    bool        enter_latest_name;
+ };
 
 extern game_options  Options;
 

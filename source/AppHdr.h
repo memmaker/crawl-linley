@@ -46,6 +46,8 @@
 #endif
 
 
+#define STASH_TRACKING
+
 // =========================================================================
 //  System Defines
 // =========================================================================
@@ -76,14 +78,24 @@
     #define USE_UNIX_SIGNALS
 
     #include <string>
+
+    #ifdef USE_X11
+    #include "libx11.h"
+    #else
     #include "liblinux.h"
+    #endif
 
 #elif defined(SOLARIS)
     // Most of the linux stuff applies, and so we want it
     #define LINUX
     #define PLAIN_TERM
     #define MULTIUSER
+
+    #ifdef USE_X11
+    #include "libx11.h"
+    #else
     #include "liblinux.h"
+    #endif
 
     // The ALTCHARSET may come across as DEC characters/JIS on non-ibm platforms
     #define CHARACTER_SET           0
@@ -116,7 +128,12 @@
     #define LINUX
     #define PLAIN_TERM
     #define MULTIUSER
+
+    #ifdef USE_X11
+    #include "libx11.h"
+    #else
     #include "liblinux.h"
+    #endif
 
     // The ALTCHARSET may come across as DEC characters/JIS on non-ibm platforms
     #define CHARACTER_SET           0
@@ -152,7 +169,11 @@
     #define LINUX
     #define PLAIN_TERM
 //#define MULTIUSER
+    #ifdef USE_X11
+    #include "libx11.h"
+    #else
     #include "liblinux.h"
+    #endif
 
     // The ALTCHARSET may come across as DEC characters/JIS on non-ibm platforms
     #define CHARACTER_SET           0
@@ -214,7 +235,7 @@
 #elif defined(DOS)
     #define DOS_TERM
     #define SHORT_FILE_NAMES
-    #define EOL "\n\r"
+    #define EOL "\r\n"
     #define CHARACTER_SET           A_ALTCHARSET
 
     #include <string>
@@ -223,17 +244,27 @@
         #define NEED_SNPRINTF
     #endif
 
-#elif defined(WIN32CONSOLE) && (defined(__IBMCPP__) || defined(__BCPLUSPLUS__))
+#elif defined(WIN32CONSOLE) && (defined(__IBMCPP__) || defined(__BCPLUSPLUS__) || defined(__MINGW32__))
     #include "libw32c.h"
     #define PLAIN_TERM
     #define SHORT_FILE_NAMES
-    #define EOL "\n"
+    #define EOL "\r\n"
     #define CHARACTER_SET           A_ALTCHARSET
     #define getstr(X,Y)         getConsoleString(X,Y)
+#elif defined(WINDOWS)
+    #include "libwt.h"
+    #define PLAIN_TERM
+    #define SHORT_FILE_NAMES
+    #define EOL "\r\n"
+    //#define EOL "\n"
+    #define CHARACTER_SET           A_ALTCHARSET
 #else
     #error unsupported compiler
 #endif
 
+#ifdef USE_TILE
+    #include "libtile.h"
+#endif
 
 // =========================================================================
 //  Debugging Defines

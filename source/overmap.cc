@@ -29,6 +29,7 @@
 #include "religion.h"
 #include "stuff.h"
 #include "view.h"
+#include "shopping.h"
 
 enum
 {
@@ -97,7 +98,11 @@ void display_overmap( void )
     bool pr_lev = false;
     bool output = false;
 
+#ifdef JP 
+    print_one_simple_line("                            既知のダンジョン構成   ", WHITE);
+#else
     print_one_simple_line("                            Overview of the Dungeon", WHITE);
+#endif
 
     // This is a more sensible order than the order of the enums -- bwr
     const int list_order[] = 
@@ -129,16 +134,30 @@ void display_overmap( void )
 
                 if (altars_present[j][i] == 100)
                 {
+#ifdef JP 
+                    print_one_highlighted_line( "    - 複数の", 
+                                                "神々の祭壇", "", 
+                                                WHITE );
+#else
                     print_one_highlighted_line( "    - some ", 
                                                 "altars to the gods", ".", 
                                                 WHITE );
+#endif
                 }
                 else
                 {
+#ifdef JP 
+                    snprintf( info, INFO_SIZE, "%sの祭壇", 
+#else
                     snprintf( info, INFO_SIZE, "altar to %s", 
+#endif
                               god_name( altars_present[j][i] ) );
                               
+#ifdef JP 
+                    print_one_highlighted_line( "    - ", info, "", WHITE );
+#else
                     print_one_highlighted_line( "    - an ", info, ".", WHITE );
+#endif
                 }
             }
 
@@ -148,8 +167,13 @@ void display_overmap( void )
 
                 // print_one_simple_line("    - facilities for the purchase of goods.",LIGHTGREY);
 
+#ifdef JP 
+                print_one_highlighted_line( "    - ", 
+                                            "店", "", LIGHTGREEN );
+#else
                 print_one_highlighted_line( "    - facilities for the ", 
                                             "purchase of goods", ".", LIGHTGREEN );
+#endif
                 output = true;
             }
 
@@ -157,8 +181,13 @@ void display_overmap( void )
             {
                 print_level_name( i, j, printed_branch, printed_level );
                 // print_one_simple_line("    - a gateway into the Abyss.", LIGHTRED);
+#ifdef JP 
+                print_one_highlighted_line( "    - ", 
+                                            "アビス", "への門", MAGENTA );
+#else
                 print_one_highlighted_line( "    - a gateway into ", 
                                             "the Abyss", ".", MAGENTA );
+#endif
                 output = true;
             }
 
@@ -167,8 +196,13 @@ void display_overmap( void )
                 print_level_name( i, j, printed_branch, printed_level );
                 // print_one_simple_line("    - a link to Pandemonium.", LIGHTRED);
 
+#ifdef JP 
+                print_one_highlighted_line( "    - ", "パンデモニウム", 
+                                            "への経路", LIGHTBLUE );
+#else
                 print_one_highlighted_line( "    - a link to ", "Pandemonium", 
                                             ".", LIGHTBLUE );
+#endif
                 output = true;
             }
 
@@ -176,7 +210,11 @@ void display_overmap( void )
             {
                 print_level_name( i, j, printed_branch, printed_level );
                 // print_one_simple_line("    - a mouth of Hell.", LIGHTRED);
+#ifdef JP 
+                print_one_highlighted_line( "    - ", "地獄", "のとば口", RED );
+#else
                 print_one_highlighted_line( "    - a mouth of ", "Hell", ".", RED );
+#endif
                 output = true;
             }
 
@@ -184,8 +222,13 @@ void display_overmap( void )
             {
                 print_level_name( i, j, printed_branch, printed_level );
                 // print_one_simple_line("    - the entrance of a Labyrinth.", LIGHTRED);
+#ifdef JP 
+                print_one_highlighted_line( "    - ", 
+                                            "ラビリンス", "の入り口", CYAN );
+#else
                 print_one_highlighted_line( "    - an entrance to ", 
                                             "a Labyrinth", ".", CYAN );
+#endif
                 output = true;
             }
 
@@ -206,15 +249,27 @@ void display_overmap( void )
                         switch (k)
                         {
                         case BRANCH_SLIME_PITS:
+#ifdef JP 
+                            strcat(info, "スライムの穴ぐら");
+#else
                             strcat(info, "the Slime Pits");
+#endif
                             pr_lev = true;
                             break;
                         case BRANCH_SNAKE_PIT:
+#ifdef JP 
+                            strcat(info, "蛇穴");
+#else
                             strcat(info, "the Snake Pit");
+#endif
                             pr_lev = true;
                             break;
                         case BRANCH_SWAMP:
+#ifdef JP 
+                            strcat(info, "沼");
+#else
                             strcat(info, "the Swamp");
+#endif
                             pr_lev = true;
                             break;
                         }
@@ -224,11 +279,19 @@ void display_overmap( void )
                         switch (k)
                         {
                         case BRANCH_HALL_OF_BLADES:
+#ifdef JP 
+                            strcat(info, "刃の広間");
+#else
                             strcat(info, "the Hall of Blades");
+#endif
                             pr_lev = true;
                             break;
                         case BRANCH_CRYPT:
+#ifdef JP 
+                            strcat(info, "地下墓地");
+#else
                             strcat(info, "the Crypt");
+#endif
                             pr_lev = true;
                             break;
                         }
@@ -238,7 +301,11 @@ void display_overmap( void )
                         switch (k)
                         {
                         case BRANCH_TOMB:
+#ifdef JP 
+                            strcat(info, "霊廟");
+#else
                             strcat(info, "the Tomb");
+#endif
                             pr_lev = true;
                             break;
                         }
@@ -248,7 +315,11 @@ void display_overmap( void )
                         switch (k)
                         {
                         case BRANCH_ELVEN_HALLS:
+#ifdef JP 
+                            strcat(info, "エルフの大広間");
+#else
                             strcat(info, "the Elven Halls");
+#endif
                             pr_lev = true;
                             break;
                         }
@@ -258,27 +329,51 @@ void display_overmap( void )
                         switch (k)
                         {
                         case BRANCH_ORCISH_MINES:
+#ifdef JP 
+                            strcat(info, "オークの坑道");
+#else
                             strcat(info, "the Orcish Mines");
+#endif
                             pr_lev = true;
                             break;
                         case BRANCH_HIVE:
+#ifdef JP 
+                            strcat(info, "蜂の巣");
+#else
                             strcat(info, "the Hive");
+#endif
                             pr_lev = true;
                             break;
                         case BRANCH_LAIR:
+#ifdef JP 
+                            strcat(info, "獣の棲み処");
+#else
                             strcat(info, "the Lair");
+#endif
                             pr_lev = true;
                             break;
                         case BRANCH_VAULTS:
+#ifdef JP 
+                            strcat(info, "宝物庫");
+#else
                             strcat(info, "the Vaults");
+#endif
                             pr_lev = true;
                             break;
                         case BRANCH_HALL_OF_ZOT:
+#ifdef JP 
+                            strcat(info, "ゾットの大広間");
+#else
                             strcat(info, "the Hall of Zot");
+#endif
                             pr_lev = true;
                             break;
                         case BRANCH_ECUMENICAL_TEMPLE:
+#ifdef JP 
+                            strcat(info, "諸宗派の寺院");
+#else
                             strcat(info, "the Ecumenical Temple");
+#endif
                             pr_lev = true;
                             break;
                         }
@@ -289,8 +384,13 @@ void display_overmap( void )
                 if (pr_lev)
                 {
                     print_level_name( i, j, printed_branch, printed_level );
+#ifdef JP 
+                    print_one_highlighted_line( "    - ", info,
+                                                "への入り口", YELLOW );
+#else
                     print_one_highlighted_line( "    - the entrance to ", info,
                                                 ".", YELLOW );
+#endif
                     output = true;
                 }
             }
@@ -300,9 +400,15 @@ void display_overmap( void )
     textcolor( LIGHTGREY );
 
     if (!output)
+#ifdef JP 
+        cprintf( EOL "あなたはまだ特別な場所を発見していない。" EOL );
+#else
         cprintf( EOL "You have yet to discover anything worth noting." EOL );
+#endif
 
+#ifndef USE_MULTIWIN //skip getch
     getch();
+#endif
 
     redraw_screen();
 
@@ -320,6 +426,32 @@ static void print_level_name( int branch, int depth,
         printed_branch = true;
 
         print_one_simple_line( "", YELLOW );
+#ifdef JP 
+        print_one_simple_line( 
+                (branch == BRANCH_MAIN_DUNGEON)      ? "ダンジョン" :
+                (branch == BRANCH_ORCISH_MINES)      ? "オークの坑道" :
+                (branch == BRANCH_HIVE)              ? "蜂の巣" :
+                (branch == BRANCH_LAIR)              ? "獣の棲み処" :
+                (branch == BRANCH_SLIME_PITS)        ? "スライムの穴ぐら" :
+                (branch == BRANCH_VAULTS)            ? "宝物庫" :
+                (branch == BRANCH_CRYPT)             ? "地下墓地" :
+                (branch == BRANCH_HALL_OF_BLADES)    ? "刃の広間" :
+                (branch == BRANCH_HALL_OF_ZOT)       ? "ゾットの領域" :
+                (branch == BRANCH_ECUMENICAL_TEMPLE) ? "諸宗派の寺院" :
+                (branch == BRANCH_SNAKE_PIT)         ? "蛇穴" :
+                (branch == BRANCH_ELVEN_HALLS)       ? "エルフの大広間" :
+                (branch == BRANCH_TOMB)              ? "霊廟" :
+                (branch == BRANCH_SWAMP)             ? "沼" :
+
+                (branch == BRANCH_DIS)               ? "鉄の都ディース" :
+                (branch == BRANCH_GEHENNA)           ? "ゲヘナ" :
+                (branch == BRANCH_VESTIBULE_OF_HELL) ? "地獄の入り口" :
+                (branch == BRANCH_COCYTUS)           ? "コキュートス" :
+                (branch == BRANCH_TARTARUS)          ? "タルタロス" 
+                                                     : "知られざる領域",
+        
+                YELLOW );
+#else
         print_one_simple_line( 
                 (branch == BRANCH_MAIN_DUNGEON)      ? "Main Dungeon" :
                 (branch == BRANCH_ORCISH_MINES)      ? "The Orcish Mines" :
@@ -344,6 +476,7 @@ static void print_level_name( int branch, int depth,
                                                      : "Unknown Area",
         
                 YELLOW );
+#endif
     }
 
     if (!printed_level)
@@ -368,7 +501,11 @@ static void print_level_name( int branch, int depth,
         else // branch is in hell (all of which start at depth 28)
             depth -= 26;
 
+#ifdef JP 
+        snprintf( buff, INFO_SIZE, "  %d階:", depth );
+#else
         snprintf( buff, INFO_SIZE, "  Level %d:", depth );
+#endif
         print_one_simple_line( buff, LIGHTRED );
     }
 }
@@ -492,7 +629,11 @@ void print_one_simple_line( const char *line , int colour)
     {
         textcolor( LIGHTGREY );
         cprintf(EOL);
+#ifdef JP 
+        cprintf("-続く-");
+#else
         cprintf("More...");
+#endif
         getch();
         clrscr();
         map_lines = 0;
@@ -512,7 +653,11 @@ void print_one_highlighted_line( const char *pre, const char *text,
     {
         textcolor( LIGHTGREY );
         cprintf(EOL);
+#ifdef JP 
+        cprintf("-続く-");
+#else
         cprintf("More...");
+#endif
         getch();
         clrscr();
         map_lines = 0;

@@ -18,8 +18,8 @@
 #define PROMPT_GOT_SPECIAL  -2
 
 int prompt_invent_item( const char *prompt, int type_expect,
-                        bool must_exist = true, 
-                        bool allow_auto_list = true, 
+                        bool must_exist = true,
+                        bool allow_auto_list = true,
                         bool allow_easy_quit = true,
                         const char other_valid_char = '\0',
                         int *const count = NULL );
@@ -36,7 +36,7 @@ unsigned char invent(int item_class_inv, bool show_price);
  * called from: acr - command - food - item_use - items - spl-book - spells1
  * *********************************************************************** */
 unsigned char get_invent(int invent_type);
-
+unsigned char get_invent_quant( int &quant );
 
 // last updated 12may2000 {dlb}
 /* ***********************************************************************
@@ -44,5 +44,11 @@ unsigned char get_invent(int invent_type);
  * *********************************************************************** */
 void list_commands(bool wizard);
 
+#if 1 //Slot
+/* ***********************************************************************
+ * called from: acr
+ * *********************************************************************** */
+void use_item(int idx);
+#endif
 
 #endif

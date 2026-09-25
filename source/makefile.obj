@@ -59,4 +59,7 @@ stuff.o \
 tags.o \
 transfor.o \
 view.o \
-wpn-misc.o
+wpn-misc.o \
+stash.o \
+Kills.o \
+travel.o

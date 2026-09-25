@@ -21,6 +21,13 @@
 
 int get_number_of_lines(void);
 
+/* ***********************************************************************
+ * called from: dump_screenshot - chardump
+ * *********************************************************************** */
+void get_non_ibm_symbol(unsigned int object, unsigned short *ch,
+                        unsigned short *color);
+void get_zenkaku_symbol(unsigned int object, unsigned short *ch,
+                           unsigned short *color);
 // last updated 29may2000 {dlb}
 /* ***********************************************************************
  * called from: bang - beam - direct - effects - fight - monstuff -
@@ -41,6 +48,8 @@ void draw_border(void);
  * *********************************************************************** */
 void item(void);
 
+void find_features(const std::vector<coord_def>& features,
+	unsigned char feature, std::vector<coord_def> *found);
 
 // last updated 12may2000 {dlb}
 /* ***********************************************************************
@@ -76,7 +85,6 @@ void show_map( FixedVector<int, 2>& spec_place );
  * called from: acr
  * *********************************************************************** */
 void viewwindow2(char draw_it, bool do_updates);
-
 
 // last updated 12may2000 {dlb}
 /* ***********************************************************************

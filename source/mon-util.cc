@@ -52,6 +52,7 @@ static int mspell_list[][7] = {
 
 #if DEBUG_DIAGNOSTICS
 static const char *monster_spell_name[] = {
+#ifdef JP 
     "Magic Missile",
     "Throw Flame",
     "Throw Frost",
@@ -105,6 +106,61 @@ static const char *monster_spell_name[] = {
     "Metal Splinters",  
     "Summon Demon Greater",
     "Banishment",
+#else
+    "Magic Missile",
+    "Throw Flame",
+    "Throw Frost",
+    "Paralysis",
+    "Slow",
+    "Haste",  
+    "Confuse",  
+    "Venom Bolt",
+    "Fire Bolt",
+    "Cold Bolt",
+    "Lightning Bolt", 
+    "Invisibility",
+    "Fireball",
+    "Heal",
+    "Teleport",
+    "Teleport Other",
+    "Blink",
+    "Crystal Spear",
+    "Dig",
+    "Negative Bolt",
+    "Hellfire Burst",
+    "Vampire Summon",
+    "Orb Energy",
+    "Brain Feed",
+    "Level Summon",
+    "Fake Rakshasa Summon",  
+    "Steam Ball",
+    "Summon Demon",
+    "Animate Dead",
+    "Pain",
+    "Smite",                
+    "Sticky Flame",
+    "Poison Blast",
+    "Summon Demon Lesser",
+    "Summon Ufetubus",
+    "Purple Blast",        
+    "Summon Beast",
+    "Energy Bolt",
+    "Sting",
+    "Iron Bolt",
+    "Stone Arrow",        
+    "Poison Splash",
+    "Summon Undead",
+    "Mutation",          
+    "Cantrip",
+    "Disintegrate", 
+    "Marsh Gas",
+    "Quicksilver Bolt",
+    "Torment",
+    "Hellfire",
+    "Metal Splinters",  
+    "Summon Demon Greater",
+    "Banishment",
+#endif
 };
 #endif
 
@@ -410,7 +466,11 @@ bool check_mons_resist_magic( struct monsters *monster, int pow )
 
 #if DEBUG_DIAGNOSTICS
     snprintf( info, INFO_SIZE, 
+#ifdef JP 
               "Power: %d, monster's MR: %d, target: %d, roll: %d", 
+#else
+              "Power: %d, monster's MR: %d, target: %d, roll: %d", 
+#endif
               pow, mrs, mrchance, mrch2 );
 
     mpr( info, MSGCH_DIAGNOSTICS );
@@ -863,7 +923,11 @@ void mons_spell_list( unsigned char sec, int splist[6] )
 const char *mons_spell_name( int spell )
 {
     if (spell == MS_NO_SPELL || spell >= NUM_MONSTER_SPELLS || spell < 0)
+#ifdef JP 
         return ("No spell");
+#else
+        return ("No spell");
+#endif
 
     return (monster_spell_name[ spell ]);
 }
@@ -1062,16 +1126,32 @@ const char *monam( int mons_num, int mons, bool vis, char desc, int mons_wpn )
         switch (desc)
         {
         case DESC_CAP_THE:
+#ifdef JP 
+            strcpy(gmo_n, "");
+#else
             strcpy(gmo_n, "The");
+#endif
             break;
         case DESC_NOCAP_THE:
+#ifdef JP 
+            strcpy(gmo_n, "");
+#else
             strcpy(gmo_n, "the");
+#endif
             break;
         case DESC_CAP_A:
+#ifdef JP 
+            strcpy(gmo_n, "");
+#else
             strcpy(gmo_n, "A");
+#endif
             break;
         case DESC_NOCAP_A:
+#ifdef JP 
+            strcpy(gmo_n, "");
+#else
             strcpy(gmo_n, "a");
+#endif
             break;
         case DESC_PLAIN:         /* do nothing */ ;
             break;
@@ -1084,25 +1164,43 @@ const char *monam( int mons_num, int mons, bool vis, char desc, int mons_wpn )
     case MONS_ZOMBIE_SMALL: 
     case MONS_ZOMBIE_LARGE:
         moname(mons_num, vis, desc, gmo_n);
+#ifdef JP 
+        strcat(gmo_n, "のゾンビ");
+#else
         strcat(gmo_n, " zombie");
+#endif
         break;
 
     case MONS_SKELETON_SMALL: 
     case MONS_SKELETON_LARGE:
         moname(mons_num, vis, desc, gmo_n);
+#ifdef JP 
+        strcat(gmo_n, "のスケルトン");
+#else
         strcat(gmo_n, " skeleton");
+#endif
         break;
 
     case MONS_SIMULACRUM_SMALL: 
     case MONS_SIMULACRUM_LARGE:
         moname(mons_num, vis, desc, gmo_n);
+#ifdef JP 
+        strcat(gmo_n, "の幻影");
+#else
         strcat(gmo_n, " simulacrum");
+#endif
         break;
 
     case MONS_SPECTRAL_THING: 
+#ifdef JP 
+        moname(mons_num, vis, DESC_PLAIN, gmo_n2);
+        strcat(gmo_n, gmo_n2);
+        strcat(gmo_n, "の幽霊");
+#else
         strcat(gmo_n, " spectral ");
         moname(mons_num, vis, DESC_PLAIN, gmo_n2);
         strcat(gmo_n, gmo_n2);
+#endif
         break;
 
     case MONS_DANCING_WEAPON:
@@ -1118,13 +1216,27 @@ const char *monam( int mons_num, int mons, bool vis, char desc, int mons_wpn )
         break;
 
     case MONS_PLAYER_GHOST:
+#ifdef JP 
+        strcpy(gmo_n, "『");
+        strcat(gmo_n, ghost.name);
+        strcat(gmo_n, "』の亡霊");
+#else
         strcpy(gmo_n, ghost.name);
         strcat(gmo_n, "'s ghost");
+#endif
         break;
 
+#ifdef JP
+    case MONS_PANDEMONIUM_DEMON:
+        strcpy(gmo_n, "『");    
+        strcat(gmo_n, ghost.name);
+        strcat(gmo_n, "』");        
+        break;
+#else
     case MONS_PANDEMONIUM_DEMON:
         strcpy(gmo_n, ghost.name);
         break;
+#endif
 
     default:
         moname(mons, vis, desc, gmo_n);
@@ -1147,12 +1259,23 @@ void moname(int mons_num, bool vis, char descrip, char glog[ ITEMNAME_SIZE ])
         {
         case DESC_CAP_THE:
         case DESC_CAP_A:
+        case DESC_CAP_YOUR:
+#ifdef JP 
+            strcpy(glog, "何か");
+#else
             strcpy(glog, "It");
+#endif
             break;
         case DESC_NOCAP_THE:
         case DESC_NOCAP_A:
         case DESC_PLAIN:
+        case DESC_NOCAP_YOUR:
+        default:
+#ifdef JP 
+            strcpy(glog, "何か");
+#else
             strcpy(glog, "it");
+#endif
             break;
         }
 
@@ -1165,22 +1288,40 @@ void moname(int mons_num, bool vis, char descrip, char glog[ ITEMNAME_SIZE ])
         switch (descrip)
         {
         case DESC_CAP_THE:
+#ifdef JP 
+            strcpy(glog, "");
+#else
             strcpy(glog, "The ");
+#endif
             break;
         case DESC_NOCAP_THE:
+#ifdef JP 
+            strcpy(glog, "");
+#else
             strcpy(glog, "the ");
+#endif
             break;
         case DESC_CAP_A:
+#ifdef JP 
+            strcpy(glog, "");
+#else
             strcpy(glog, "A");
+#endif
             break;
         case DESC_NOCAP_A:
+#ifdef JP 
+            strcpy(glog, "");
+#else
             strcpy(glog, "a");
+#endif
             break;
         case DESC_PLAIN:
             break;
         // default: DEBUGSTR("bad monster descrip flag");
         }
 
+#ifdef JP 
+#else
         if (descrip == DESC_CAP_A || descrip == DESC_NOCAP_A)
         {
             switch (toupper(gmon_name[0]))
@@ -1198,6 +1339,7 @@ void moname(int mons_num, bool vis, char descrip, char glog[ ITEMNAME_SIZE ])
                 break;
             }
         }
+#endif
     }
 
     strcat(glog, gmon_name);
@@ -1433,7 +1575,11 @@ int mons_del_ench( struct monsters *mon, unsigned int ench, unsigned int ench2,
     if (ench == ENCH_FEAR)
     {
         if (!quiet)
+#ifdef JP 
+            simple_monster_message(mon, "は勇気を取り戻したようだ。");
+#else
             simple_monster_message(mon, " seems to regain its courage.");
+#endif
 
         // reevaluate behaviour
         behaviour_event(mon, ME_EVAL);
@@ -1442,7 +1588,11 @@ int mons_del_ench( struct monsters *mon, unsigned int ench, unsigned int ench2,
     if (ench == ENCH_CONFUSION)
     {
         if (!quiet)
+#ifdef JP 
+            simple_monster_message(mon, "は混乱が収まってきたようだ。");
+#else
             simple_monster_message(mon, " seems less confused.");
+#endif
 
         // reevaluate behaviour
         behaviour_event(mon, ME_EVAL);
@@ -1461,7 +1611,11 @@ int mons_del_ench( struct monsters *mon, unsigned int ench, unsigned int ench2,
             if (!quiet)
             {
                 strcpy( info, ptr_monam( mon, DESC_CAP_A ) );
+#ifdef JP 
+                strcat( info, "が姿を現した！" );
+#else
                 strcat( info, " appears!" );
+#endif
                 mpr( info );
             }
         }
@@ -1470,7 +1624,11 @@ int mons_del_ench( struct monsters *mon, unsigned int ench, unsigned int ench2,
     if (ench == ENCH_CHARM)
     {
         if (!quiet)
+#ifdef JP 
+            simple_monster_message(mon, "は魅了から覚醒した。");
+#else
             simple_monster_message(mon, " is no longer charmed.");
+#endif
 
         // reevaluate behaviour
         behaviour_event(mon, ME_EVAL);
@@ -1479,25 +1637,41 @@ int mons_del_ench( struct monsters *mon, unsigned int ench, unsigned int ench2,
     if (ench == ENCH_BACKLIGHT_I)
     {
         if (!quiet)
+#ifdef JP 
+            simple_monster_message(mon, "の輝きは止まった。");
+#else
             simple_monster_message(mon, " stops glowing.");
+#endif
     }
 
     if (ench == ENCH_STICKY_FLAME_I || ench == ENCH_YOUR_STICKY_FLAME_I)
     {
         if (!quiet)
+#ifdef JP 
+            simple_monster_message(mon, "を燃やしていた炎が消えた。");
+#else
             simple_monster_message(mon, " stops burning.");
+#endif
     }
 
     if (ench == ENCH_POISON_I || ench == ENCH_YOUR_POISON_I)
     {
         if (!quiet)
+#ifdef JP 
+            simple_monster_message(mon, "は体調が持ち直したようだ。");
+#else
             simple_monster_message(mon, " looks more healthy.");
+#endif
     }
 
     if (ench == ENCH_YOUR_ROT_I)
     {
         if (!quiet)
+#ifdef JP 
+            simple_monster_message(mon, "の腐敗は止まった。");
+#else
             simple_monster_message(mon, " is no longer rotting.");
+#endif
     }
 
     return (ret_val);
@@ -1959,24 +2133,49 @@ const char *mons_pronoun(int mon_type, int variant)
     switch(variant)
     {
         case PRONOUN_CAP:
+#ifdef JP 
+            return ((gender == 0) ? "このモンスター" :
+                    (gender == 1) ? "彼" : "彼女");
+#else
             return ((gender == 0) ? "It" :
                     (gender == 1) ? "He" : "She");
+#endif
 
         case PRONOUN_NOCAP:
+#ifdef JP 
+            return ((gender == 0) ? "このモンスター" :
+                    (gender == 1) ? "彼" : "彼女");
+#else
             return ((gender == 0) ? "it" :
                     (gender == 1) ? "he" : "she");
+#endif
 
         case PRONOUN_CAP_POSSESSIVE:
+#ifdef JP 
+            return ((gender == 0) ? "このモンスターの" :
+                    (gender == 1) ? "彼の" : "彼女の");
+#else
             return ((gender == 0) ? "Its" :
                     (gender == 1) ? "His" : "Her");
+#endif
 
         case PRONOUN_NOCAP_POSSESSIVE:
+#ifdef JP 
+            return ((gender == 0) ? "このモンスターの" :
+                    (gender == 1) ? "彼の" : "彼女の");
+#else
             return ((gender == 0) ? "its" :
                     (gender == 1) ? "his" : "her");
+#endif
 
         case PRONOUN_REFLEXIVE:  // awkward at start of sentence, always lower
+#ifdef JP 
+            return ((gender == 0) ? "自身を"  :
+                    (gender == 1) ? "彼自身を" : "彼女自身を");
+#else
             return ((gender == 0) ? "itself"  :
                     (gender == 1) ? "himself" : "herself");
+#endif
     }
 
     return ("");

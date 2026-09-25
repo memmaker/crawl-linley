@@ -53,18 +53,33 @@
 #include "stuff.h"
 
 const char *sacrifice[] = {
-    {" glows silver and disappears."},
-    {" glows a brilliant golden colour and disappears."},
-    {" rots away in an instant."},
-    {" crumbles to dust."},
-    {" is eaten by a bug."},    /* Xom - no sacrifices */
-    {" explodes into nothingness."},
-    {" is consumed in a burst of flame."},
-    {" is consumed in a roaring column of flame."},
-    {" glows faintly for a moment, then is gone."},
-    {" is consumed in a roaring column of flame."},
-    {" glows with a rainbow of weird colours and disappears."},
-    {" evaporates."}
+#ifdef JP
+    "は銀色に輝いて消え去った。",
+    "は煌く金色に輝いて消え去った。",
+    "は一瞬のうちに朽ち果ててしまった。",
+    "は塵へと分解された。",
+    "は虫に食べられた。",    /* Xom - no sacrifices */
+    "は爆発して消え去った。",
+    "は炎の爆発で焼き尽された。",
+    "は唸りを上げる炎の柱に焼き尽された。",
+    "は一瞬だけかすかに輝くと消え去った。",
+    "は唸りを上げる炎の柱に焼き尽された。",
+    "は気味悪い色彩の虹に輝くと消え去った。",
+    "は蒸発した。"
+#else
+    " glows silver and disappears.",
+    " glows a brilliant golden colour and disappears.",
+    " rots away in an instant.",
+    " crumbles to dust.",
+    " is eaten by a bug.",    /* Xom - no sacrifices */
+    " explodes into nothingness.",
+    " is consumed in a burst of flame.",
+    " is consumed in a roaring column of flame.",
+    " glows faintly for a moment, then is gone.",
+    " is consumed in a roaring column of flame.",
+    " glows with a rainbow of weird colours and disappears.",
+    " evaporates."
+#endif
 };
 
 void altar_prayer(void);
@@ -79,7 +94,11 @@ void dec_penance(int god, int val)
     {
         if (you.penance[god] <= val)
         {
+#ifdef JP
+            simple_god_message("は怒りを和らげたようだ。", god);
+#else
             simple_god_message(" seems mollified.", god);
+#endif
             you.penance[god] = 0;
         }
         else
@@ -121,7 +140,11 @@ void pray(void)
 
     if (silenced(you.x_pos, you.y_pos))
     {
+#ifdef JP
+        mpr("あなたは声を上げることができない！");
+#else
         mpr("You are unable to make a sound!");
+#endif
         return;
     }
 
@@ -138,7 +161,11 @@ void pray(void)
     {
         if (you.species == SP_DEMIGOD)
         {
+#ifdef JP
+            mpr("残念ながら、あなたのような地位にある存在はここで祈れない。");
+#else
             mpr("Sorry, a being of your status cannot worship here.");
+#endif
             return;
         }
         god_pitch(grd[you.x_pos][you.y_pos] - 179);
@@ -147,12 +174,25 @@ void pray(void)
 
     if (you.religion == GOD_NO_GOD)
     {
+#ifdef JP
+        strcpy(info, "あなたは一瞬、");
+#else
         strcpy(info, "You spend a moment contemplating the meaning of ");
+#endif
 
         if (you.is_undead)
+#ifdef JP
+            strcat(info, "死せることの意味について考えた。");
+#else
             strcat(info, "un");
+#endif
 
+#ifdef JP
+        else
+            strcat(info, "生きることの意味について考えた。");
+#else
         strcat(info, "life.");
+#endif
         mpr(info);
         return;
     }
@@ -177,26 +217,55 @@ void pray(void)
             Xom_acts( nice, 1 + sever, force );
         }
         else
+#ifdef JP
+            mpr("ゾムはあなたを顧みない。");
+#else
             mpr("Xom ignores you.");
+#endif
 
         return;
     }
 
+#ifdef JP
+    strcpy( info, "あなたは" );
+#else
     strcpy( info, "You offer a prayer to " );
+#endif
     strcat( info, god_name( you.religion ) );
+#ifdef JP
+    strcat( info, "に祈りを捧げた。" );
+#else
     strcat( info, "." );
+#endif
     mpr(info);
 
     you.duration[DUR_PRAYER] = 9 + (random2(you.piety) / 20)
                                             + (random2(you.piety) / 20);
 
     if (player_under_penance())
+#ifdef JP
+        simple_god_message("は贖罪を求めている！");
+#else
         simple_god_message(" demands penance!");
+#endif
     else
     {
         strcpy(info, god_name(you.religion));
+#ifdef JP
+        strcat(info, "は");
+#else
         strcat(info, " is ");
+#endif
 
+#ifdef JP
+        strcat(info, (you.piety > 130) ? "あなたの崇拝を誇りにしている" :
+                     (you.piety > 100) ? "あなたに極めて満足している" :
+                     (you.piety >  70) ? "あなたに大いに満足している" :
+                     (you.piety >  40) ? "あなたにかなり満足している" :
+                     (you.piety >  20) ? "あなたに満足している" :
+                     (you.piety >   5) ? "あなたに特別な関心を持っていない"
+                                       : "あなたに不満がある");
+#else
         strcat(info, (you.piety > 130) ? "exalted by your worship" :
                      (you.piety > 100) ? "extremely pleased with you" :
                      (you.piety >  70) ? "greatly pleased with you" :
@@ -204,8 +273,13 @@ void pray(void)
                      (you.piety >  20) ? "pleased with you" :
                      (you.piety >   5) ? "noncommittal"
                                        : "displeased");
+#endif
 
+#ifdef JP
+        strcat(info, "。");
+#else
         strcat(info, ".");
+#endif
         god_speaks(you.religion, info);
 
         if (you.piety > 130)
@@ -215,7 +289,11 @@ void pray(void)
     }
 
 #if DEBUG_DIAGNOSTICS
+#ifdef JP
     snprintf( info, INFO_SIZE, "piety: %d", you.piety );
+#else
+    snprintf( info, INFO_SIZE, "piety: %d", you.piety );
+#endif
     mpr( info, MSGCH_DIAGNOSTICS );
 #endif
 
@@ -225,11 +303,15 @@ void pray(void)
     {
         //   Remember to check for water/lava
         //jmf: "good" god will sometimes feed you (a la Nethack)
-        if (you.religion == GOD_ZIN 
+        if (you.religion == GOD_ZIN
             && you.hunger_state == HS_STARVING
             && random2(250) <= you.piety)
         {
+#ifdef JP
+            god_speaks(you.religion, "あなたの空腹は満たされた。");
+#else
             god_speaks(you.religion, "Your stomach feels content.");
+#endif
             set_hunger(6000, true);
             lose_piety(5 + random2avg(10, 2));
             inc_gift_timeout(30 + random2avg(10, 2));
@@ -249,7 +331,7 @@ void pray(void)
             if (!you.attribute[ATTR_CARD_TABLE])
             {
                 thing_created = items( 1, OBJ_MISCELLANY,
-                                       MISC_PORTABLE_ALTAR_OF_NEMELEX, 
+                                       MISC_PORTABLE_ALTAR_OF_NEMELEX,
                                        true, 1, 250 );
 
                 if (thing_created != NON_ITEM)
@@ -264,7 +346,7 @@ void pray(void)
                 if (random2(200) <= you.piety && one_chance_in(4))
                     gift_type = MISC_DECK_OF_POWER;
 
-                thing_created = items( 1, OBJ_MISCELLANY, gift_type, 
+                thing_created = items( 1, OBJ_MISCELLANY, gift_type,
                                        true, 1, 250 );
             }
 
@@ -272,7 +354,11 @@ void pray(void)
             {
                 move_item_to_grid( &thing_created, you.x_pos, you.y_pos );
 
+#ifdef JP
+                simple_god_message("はあなたに贈り物を授けた！");
+#else
                 simple_god_message(" grants you a gift!");
+#endif
                 more();
                 canned_msg(MSG_SOMETHING_APPEARS);
 
@@ -288,7 +374,7 @@ void pray(void)
             && grd[you.x_pos][you.y_pos] != DNGN_DEEP_WATER
             && one_chance_in(4))
         {
-            if (you.religion == GOD_TROG 
+            if (you.religion == GOD_TROG
                 || (you.religion == GOD_OKAWARU && coinflip()))
             {
                 success = acquirement(OBJ_WEAPONS);
@@ -300,7 +386,11 @@ void pray(void)
 
             if (success)
             {
+#ifdef JP
+                simple_god_message("はあなたに贈り物を授けた！");
+#else
                 simple_god_message(" has granted you a gift!");
+#endif
                 more();
 
                 inc_gift_timeout(30 + random2avg(19, 2));
@@ -323,11 +413,15 @@ void pray(void)
                             (temp_rand >  4) ? MONS_MUMMY               //  6%
                                              : MONS_FLAYED_GHOST);      //  5%
 
-            if (create_monster( thing_called, 0, BEH_FRIENDLY, 
-                                you.x_pos, you.y_pos, 
+            if (create_monster( thing_called, 0, BEH_FRIENDLY,
+                                you.x_pos, you.y_pos,
                                 you.pet_target, 250 ) != -1)
             {
+#ifdef JP
+                simple_god_message("はあなたにアンデッドの従僕を授けた！");
+#else
                 simple_god_message(" grants you an undead servant!");
+#endif
                 more();
                 inc_gift_timeout(4 + random2avg(7, 2));
             }
@@ -399,7 +493,11 @@ void pray(void)
 
                 if (success)
                 {
+#ifdef JP
+                    simple_god_message("はあなたに贈り物を授けた！");
+#else
                     simple_god_message(" has granted you a gift!");
+#endif
                     more();
 
                     inc_gift_timeout(40 + random2avg(19, 2));
@@ -421,121 +519,270 @@ char *god_name( int which_god, bool long_name ) // mv - rewritten
     switch (which_god)
     {
     case GOD_NO_GOD:
+#ifdef JP
+        sprintf(godname_buff, "無信仰");
+#else
         sprintf(godname_buff, "No God");
+#endif
         break;
     case GOD_ZIN:
+#ifdef JP
+        sprintf(godname_buff, "%sジン", long_name ? "秩序をもたらすもの" : "");
+#else
         sprintf(godname_buff, "Zin%s", long_name ? " the Law-Giver" : "");
+#endif
         break;
     case GOD_SHINING_ONE:
+#ifdef JP
+        sprintf(godname_buff, "輝けるもの");
+#else
         sprintf(godname_buff, "The Shining One");
+#endif
         break;
     case GOD_KIKUBAAQUDGHA:
+#ifdef JP
+        strcpy(godname_buff, "キクバークッグァ");
+#else
         strcpy(godname_buff, "Kikubaaqudgha");
+#endif
         break;
     case GOD_YREDELEMNUL:
+#ifdef JP
+        sprintf(godname_buff, "%sイレデレンヌル", long_name ? "暗黒の" : "");
+#else
         sprintf(godname_buff, "Yredelemnul%s", long_name ? " the Dark" : "");
+#endif
         break;
     case GOD_XOM:
+#ifdef JP
+        strcpy(godname_buff, "ゾム");
+#else
         strcpy(godname_buff, "Xom");
-        if (long_name) 
+#endif
+        if (long_name)
         {
+#ifdef JP
+            strcat(godname_buff, "");
+#else
             strcat(godname_buff, " ");
-            switch(random2(1000)) 
+#endif
+            switch(random2(1000))
             {
             default:
-                strcat(godname_buff, "of Chaos"); 
+#ifdef JP
+                strcpy(godname_buff, "混沌のゾム");
+#else
+                strcat(godname_buff, "of Chaos");
+#endif
                 break;
             case 1:
+#ifdef JP
+                strcpy(godname_buff, "無秩序のゾム");
+#else
                 strcat(godname_buff, "the Random");
+#endif
                 if (coinflip())
+#ifdef JP
+                    strcpy(godname_buff, coinflip()?"無秩序のあるじゾム":"乱数の神ゾム");
+#else
                     strcat(godname_buff, coinflip()?"master":" Number God");
+#endif
                 break;
             case 2:
-                strcat(godname_buff, "the Tricky"); 
+#ifdef JP
+                strcpy(godname_buff, "トリックのゾム");
+#else
+                strcat(godname_buff, "the Tricky");
+#endif
                 break;
             case 3:
-                sprintf( godname_buff, "Xom the %sredictible", coinflip() ? "Less-P" 
+#ifdef JP
+                sprintf( godname_buff, "%sのゾム", coinflip() ? "予測不可能"
+                                                                    : "予測不能" );
+#else
+                sprintf( godname_buff, "Xom the %sredictible", coinflip() ? "Less-P"
                                                                     : "Unp" );
+#endif
                 break;
             case 4:
-                strcat(godname_buff, "of Many Doors"); 
+#ifdef JP
+                strcpy(godname_buff, "あまたの扉のゾム");
+#else
+                strcat(godname_buff, "of Many Doors");
+#endif
                 break;
             case 5:
-                strcat(godname_buff, "the Capricious"); 
+#ifdef JP
+                strcpy(godname_buff, "気紛れのゾム");
+#else
+                strcat(godname_buff, "the Capricious");
+#endif
                 break;
             case 6:
+#ifdef JP
+                strcpy(godname_buff, coinflip() ? "血塗られし奇想のゾム" : "奇想の執行者ゾム");
+#else
                 strcat(godname_buff, "of ");
                 strcat(godname_buff, coinflip() ? "Bloodstained" : "Enforced");
                 strcat(godname_buff, " Whimsey");
+#endif
                 break;
             case 7:
+#ifdef JP
+                strcpy(godname_buff, "ゾム『お前のユーザー名なんだったけ？』*カタカタカタ*");
+#else
                 strcat(godname_buff, "\"What was your username?\" *clickity-click*");
+#endif
                 break;
             case 8:
-                strcat(godname_buff, "of Bone-Dry Humour"); 
+#ifdef JP
+                strcpy(godname_buff, "残忍なる機知のゾム");
+#else
+                strcat(godname_buff, "of Bone-Dry Humour");
+#endif
                 break;
             case 9:
+#ifdef JP
+                strcpy(godname_buff, coinflip() ? "邪悪なる戯れのゾム" : "悪意ある冗談のゾム");
+#else
                 strcat(godname_buff, "of ");
                 strcat(godname_buff, coinflip() ? "Malevolent" : "Malicious");
                 strcat(godname_buff, " Giggling");
+#endif
                 break;
             case 10:
+#ifdef JP
+                strcpy(godname_buff, coinflip() ? "狂気のゾム" : "精神病質者ゾム");
+#else
                 strcat(godname_buff, "the Psycho");
                 strcat(godname_buff, coinflip() ? "tic" : "path");
+#endif
                 break;
             case 11:
+#ifdef JP
+#else
                 strcat(godname_buff, "of ");
-                switch(random2(5)) 
+#endif
+                switch(random2(5))
                 {
+#ifdef JP
+                case 0: strcpy(godname_buff, "戯れのゾム"); break;
+                case 1: strcpy(godname_buff, "恐るべきゾム"); break;
+                case 2: strcpy(godname_buff, "移り気のゾム"); break;
+                case 3: strcpy(godname_buff, "前言撤回のゾム"); break;
+                case 4: strcpy(godname_buff, "知られざる意図のゾム"); break;
+#else
                 case 0: strcat(godname_buff, "Gnomic"); break;
                 case 1: strcat(godname_buff, "Ineffable"); break;
                 case 2: strcat(godname_buff, "Fickle"); break;
                 case 3: strcat(godname_buff, "Swiftly Tilting"); break;
                 case 4: strcat(godname_buff, "Unknown"); break;
+#endif
                 }
+#ifdef JP
+                strcat(godname_buff, "");
+#else
                 strcat(godname_buff, " Intent");
-                if (coinflip()) 
+#endif
+                if (coinflip())
+#ifdef JP
+                    strcat(godname_buff, "");
+#else
                     strcat(godname_buff, "ion");
+#endif
                 break;
             case 12:
+#ifdef JP
+                sprintf(godname_buff, "ゾム・メイスター");
+#else
                 sprintf(godname_buff, "The Xom-Meister");
+#endif
                 if (coinflip())
+#ifdef JP
+                    strcat(godname_buff, " ゾム-ア-ロム-ア-ディン-ドン");
+#else
                     strcat(godname_buff, ", Xom-a-lom-a-ding-dong");
+#endif
                 else if (coinflip())
+#ifdef JP
+                    strcat(godname_buff, " ゾム-オ-ラマ");
+#else
                     strcat(godname_buff, ", Xom-o-Rama");
+#endif
                 else if (coinflip())
+#ifdef JP
+                    strcat(godname_buff, " ゾム-ゾム-ボ-ボン バナナ-ファナ-フォ-フォム");
+#else
                     strcat(godname_buff, ", Xom-Xom-bo-Bom, Banana-Fana-fo-Fom");
+#endif
                 break;
             case 13:
+#ifdef JP
+                strcpy(godname_buff, coinflip() ? "争乱をもたらすものゾム" :
+                 "無秩序をもたらすものゾム");
+#else
                 strcat(godname_buff, "the Begetter of ");
                 strcat(godname_buff, coinflip() ? "Turbulence" : "Discontinuities");
+#endif
                 break;
             }
         }
         break;
     case GOD_VEHUMET:
+#ifdef JP
+        strcpy(godname_buff, "ヴェフメット");
+#else
         strcpy(godname_buff, "Vehumet");
+#endif
         break;
     case GOD_OKAWARU:
+#ifdef JP
+        sprintf(godname_buff, "%sオカワル", long_name ? "軍神" : "");
+#else
         sprintf(godname_buff, "%sOkawaru", long_name ? "Warmaster " : "");
+#endif
         break;
     case GOD_MAKHLEB:
+#ifdef JP
+        sprintf(godname_buff, "%sマクレブ", long_name ? "破壊者" : "");
+#else
         sprintf(godname_buff, "Makhleb%s", long_name ? " the Destroyer" : "");
+#endif
         break;
     case GOD_SIF_MUNA:
+#ifdef JP
+        sprintf(godname_buff, "%sシフ・ムーナ", long_name ? "知識の守護者" : "");
+#else
         sprintf(godname_buff, "Sif Muna%s", long_name ? " the Loreminder" : "");
+#endif
         break;
     case GOD_TROG:
+#ifdef JP
+        sprintf(godname_buff, "%sトログ", long_name ? "怒れる" : "");
+#else
         sprintf(godname_buff, "Trog%s", long_name ? " the Wrathful" : "");
+#endif
         break;
     case GOD_NEMELEX_XOBEH:
+#ifdef JP
+        sprintf(godname_buff, "ネメレクス%s", long_name ? "・ソベー" : "");
+#else
         strcpy(godname_buff, "Nemelex Xobeh");
+#endif
         break;
     case GOD_ELYVILON:
+#ifdef JP
+        sprintf(godname_buff, "%sエリヴィロン", long_name ? "癒し手" : "");
+#else
         sprintf(godname_buff, "Elyvilon%s", long_name ? " the Healer" : "");
+#endif
         break;
     default:
+#ifdef JP
+        sprintf(godname_buff, "『バグれるもの』(%d)", which_god);
+#else
         sprintf(godname_buff, "The Buggy One (%d)", which_god);
+#endif
     }
 
     return (godname_buff);
@@ -577,14 +824,26 @@ void Xom_acts(bool niceness, int sever, bool force_sever)
         {
             temp_rand = random2(4);
 
+#ifdef JP
+            god_speaks(GOD_XOM,
+                (temp_rand == 0) ? "ゾムはあなたに目をとめた。" :
+                (temp_rand == 1) ? "ゾムは一瞬だけあなたに注目した。":
+                (temp_rand == 2) ? "ゾムの力が一瞬だけあなたに触れた。"
+                                 : "あなたはゾムの狂気の哄笑を耳にした。");
+#else
             god_speaks(GOD_XOM,
                 (temp_rand == 0) ? "Xom notices you." :
                 (temp_rand == 1) ? "Xom's attention turns to you for a moment.":
                 (temp_rand == 2) ? "Xom's power touches on you for a moment."
                                  : "You hear Xom's maniacal laughter.");
+#endif
 
-            miscast_effect( SPTYP_RANDOM, 5 + random2(10), random2(100), 0, 
+            miscast_effect( SPTYP_RANDOM, 5 + random2(10), random2(100), 0,
+#ifdef JP
+                            "ゾムの気まぐれ" );
+#else
                             "the capriciousness of Xom" );
+#endif
 
             done_bad = true;
         }
@@ -593,10 +852,17 @@ void Xom_acts(bool niceness, int sever, bool force_sever)
             temp_rand = random2(4);
 
             god_speaks(GOD_XOM,
+#ifdef JP
+                (temp_rand == 0) ? "『苦しめ！』" :
+                (temp_rand == 1) ? "ゾムの悪意ある注視が、一瞬だけあなたに注がれた。" :
+                (temp_rand == 2) ? "ゾムの力が一瞬だけあなたに触れた。"
+                                 : "あなたはゾムの狂気の哄笑を耳にした。");
+#else
                 (temp_rand == 0) ? "\"Suffer!\"" :
                 (temp_rand == 1) ? "Xom's malign attention turns to you for a moment." :
                 (temp_rand == 2) ? "Xom's power touches on you for a moment."
                                  : "You hear Xom's maniacal laughter.");
+#endif
 
             lose_stat(STAT_RANDOM, 1 + random2(3), true);
 
@@ -607,13 +873,24 @@ void Xom_acts(bool niceness, int sever, bool force_sever)
             temp_rand = random2(4);
 
             god_speaks(GOD_XOM,
+#ifdef JP
+                (temp_rand == 0) ? "ゾムはあなたに目をとめた。" :
+                (temp_rand == 1) ? "ゾムは一瞬だけあなたに注目した。":
+                (temp_rand == 2) ? "ゾムの力が一瞬だけあなたに触れた。"
+                                 : "あなたはゾムの狂気の哄笑を耳にした。");
+#else
                 (temp_rand == 0) ? "Xom notices you." :
                 (temp_rand == 1) ? "Xom's attention turns to you for a moment.":
                 (temp_rand == 2) ? "Xom's power touches on you for a moment."
                                  : "You hear Xom's maniacal laughter.");
+#endif
 
-            miscast_effect( SPTYP_RANDOM, 5 + random2(15), random2(250), 0, 
+            miscast_effect( SPTYP_RANDOM, 5 + random2(15), random2(250), 0,
+#ifdef JP
+                            "ゾムの気まぐれ" );
+#else
                             "the capriciousness of Xom" );
+#endif
 
             done_bad = true;
         }
@@ -622,12 +899,23 @@ void Xom_acts(bool niceness, int sever, bool force_sever)
             temp_rand = random2(4);
 
             god_speaks(GOD_XOM,
+#ifdef JP
+                (temp_rand == 0) ? "『定命の者よ！お前には若干の修正が必要だな！』" :
+                (temp_rand == 1) ? "『お前の貧相な体を改造してやろう』" :
+                (temp_rand == 2) ? "ゾムの力が一瞬だけあなたに触れた。"
+                                 : "あなたはゾムの狂気の哄笑を耳にした。");
+#else
                 (temp_rand == 0) ? "\"You need some minor adjustments, mortal!\"" :
                 (temp_rand == 1) ? "\"Let me alter your pitiful body.\"" :
                 (temp_rand == 2) ? "Xom's power touches on you for a moment."
                                  : "You hear Xom's maniacal laughter.");
+#endif
 
+#ifdef JP
+            mpr("あなたの肉体は歪曲のエネルギーに覆われた。");
+#else
             mpr("Your body is suffused with distortional energy.");
+#endif
 
             set_hp(1 + random2(you.hp), false);
             deflate_hp(you.hp_max / 2, true);
@@ -646,10 +934,17 @@ void Xom_acts(bool niceness, int sever, bool force_sever)
             temp_rand = random2(4);
 
             god_speaks(GOD_XOM,
+#ifdef JP
+                (temp_rand == 0) ? "『定命の者よ、お前ってば癇にさわるんだよ』" :
+                (temp_rand == 1) ? "『お前は無価値な分際でいい気になりすぎているな』" :
+                (temp_rand == 2) ? "ゾムの力が一瞬だけあなたに触れた。"
+                                 : "あなたはゾムの狂気の哄笑を耳にした。");
+#else
                 (temp_rand == 0) ? "\"You have displeased me, mortal.\"" :
                 (temp_rand == 1) ? "\"You have grown too confident for your meagre worth.\"" :
                 (temp_rand == 2) ? "Xom's power touches on you for a moment."
                                  : "You hear Xom's maniacal laughter.");
+#endif
 
             if (one_chance_in(4))
             {
@@ -661,7 +956,11 @@ void Xom_acts(bool niceness, int sever, bool force_sever)
             }
             else
             {
+#ifdef JP
+                mpr("苦痛の波動があなたの全身を引き裂いた！");
+#else
                 mpr("A wave of agony tears through your body!");
+#endif
                 set_hp(1 + (you.hp / 2), false);
             }
 
@@ -672,10 +971,17 @@ void Xom_acts(bool niceness, int sever, bool force_sever)
             temp_rand = random2(4);
 
             god_speaks(GOD_XOM,
+#ifdef JP
+                (temp_rand == 0) ? "『お楽しみの時間だ！』" :
+                (temp_rand == 1) ? "『定命の者よ、戦って生き延びて見せよ』" :
+                (temp_rand == 2) ? "『お前の強さが生き残るに充分か試してみよう』"
+                                 : "あなたはゾムの狂気の哄笑を耳にした。");
+#else
                 (temp_rand == 0) ? "\"Time to have some fun!\"" :
                 (temp_rand == 1) ? "\"Fight to survive, mortal.\"" :
                 (temp_rand == 2) ? "\"Let's see if it's strong enough to survive yet.\""
                                  : "You hear Xom's maniacal laughter.");
+#endif
 
             if (one_chance_in(4))
                 dancing_weapon(100, true);      // nasty, but fun
@@ -709,9 +1015,15 @@ void Xom_acts(bool niceness, int sever, bool force_sever)
             temp_rand = random2(3);
 
             god_speaks(GOD_XOM,
+#ifdef JP
+                (temp_rand == 0) ? "『定命の者よ！お前はそのちっぽけな世界で居心地良くしすぎているな』" :
+                (temp_rand == 1) ? "ゾムがあなたをアビスに放り込んだ！"
+                                 : "ゾムの狂気の哄笑が耳に響くとともに、世界がクルクルと回りだした。");
+#else
                 (temp_rand == 0) ? "\"You have grown too comfortable in your little world, mortal!\"" :
                 (temp_rand == 1) ? "Xom casts you into the Abyss!"
                                  : "The world seems to spin as Xom's maniacal laughter rings in your ears.");
+#endif
 
             banished(DNGN_ENTER_ABYSS);
 
@@ -729,10 +1041,17 @@ void Xom_acts(bool niceness, int sever, bool force_sever)
             temp_rand = random2(4);
 
             god_speaks(GOD_XOM,
+#ifdef JP
+                (temp_rand == 0) ? "『行きて、そして破壊せよ！』" :
+                (temp_rand == 1) ? "『定命の者よ、行きて、そして破壊せよ！』" :
+                (temp_rand == 2) ? "ゾムはあなたに幾許かの好意を示した。"
+                                 : "ゾムはあなたに微笑みかけている。");
+#else
                 (temp_rand == 0) ? "\"Go forth and destroy!\"" :
                 (temp_rand == 1) ? "\"Go forth and destroy, mortal!\"" :
                 (temp_rand == 2) ? "Xom grants you a minor favour."
                                  : "Xom smiles on you.");
+#endif
 
             switch (random2(7))
             {
@@ -773,22 +1092,28 @@ void Xom_acts(bool niceness, int sever, bool force_sever)
             temp_rand = random2(3);
 
             god_speaks(GOD_XOM,
+#ifdef JP
+                (temp_rand == 0) ? "『わが子らよ、この定命の者に仕えよ』" :
+                (temp_rand == 1) ? "ゾムはあなたに一時的な手助けを与えた。"
+                                 : "ゾムは門を開いた。");
+#else
                 (temp_rand == 0) ? "\"Serve the mortal, my children!\"" :
                 (temp_rand == 1) ? "Xom grants you some temporary aid."
                                  : "Xom opens a gate.");
+#endif
 
-            create_monster( MONS_NEQOXEC + random2(5), ENCH_ABJ_III, 
-                            BEH_FRIENDLY, you.x_pos, you.y_pos, 
+            create_monster( MONS_NEQOXEC + random2(5), ENCH_ABJ_III,
+                            BEH_FRIENDLY, you.x_pos, you.y_pos,
                             you.pet_target, 250 );
 
-            create_monster( MONS_NEQOXEC + random2(5), ENCH_ABJ_III, 
-                            BEH_FRIENDLY, you.x_pos, you.y_pos, 
+            create_monster( MONS_NEQOXEC + random2(5), ENCH_ABJ_III,
+                            BEH_FRIENDLY, you.x_pos, you.y_pos,
                             you.pet_target, 250 );
 
             if (random2( you.experience_level ) >= 8)
             {
-                create_monster( MONS_NEQOXEC + random2(5), ENCH_ABJ_III, 
-                                BEH_FRIENDLY, you.x_pos, you.y_pos, 
+                create_monster( MONS_NEQOXEC + random2(5), ENCH_ABJ_III,
+                                BEH_FRIENDLY, you.x_pos, you.y_pos,
                                 you.pet_target, 250 );
             }
 
@@ -813,15 +1138,25 @@ void Xom_acts(bool niceness, int sever, bool force_sever)
             temp_rand = random2(3);
 
             god_speaks(GOD_XOM,
+#ifdef JP
+                (temp_rand == 0) ? "『我が好意の印にこれを受け取れ』" :
+                (temp_rand == 1) ? "ゾムはあなたに贈り物を授けた！"
+                                 : "ゾムは気前の良さを披露した。");
+#else
                 (temp_rand == 0) ? "\"Take this token of my esteem.\"" :
                 (temp_rand == 1) ? "Xom grants you a gift!"
                                  : "Xom's generous nature manifests itself.");
+#endif
 
             if (grd[you.x_pos][you.y_pos] == DNGN_LAVA
                 || grd[you.x_pos][you.y_pos] == DNGN_DEEP_WATER)
             {
                 // How unfortunate. I'll bet Xom feels sorry for you.
+#ifdef JP
+                mpr("あなたは水飛沫の音を耳にした。");
+#else
                 mpr("You hear a splash.");
+#endif
             }
             else
             {
@@ -851,9 +1186,15 @@ void Xom_acts(bool niceness, int sever, bool force_sever)
                 temp_rand = random2(3);
 
                 god_speaks(GOD_XOM,
+#ifdef JP
+                    (temp_rand == 0) ? "『わが子よ、この定命の者に仕えよ』" :
+                    (temp_rand == 1) ? "ゾムがあなたに悪魔の召使を貸し与えた。"
+                                     : "ゾムは門を開いた。");
+#else
                     (temp_rand == 0) ? "\"Serve the mortal, my child!\"" :
                     (temp_rand == 1) ? "Xom grants you a demonic servitor."
                                      : "Xom opens a gate.");
+#endif
             }
 
             done_good = true;   // well, for Xom, trying == doing {dlb}
@@ -863,10 +1204,17 @@ void Xom_acts(bool niceness, int sever, bool force_sever)
             temp_rand = random2(4);
 
             god_speaks(GOD_XOM,
+#ifdef JP
+                (temp_rand == 0) ? "『この武器を手に破壊をもたらせ！』" :
+                (temp_rand == 1) ? "『お前は贈り物を受けるに値する』" :
+                (temp_rand == 2) ? "ゾムはあなたに、死をもたらす武器を与えた。"
+                                 : "ゾムはあなたに微笑みかけている。");
+#else
                 (temp_rand == 0) ? "\"Take this instrument of destruction!\"" :
                 (temp_rand == 1) ? "\"You have earned yourself a gift.\"" :
                 (temp_rand == 2) ? "Xom grants you an implement of death."
                                  : "Xom smiles on you.");
+#endif
 
             if (acquirement(OBJ_WEAPONS))
                 more();
@@ -878,12 +1226,23 @@ void Xom_acts(bool niceness, int sever, bool force_sever)
             temp_rand = random2(4);
 
             god_speaks(GOD_XOM,
+#ifdef JP
+                (temp_rand == 0) ? "『定命の者よ！お前には若干の修正が必要だな！』" :
+                (temp_rand == 1) ? "『お前の貧相な体を改造してやろう』" :
+                (temp_rand == 2) ? "ゾムの力が一瞬だけあなたに触れた。"
+                                 : "あなたはゾムの狂気の哄笑を耳にした。");
+#else
                 (temp_rand == 0) ? "\"You need some minor adjustments, mortal!\"" :
                 (temp_rand == 1) ? "\"Let me alter your pitiful body.\"" :
                 (temp_rand == 2) ? "Xom's power touches on you for a moment."
                                  : "You hear Xom's maniacal chuckling.");
+#endif
 
+#ifdef JP
+            mpr("あなたの肉体は歪曲のエネルギーに覆われた。");
+#else
             mpr("Your body is suffused with distortional energy.");
+#endif
 
             set_hp(1 + random2(you.hp), false);
             deflate_hp(you.hp_max / 2, true);
@@ -899,7 +1258,11 @@ void Xom_acts(bool niceness, int sever, bool force_sever)
             if (!one_chance_in(8))
                 you.attribute[ATTR_DIVINE_LIGHTNING_PROTECTION] = 1;
 
+#ifdef JP
+            god_speaks(GOD_XOM, "一帯に神の稲妻が降り注いだ！");
+#else
             god_speaks(GOD_XOM, "The area is suffused with divine lightning!");
+#endif
 
             beam.beam_source = NON_MONSTER;
             beam.type = SYM_BURST;
@@ -907,10 +1270,18 @@ void Xom_acts(bool niceness, int sever, bool force_sever)
             beam.flavour = BEAM_ELECTRICITY;
             beam.target_x = you.x_pos;
             beam.target_y = you.y_pos;
+#ifdef JP
+            strcpy(beam.beam_name, "稲妻の放射");
+#else
             strcpy(beam.beam_name, "blast of lightning");
+#endif
             beam.colour = LIGHTCYAN;
             beam.thrower = KILL_YOU;    // your explosion
+#ifdef JP
+            beam.aux_source = "ゾムの雷霆の一撃";
+#else
             beam.aux_source = "Xom's lightning strike";
+#endif
             beam.ex_size = 2;
             beam.isTracer = false;
 
@@ -918,7 +1289,11 @@ void Xom_acts(bool niceness, int sever, bool force_sever)
 
             if (you.attribute[ATTR_DIVINE_LIGHTNING_PROTECTION] == 1)
             {
+#ifdef JP
+                mpr("あなたから神による防護が消え去った。");
+#else
                 mpr("Your divine protection wanes.");
+#endif
                 you.attribute[ATTR_DIVINE_LIGHTNING_PROTECTION] = 0;
             }
 
@@ -943,7 +1318,11 @@ void done_good(char thing_done, int pgain)
         switch (you.religion)
         {
         case GOD_ELYVILON:
+#ifdef JP
+            simple_god_message("はそれを喜ばない！");
+#else
             simple_god_message(" did not appreciate that!");
+#endif
             naughty(NAUGHTY_KILLING, 10);
             break;
         case GOD_KIKUBAAQUDGHA:
@@ -952,7 +1331,11 @@ void done_good(char thing_done, int pgain)
         case GOD_OKAWARU:
         case GOD_MAKHLEB:
         case GOD_TROG:
+#ifdef JP
+            simple_god_message("はあなたの殺しを善しとした。");
+#else
             simple_god_message(" accepts your kill.");
+#endif
             if (random2(18 + pgain) > 5)
                 gain_piety(1);
             break;
@@ -967,7 +1350,11 @@ void done_good(char thing_done, int pgain)
         case GOD_VEHUMET:
         case GOD_MAKHLEB:
         case GOD_OKAWARU:
+#ifdef JP
+            simple_god_message("はあなたの殺しを善しとした。");
+#else
             simple_god_message(" accepts your kill.");
+#endif
             if (random2(18 + pgain) > 4)
                 gain_piety(1);
             break;
@@ -982,7 +1369,11 @@ void done_good(char thing_done, int pgain)
         case GOD_VEHUMET:
         case GOD_MAKHLEB:
         case GOD_OKAWARU:
+#ifdef JP
+            simple_god_message("はあなたの殺しを善しとした。");
+#else
             simple_god_message(" accepts your kill.");
+#endif
             if (random2(18 + pgain) > 3)
                 gain_piety(1);
             break;
@@ -996,18 +1387,26 @@ void done_good(char thing_done, int pgain)
         case GOD_ZIN:
         case GOD_SHINING_ONE:
         case GOD_ELYVILON:
+#ifdef JP
+            simple_god_message("はそれを見咎めた！");
+#else
             simple_god_message(" did not appreciate that!");
+#endif
             naughty(NAUGHTY_ATTACK_HOLY, (you.conf ? 3 : pgain * 3));
             break;
         }
         break;
 
     case GOOD_KILLED_WIZARD:
-        // hooking this up, but is it too good?  
+        // hooking this up, but is it too good?
         // enjoy it while you can -- bwr
-        if (you.religion == GOD_TROG) 
+        if (you.religion == GOD_TROG)
         {
+#ifdef JP
+            simple_god_message( "はあなたが魔法の遣い手を殺したことを喜んだ。" );
+#else
             simple_god_message( " appreciates your killing of a magic user." );
+#endif
 
             if (random2( 5 + pgain ) > 5)
                 gain_piety(1);
@@ -1021,7 +1420,11 @@ void done_good(char thing_done, int pgain)
         case GOD_OKAWARU:
         case GOD_MAKHLEB:
         case GOD_TROG:
+#ifdef JP
+            simple_god_message("はあなたの捧げ物を受け容れた。");
+#else
             simple_god_message(" accepts your offering.");
+#endif
             if (random2(10 + pgain) > 5)
                 gain_piety(1);
             break;
@@ -1029,7 +1432,11 @@ void done_good(char thing_done, int pgain)
         // case GOD_ZIN:
         // case GOD_SHINING_ONE:
         case GOD_ELYVILON:
+#ifdef JP
+            simple_god_message("はそれを喜ばない！");
+#else
             simple_god_message(" did not appreciate that!");
+#endif
 
             naughty(NAUGHTY_BUTCHER, 8);
             break;
@@ -1037,7 +1444,11 @@ void done_good(char thing_done, int pgain)
         break;
 
     case GOOD_OFFER_STUFF:
+#ifdef JP
+        simple_god_message("はあなたの捧げ物に満足した。");
+#else
         simple_god_message(" is pleased with your offering.");
+#endif
 
         gain_piety(1);
         break;
@@ -1048,7 +1459,11 @@ void done_good(char thing_done, int pgain)
         case GOD_KIKUBAAQUDGHA:
         case GOD_YREDELEMNUL:
         case GOD_VEHUMET:
+#ifdef JP
+            simple_god_message("はあなたの奴隷の殺しを善しとした。");
+#else
             simple_god_message(" accepts your slave's kill.");
+#endif
 
             if (random2(pgain + 18) > 5)
                 gain_piety(1);
@@ -1061,7 +1476,11 @@ void done_good(char thing_done, int pgain)
         {
         case GOD_VEHUMET:
         case GOD_MAKHLEB:
+#ifdef JP
+            simple_god_message("はあなたのしもべの殺しを善しとした。");
+#else
             simple_god_message(" accepts your collateral kill.");
+#endif
 
             if (random2(pgain + 18) > 5)
                 gain_piety(1);
@@ -1122,29 +1541,73 @@ void gain_piety(char pgn)
         case GOD_SIF_MUNA:
             break;
         default:
+#ifdef JP
+            strcpy(info, "あなたは今や");
+#else
             strcpy(info, "You can now ");
+#endif
             strcat(info,
                     (you.religion == GOD_ZIN || you.religion == GOD_SHINING_ONE)
+#ifdef JP
+                            ? "アンデッドを撃退することができる" :
+#else
                             ? "repel the undead" :
+#endif
 
                     (you.religion == GOD_KIKUBAAQUDGHA)
+#ifdef JP
+                            ? "アンデッドのしもべを近くに呼び集めることができる" :
+#else
                             ? "recall your undead slaves" :
+#endif
                     (you.religion == GOD_YREDELEMNUL)
+#ifdef JP
+                            ? "死体を操ることができる" :
+#else
                             ? "animate corpses" :
+#endif
                     (you.religion == GOD_VEHUMET)
+#ifdef JP
+                            ? "ヴェフメットの名に於いての殺しによって力を得られる" :
+#else
                             ? "gain power from killing in Vehumet's name" :
+#endif
                     (you.religion == GOD_MAKHLEB)
+#ifdef JP
+                            ? "マクレブの名に於いての殺しによって力を得られる" :
+#else
                             ? "gain power from killing in Makhleb's name" :
+#endif
                     (you.religion == GOD_OKAWARU)
+#ifdef JP
+                            ? "一時的ではあるが強大な腕力を引き出すことができる" :
+#else
                             ? "give your great, but temporary, body strength" :
+#endif
                     (you.religion == GOD_TROG)
+#ifdef JP
+                            ? "意思によってバーサーク状態になることができる" :
+#else
                             ? "go berserk at will" :
+#endif
                     (you.religion == GOD_ELYVILON)
+#ifdef JP
+                            ? "小さき癒しをエリヴィロンに請うことができる"
+#else
                             ? "call upon Elyvilon for minor healing"
+#endif
                 // Unknown god
+#ifdef JP
+                            : "このプログラムバグに耐えうる @30");
+#else
                             : "endure this program bug @30");
+#endif
 
+#ifdef JP
+            strcat(info, "。");
+#else
             strcat(info, ".");
+#endif
             god_speaks(you.religion, info);
             break;
         }
@@ -1159,37 +1622,89 @@ void gain_piety(char pgn)
         case GOD_NEMELEX_XOBEH:
             break;
         case GOD_KIKUBAAQUDGHA:
+#ifdef JP
+            simple_god_message("があなたに、死の魔術の副作用からの保護を与えている。");
+#else
             simple_god_message(" is protecting you from some side-effects of death magic.");
+#endif
             break;
 
         case GOD_VEHUMET:
+#ifdef JP
+            god_speaks(you.religion, "あなたはヴェフメットへの祈りによって破壊の魔法の手助けを請うことができる。");
+#else
             god_speaks(you.religion, "You can call upon Vehumet to aid your destructive magics with prayer.");
+#endif
             break;
 
         default:
+#ifdef JP
+            strcpy(info, "あなたは今や");
+#else
             strcpy(info, "You can now ");
+#endif
 
             strcat(info,
                    (you.religion == GOD_ZIN)
+#ifdef JP
+                           ? "小さき癒しをジンに請うことができる" :
+#else
                            ? "call upon Zin for minor healing" :
+#endif
                    (you.religion == GOD_SHINING_ONE)
+#ifdef JP
+                           ? "あなたの敵に打擲を与えることができる" :
+#else
                            ? "smite your foes" :
+#endif
                    (you.religion == GOD_YREDELEMNUL)
+#ifdef JP
+                           ? "アンデッドのしもべを近くに呼び集めることができる" :
+#else
                            ? "recall your undead slaves" :
+#endif
                    (you.religion == GOD_OKAWARU)
+#ifdef JP
+                           ? "小さき癒しをオカワルに請うことができる" :
+#else
                            ? "call upon Okawaru for minor healing" :
+#endif
                    (you.religion == GOD_MAKHLEB)
+#ifdef JP
+                           ? "マクレブの破壊の力を扱うことができる" :
+#else
                            ? "harness Makhleb's destructive might" :
+#endif
                    (you.religion == GOD_SIF_MUNA)
+#ifdef JP
+                           ? "新しい呪文を覚えるために記憶を抹消することができる" :
+#else
                            ? "freely open your mind to new spells" :
+#endif
                    (you.religion == GOD_TROG)
+#ifdef JP
+                           ? "一時的ではあるが強大な腕力を引き出すことができる" :
+#else
                            ? "give your body great, but temporary, strength" :
+#endif
                    (you.religion == GOD_ELYVILON)
+#ifdef JP
+                           ? "肉体の清浄化をエリヴィロンに請うことができる"
+#else
                            ? "call upon Elyvilon for purification"
+#endif
                    // Unknown god
+#ifdef JP
+                           : "このプログラムバグに耐えうる @50");
+#else
                            : "endure this program bug @50");
+#endif
 
+#ifdef JP
+            strcat(info, "。");
+#else
             strcat(info, ".");
+#endif
             god_speaks(you.religion, info);
             break;
         }
@@ -1207,27 +1722,67 @@ void gain_piety(char pgn)
         case GOD_TROG:
             break;
         case GOD_VEHUMET:
+#ifdef JP
+            god_speaks(you.religion,"あなたは祈りの間、召換されたモンスターからある程度護られる。");
+#else
             god_speaks(you.religion,"During prayer you have some protection from summoned creatures.");
+#endif
             break;
 
         default:
+#ifdef JP
+            strcpy(info, "あなたは今や");
+#else
             strcpy(info, "You can now ");
+#endif
             strcat(info,
                      (you.religion == GOD_ZIN)
+#ifdef JP
+                                 ? "悪疫の発生を請うことができる" :
+#else
                                  ? "call down a plague" :
+#endif
                      (you.religion == GOD_SHINING_ONE)
+#ifdef JP
+                                 ? "アンデッドを解呪することができる" :
+#else
                                  ? "dispel the undead" :
+#endif
                      (you.religion == GOD_KIKUBAAQUDGHA)
+#ifdef JP
+                                 ? "アンデッドを永続的な奴隷とすることができる" :
+#else
                                  ? "permanently enslave the undead" :
+#endif
                      (you.religion == GOD_YREDELEMNUL)
+#ifdef JP
+                                 ? "死者の軍勢を操ることができる" :
+#else
                                  ? "animate legions of the dead" :
+#endif
                      (you.religion == GOD_MAKHLEB)
+#ifdef JP
+                                 ? "マクレブの小さきしもべを召換することができる" :
+#else
                                  ? "summon a lesser servant of Makhleb" :
+#endif
                      (you.religion == GOD_ELYVILON)
+#ifdef JP
+                                 ? "癒しをエリヴィロンに請うことができる"
+#else
                                  ? "call upon Elyvilon for moderate healing"
+#endif
                      // Unknown god
+#ifdef JP
+                                 : "このプログラムバグに耐えうる @75");
+#else
                                  : "endure this program bug @75");
+#endif
+#ifdef JP
+            strcat(info, "。");
+#else
             strcat(info, ".");
+#endif
             god_speaks(you.religion, info);
             break;
         }
@@ -1245,31 +1800,75 @@ void gain_piety(char pgn)
             break;
         case GOD_SIF_MUNA:
             simple_god_message
+#ifdef JP
+                ("があなたに、魔術の副作用からの保護を与えている。");
+#else
                 (" is protecting you from some side-effects of spellcasting.");
+#endif
             break;
 
         default:
+#ifdef JP
+            strcpy(info, "あなたは今や");
+#else
             strcpy(info, "You can now ");
+#endif
 
             strcat(info,
                         (you.religion == GOD_ZIN)
+#ifdef JP
+                                ? "聖なる御言葉を口にすることができる" :
+#else
                                 ? "utter a Holy Word" :
+#endif
                         (you.religion == GOD_SHINING_ONE)
+#ifdef JP
+                                ? "神の怒りの矢を放つことができる" :
+#else
                                 ? "hurl bolts of divine anger" :
+#endif
                         (you.religion == GOD_YREDELEMNUL)
+#ifdef JP
+                                ? "周囲から生命力を吸い上げることができる" :
+#else
                                 ? "drain ambient lifeforce" :
+#endif
                         (you.religion == GOD_VEHUMET)
+#ifdef JP
+                                ? "周辺から魔力を吸い上げることができる" :
+#else
                                 ? "tap ambient magical fields" :
+#endif
                         (you.religion == GOD_MAKHLEB)
+#ifdef JP
+                                ? "マクレブの大いなる破壊を放つことができる" :
+#else
                                 ? "hurl Makhleb's greater destruction" :
+#endif
                         (you.religion == GOD_TROG)
+#ifdef JP
+                                ? "自身を加速することができる" :
+#else
                                 ? "haste yourself" :
+#endif
                         (you.religion == GOD_ELYVILON)
+#ifdef JP
+                                ? "能力の回復をエリヴィロンに請うことができる"
+#else
                                 ? "call upon Elyvilon to restore your abilities"
+#endif
                         // Unknown god
+#ifdef JP
+                                : "このプログラムバグに耐えうる @100");
+#else
                                 : "endure this program bug @100");
+#endif
 
+#ifdef JP
+            strcat(info, "。");
+#else
             strcat(info, ".");
+#endif
             god_speaks(you.religion, info);
             break;
         }
@@ -1287,27 +1886,67 @@ void gain_piety(char pgn)
         case GOD_TROG:
             break;
         default:
+#ifdef JP
+            strcpy(info, "あなたは今や");
+#else
             strcpy(info, "You can now ");
+#endif
 
             strcat(info,
                      (you.religion == GOD_ZIN)
+#ifdef JP
+                                ? "守護天使を呼び出すことができる" :
+#else
                                 ? "summon a guardian angel" :
+#endif
                      (you.religion == GOD_SHINING_ONE)
+#ifdef JP
+                                ? "聖なる戦士を呼び出すことができる" :
+#else
                                 ? "summon a divine warrior" :
+#endif
                      (you.religion == GOD_KIKUBAAQUDGHA)
+#ifdef JP
+                                ? "死の御遣いを呼び出すことができる" :
+#else
                                 ? "summon an emissary of Death" :
+#endif
                      (you.religion == GOD_YREDELEMNUL)
+#ifdef JP
+                                ? "アンデッドに支配を及ぼすことができる" :
+#else
                                 ? "control the undead" :
+#endif
                      (you.religion == GOD_OKAWARU)
+#ifdef JP
+                                ? "自身を加速することができる" :
+#else
                                 ? "haste yourself" :
+#endif
                      (you.religion == GOD_MAKHLEB)
+#ifdef JP
+                                ? "マクレブの大いなるしもべを呼び出すことができる" :
+#else
                                 ? "summon a greater servant of Makhleb" :
+#endif
                      (you.religion == GOD_ELYVILON)
+#ifdef JP
+                                ? "大いなる癒しをエリヴィロンに請うことができる"
+#else
                                 ? "call upon Elyvilon for incredible healing"
+#endif
                      // Unknown god
+#ifdef JP
+                                : "このプログラムバグに耐えうる @120");
+#else
                                 : "endure this program bug @120");
+#endif
 
+#ifdef JP
+            strcat(info, "。");
+#else
             strcat(info, ".");
+#endif
             god_speaks(you.religion, info);
             break;
         }
@@ -1444,14 +2083,29 @@ void naughty(char type_naughty, int naughtiness)
         return;
 
     // output guilt message:
+#ifdef JP
+    strcpy(info, "あなたは");
+#else
     strcpy(info, "You feel");
+#endif
 
+#ifdef JP
+    strcat(info, (piety_loss == 1) ? "ほんの少し" :
+                 (piety_loss <  5) ? "" :
+                 (piety_loss < 10) ? "強い"
+                                   : "極めて強い");
+#else
     strcat(info, (piety_loss == 1) ? " a little " :
                  (piety_loss <  5) ? " " :
                  (piety_loss < 10) ? " very "
                                    : " extremely ");
+#endif
 
+#ifdef JP
+    strcat(info, "罪の意識を覚えた。");
+#else
     strcat(info, "guilty.");
+#endif
     mpr(info);
 
     lose_piety(piety_loss);
@@ -1461,7 +2115,11 @@ void naughty(char type_naughty, int naughtiness)
     else if (penance)       // Don't bother unless we're not kicking them out
     {
         //jmf: FIXME: add randomness to following message:
+#ifdef JP
+        god_speaks(you.religion, "『定命の者よ、お前は罪の代価を支払うことになろう！！』");
+#else
         god_speaks(you.religion, "\"You will pay for your transgression, mortal!\"");
+#endif
         inc_penance(penance);
     }
 }                               // end naughty()
@@ -1492,27 +2150,67 @@ void lose_piety(char pgn)
             case GOD_TROG:
                 break;
             default:
+#ifdef JP
+                strcpy(info, "あなたはもはや");
+#else
                 strcpy(info, "You can no longer ");
+#endif
 
                 strcat(info,
                            (you.religion == GOD_ZIN)
+#ifdef JP
+                                ? "守護天使を呼び出すことができない" :
+#else
                                 ? "summon guardian angels" :
+#endif
                            (you.religion == GOD_SHINING_ONE)
+#ifdef JP
+                                ? "聖なる戦士を呼び出すことができない" :
+#else
                                 ? "summon divine warriors" :
+#endif
                            (you.religion == GOD_KIKUBAAQUDGHA)
+#ifdef JP
+                                ? "死の御遣いを呼び出すことができない" :
+#else
                                 ? "summon Death's emissaries" :
+#endif
                            (you.religion == GOD_YREDELEMNUL)
+#ifdef JP
+                                ? "アンデッドに支配を及ぼすことができない" :
+#else
                                 ? "control undead beings" :
+#endif
                            (you.religion == GOD_OKAWARU)
+#ifdef JP
+                                ? "自身を加速することができない" :
+#else
                                 ? "haste yourself" :
+#endif
                            (you.religion == GOD_MAKHLEB)
+#ifdef JP
+                                ? "マクレブの大いなるしもべを呼び出すことができない" :
+#else
                                 ? "summon a greater servant of Makhleb" :
+#endif
                            (you.religion == GOD_ELYVILON)
+#ifdef JP
+                                ? "大いなる癒しをエリヴィロンに請うことができない"
+#else
                                 ? "call upon Elyvilon for incredible healing"
+#endif
                            // Unknown god
+#ifdef JP
+                                : "このプログラムバグに耐えることができない @120");
+#else
                                 : "endure this program bug @120");
+#endif
 
+#ifdef JP
+                strcat(info, "。");
+#else
                 strcat(info, ".");
+#endif
                 god_speaks(you.religion, info);
                 break;
             }
@@ -1529,29 +2227,73 @@ void lose_piety(char pgn)
             case GOD_KIKUBAAQUDGHA:
                 break;
             case GOD_SIF_MUNA:
+#ifdef JP
+                god_speaks(you.religion,"シフ・ムーナはもはや、あなたを呪文の失敗から護っていない。");
+#else
                 god_speaks(you.religion,"Sif Muna is no longer protecting you from miscast magic.");
+#endif
                 break;
             default:
+#ifdef JP
+                strcpy(info, "あなたはもはや");
+#else
                 strcpy(info, "You can no longer ");
+#endif
                 strcat(info,
                         (you.religion == GOD_ZIN)
+#ifdef JP
+                            ? "聖なる御言葉を口にすることができない" :
+#else
                             ? "utter a Holy Word" :
+#endif
                         (you.religion == GOD_ELYVILON)
+#ifdef JP
+                            ? "能力の回復をエリヴィロンに請うことができない" :
+#else
                             ? "call upon Elyvilon to restore your abilities" :
+#endif
                         (you.religion == GOD_SHINING_ONE)
+#ifdef JP
+                            ? "神の怒りの矢を放つことができない" :
+#else
                             ? "hurl bolts of divine anger" :
+#endif
                         (you.religion == GOD_YREDELEMNUL)
+#ifdef JP
+                            ? "周囲から生命力を吸い上げることができない" :
+#else
                             ? "drain ambient life force" :
+#endif
                         (you.religion == GOD_VEHUMET)
+#ifdef JP
+                            ? "周辺から魔力を吸い上げることができない" :
+#else
                             ? "tap ambient magical fields" :
+#endif
                         (you.religion == GOD_MAKHLEB)
+#ifdef JP
+                            ? "マクレブの大いなる破壊を放つことができない" :
+#else
                             ? "direct Makhleb's greater destructive powers" :
+#endif
                         (you.religion == GOD_TROG)
+#ifdef JP
+                            ? "自身を加速することができない"
+#else
                             ? "haste yourself"
+#endif
                         // Unknown god
+#ifdef JP
+                            : "このプログラムバグに耐えることができない @100");
+#else
                             : "endure this program bug @100");
+#endif
 
+#ifdef JP
+                strcat(info, "。");
+#else
                 strcat(info, ".");
+#endif
                 god_speaks(you.religion, info);
                 break;
             }
@@ -1569,28 +2311,68 @@ void lose_piety(char pgn)
             case GOD_TROG:
                 break;
             case GOD_VEHUMET:
+#ifdef JP
+                simple_god_message("はもはや、召換されたモンスターからあなたを護らない。");
+#else
                 simple_god_message(" will longer shield you from summoned creatures.");
+#endif
                 break;
             default:
+#ifdef JP
+                strcpy(info, "あなやはもはや");
+#else
                 strcpy(info, "You can no longer ");
+#endif
 
                 strcat(info,
                        (you.religion == GOD_ZIN)
+#ifdef JP
+                                ? "悪疫の発生を請うことができない" :
+#else
                                 ? "call down a plague" :
+#endif
                        (you.religion == GOD_SHINING_ONE)
+#ifdef JP
+                                ? "アンデッドを解呪することができない" :
+#else
                                 ? "dispel undead" :
+#endif
                        (you.religion == GOD_KIKUBAAQUDGHA)
+#ifdef JP
+                                ? "アンデッドを奴隷とすることができない" :
+#else
                                 ? "enslave undead" :
+#endif
                        (you.religion == GOD_YREDELEMNUL)
+#ifdef JP
+                                ? "死者の軍勢を操ることができない" :
+#else
                                 ? "animate legions of the dead" :
+#endif
                        (you.religion == GOD_MAKHLEB)
+#ifdef JP
+                                ? "マクレブのしもべを召換することができない" :
+#else
                                 ? "summon a servant of Makhleb" :
+#endif
                        (you.religion == GOD_ELYVILON)
+#ifdef JP
+                                ? "癒しをエリヴィロンに請うことができない"
+#else
                                 ? "call upon Elyvilon for moderate healing"
+#endif
                        // Unknown god
+#ifdef JP
                                 : "endure this program bug @75");
+#else
+                                : "endure this program bug @75");
+#endif
 
+#ifdef JP
+                strcat(info, "。");
+#else
                 strcat(info, ".");
+#endif
                 god_speaks(you.religion, info);
                 break;
             }
@@ -1605,36 +2387,88 @@ void lose_piety(char pgn)
             case GOD_NEMELEX_XOBEH:
                 break;
             case GOD_KIKUBAAQUDGHA:
+#ifdef JP
+                simple_god_message("はもはや、あなたを死の魔術の失敗から護っていない。");
+#else
                 simple_god_message(" is no longer shielding you from miscast death magic.");
+#endif
                 break;
             case GOD_VEHUMET:
+#ifdef JP
+                simple_god_message("はもはや、あなたの破壊の魔法を手助けしない。");
+#else
                 simple_god_message(" will no longer aid your destructive magics.");
+#endif
                 break;
 
             default:
+#ifdef JP
+                strcpy(info, "あなやはもはや");
+#else
                 strcpy(info, "You can no longer ");
+#endif
 
                 strcat(info,
                        (you.religion == GOD_ZIN)
+#ifdef JP
+                            ? "小さき癒しをジンに請うことができない" :
+#else
                             ? "call upon Zin for minor healing" :
+#endif
                        (you.religion == GOD_SHINING_ONE)
+#ifdef JP
+                            ? "あなたの敵に打擲を与えることができない" :
+#else
                             ? "smite your foes" :
+#endif
                        (you.religion == GOD_YREDELEMNUL)
+#ifdef JP
+                            ? "アンデッドのしもべを近くに呼び集めることができない" :
+#else
                             ? "recall your undead slaves" :
+#endif
                        (you.religion == GOD_OKAWARU)
+#ifdef JP
+                            ? "小さき癒しをオカワルに請うことができない" :
+#else
                             ? "call upon Okawaru for minor healing" :
+#endif
                        (you.religion == GOD_MAKHLEB)
+#ifdef JP
+                            ? "マクレブの破壊の力を扱うことができない" :
+#else
                             ? "hurl Makhleb's destruction" :
+#endif
                        (you.religion == GOD_SIF_MUNA)
+#ifdef JP
+                            ? "意思の力で呪文を忘れることができない" :
+#else
                             ? "forget spells at will" :
+#endif
                        (you.religion == GOD_TROG)
+#ifdef JP
+                            ? "強大な腕力を引き出すことができない" :
+#else
                             ? "give your body great, but temporary, strength" :
+#endif
                        (you.religion == GOD_ELYVILON)
+#ifdef JP
+                            ? "肉体の清浄化をエリヴィロンに請うことができない"
+#else
                             ? "call upon Elyvilon for Purification"
+#endif
                        // Unknown god
+#ifdef JP
+                            : "このプログラムバグに耐えうことができない @50");
+#else
                             : "endure this program bug @50");
+#endif
 
+#ifdef JP
+                strcat(info, "。");
+#else
                 strcat(info, ".");
+#endif
                 god_speaks(you.religion, info);
                 break;
             }
@@ -1650,29 +2484,73 @@ void lose_piety(char pgn)
             case GOD_SIF_MUNA:
                 break;
             default:
+#ifdef JP
+                strcpy(info, "あなたはもはや");
+#else
                 strcpy(info, "You can no longer ");
+#endif
 
                 strcat(info,
                     (you.religion == GOD_ZIN || you.religion == GOD_SHINING_ONE)
+#ifdef JP
+                            ? "アンデッドを撃退することができない" :
+#else
                             ? "repel the undead" :
+#endif
                     (you.religion == GOD_KIKUBAAQUDGHA)
+#ifdef JP
+                            ? "アンデッドのしもべを近くに呼び集めることができない" :
+#else
                             ? "recall your undead slaves" :
+#endif
                     (you.religion == GOD_YREDELEMNUL)
+#ifdef JP
+                            ? "死体を操ることができない" :
+#else
                             ? "animate corpses" :
+#endif
                     (you.religion == GOD_VEHUMET)
+#ifdef JP
+                            ? "ヴェフメットの名に於いての殺しによって力を得ることができない" :
+#else
                             ? "gain power from killing in Vehumet's name" :
+#endif
                     (you.religion == GOD_MAKHLEB)
+#ifdef JP
+                            ? "マクレブの名に於いての殺しによって力を得ることができない" :
+#else
                             ? "gain power from killing in Makhleb's name" :
+#endif
                     (you.religion == GOD_OKAWARU)
+#ifdef JP
+                            ? "強大な腕力を引き出すことができない" :
+#else
                             ? "give your body great, but temporary, strength" :
+#endif
                     (you.religion == GOD_TROG)
+#ifdef JP
+                            ? "意思によってバーサーク状態になることができない" :
+#else
                             ? "go berserk at will" :
+#endif
                     (you.religion == GOD_ELYVILON)
+#ifdef JP
+                            ? "小さき癒しをエリヴィロンに請うことができない"
+#else
                             ? "call upon Elyvilon for minor healing."
+#endif
                     // Unknown god
+#ifdef JP
+                            : "このプログラムバグに耐えることができない @30");
+#else
                             : "endure this program bug @30");
+#endif
 
+#ifdef JP
+                strcat(info, "。");
+#else
                 strcat(info, ".");
+#endif
                 god_speaks(you.religion, info);
                 break;
             }
@@ -1738,7 +2616,11 @@ void divine_retribution( int god )
 
                 if (success)
                 {
+#ifdef JP
+                    simple_god_message( "はあなたの悪行を処罰するために、神の代行者を送り込んだ！", god );
+#else
                     simple_god_message( " sends the divine host to punish you for your evil ways!", god );
+#endif
                 }
             }
             else
@@ -1750,13 +2632,25 @@ void divine_retribution( int god )
 
                 if (!player_under_penance() && you.piety > random2(400))
                 {
+#ifdef JP
+                    strcpy(info, "定命の者よ、『輝けるもの』の怒りを逸らしてやろう"
+#else
                     strcpy(info, "Mortal, I have averted the wrath of "
+#endif
+#ifdef JP
+                        "……今回はな。");
+#else
                         "the Shining One... this time.");
+#endif
                     god_speaks(you.religion, info);
                 }
                 else
                 {
+#ifdef JP
+                    simple_god_message( "はあなたに一撃を見舞った！", god );
+#else
                     simple_god_message( " smites you!", god );
+#endif
                     ouch( divine_hurt, 0, KILLED_BY_TSO_SMITING );
                     dec_penance( GOD_SHINING_ONE, 1 );
                 }
@@ -1786,14 +2680,22 @@ void divine_retribution( int god )
 
                 if (success)
                 {
+#ifdef JP
+                    simple_god_message("はあなたの悪業を処罰するために、神の代行者を送り込んだ！", god);
+#else
                     simple_god_message(" sends the divine host to punish you for your evil ways!", god);
+#endif
                 }
             }
             else
             {
                 // god_gift == false gives unfriendly
                 summon_swarm( you.experience_level * 20, true, false );
+#ifdef JP
+                simple_god_message("はあなたに悪疫の猛威を放った！", god);
+#else
                 simple_god_message(" sends a plague down upon you!", god);
+#endif
             }
         }
         break;
@@ -1806,7 +2708,11 @@ void divine_retribution( int god )
                                BEH_HOSTILE, you.x_pos, you.y_pos,
                                MHITYOU, 250) != -1)
             {
+#ifdef JP
+                simple_god_message("はあなたの後釜に、大いなるしもべを送り込んだ！",
+#else
                 simple_god_message(" sends a greater servant after you!",
+#endif
                                    god);
             }
         }
@@ -1825,7 +2731,11 @@ void divine_retribution( int god )
             }
 
             if (success)
+#ifdef JP
+                simple_god_message("はあなたを処罰するために手先を送り込んだ。", god);
+#else
                 simple_god_message(" sends minions to punish you.", god);
+#endif
         }
         break;
 
@@ -1846,15 +2756,28 @@ void divine_retribution( int god )
             }
 
             if (success)
+#ifdef JP
+                simple_god_message("はあなたの元に死神を放った！", god);
+#else
                 simple_god_message(" unleashes Death upon you!", god);
+#endif
         }
         else
         {
+#ifdef JP
+            god_speaks(god, (coinflip()) ? "あなたはキクバークッグァが甲高く笑い声を上げるのを耳にした。"
+                                         : "キクバークッグァの悪意があなたに集中した。");
+#else
             god_speaks(god, (coinflip()) ? "You hear Kikubaaqudgha cackling."
                                          : "Kikubaaqudgha's malice focuses upon you.");
+#endif
 
             miscast_effect( SPTYP_NECROMANCY, 5 + you.experience_level,
+#ifdef JP
+                            random2avg(88, 3), 100, "キクバークッグァの悪意" );
+#else
                             random2avg(88, 3), 100, "the malice of Kikubaaqudgha" );
+#endif
         }
         break;
 
@@ -1879,7 +2802,7 @@ void divine_retribution( int god )
                             (temp_rand >  4) ? MONS_MUMMY               //  6%
                                              : MONS_FLAYED_GHOST);      //  5%
 
-                if (create_monster( punisher, 0, BEH_HOSTILE, 
+                if (create_monster( punisher, 0, BEH_HOSTILE,
                                     you.x_pos, you.y_pos, MHITYOU, 250 ) != -1)
                 {
                     success = true;
@@ -1887,15 +2810,27 @@ void divine_retribution( int god )
             }
 
             if (success)
+#ifdef JP
+                simple_god_message("はあなたを処罰するためにしもべを送り込んだ。", god);
+#else
                 simple_god_message(" sends a servant to punish you.", god);
+#endif
         }
         else
         {
+#ifdef JP
+            simple_god_message("の怒りが一瞬あなたに向けられた。",
+#else
             simple_god_message("'s anger turns toward you for a moment.",
+#endif
                                god);
 
             miscast_effect( SPTYP_NECROMANCY, 5 + you.experience_level,
+#ifdef JP
+                            random2avg(88, 3), 100, "イレデレンヌルの怒り" );
+#else
                             random2avg(88, 3), 100, "the anger of Yredelemnul" );
+#endif
         }
         break;
 
@@ -1970,13 +2905,21 @@ void divine_retribution( int god )
                 }
 
                 if (success)
+#ifdef JP
+                    simple_god_message("はあなたを処罰するためにモンスターを送り込んだ。", god);
+#else
                     simple_god_message(" sends monsters to punish you.", god);
+#endif
             }
             break;
 
         case 3:
         case 4:
+#ifdef JP
+            simple_god_message("の声が轟いた。『我が怒りを思い知れ！』", god );
+#else
             simple_god_message("'s voice booms out, \"Feel my wrath!\"", god );
+#endif
 
             // A collection of physical effects that might be better
             // suited to Trog than wild fire magic... messages could
@@ -1997,7 +2940,11 @@ void divine_retribution( int god )
                 if (!you.paralysis)
                 {
                     dec_penance(GOD_TROG, 3);
+#ifdef JP
+                    mpr( "あなたは突然、気を失った！", MSGCH_WARN );
+#else
                     mpr( "You suddenly pass out!", MSGCH_WARN );
+#endif
                     you.paralysis = 2 + random2(6);
                 }
                 break;
@@ -2007,7 +2954,11 @@ void divine_retribution( int god )
                 if (you.slow < 90)
                 {
                     dec_penance( GOD_TROG, 1 );
+#ifdef JP
+                    mpr( "あなたは突然に疲労困憊した！", MSGCH_WARN );
+#else
                     mpr( "You suddenly feel exhausted!", MSGCH_WARN );
+#endif
                     you.exhausted = 100;
                     slow_player( 100 );
                 }
@@ -2020,9 +2971,17 @@ void divine_retribution( int god )
         //    fire magic. -- bwr
         case 5:
             dec_penance(GOD_TROG, 2);
+#ifdef JP
+            mpr( "あなたはトログの燃え盛る怒りが振り下ろされるのを感じた！", MSGCH_WARN );
+#else
             mpr( "You feel Trog's fiery rage upon you!", MSGCH_WARN );
-            miscast_effect( SPTYP_FIRE, 8 + you.experience_level, 
+#endif
+            miscast_effect( SPTYP_FIRE, 8 + you.experience_level,
+#ifdef JP
+                            random2avg(98, 3), 100, "トログの燃え盛る怒り" );
+#else
                             random2avg(98, 3), 100, "the fiery rage of Trog" );
+#endif
             break;
         }
         break;
@@ -2045,7 +3004,7 @@ void divine_retribution( int god )
                             (temp_rand > 29) ? MONS_FIRE_GIANT :
                             (temp_rand > 19) ? MONS_FROST_GIANT :
                             (temp_rand >  9) ? MONS_CYCLOPS :
-                            (temp_rand >  4) ? MONS_HILL_GIANT 
+                            (temp_rand >  4) ? MONS_HILL_GIANT
                                              : MONS_TITAN);
 
                 if (create_monster(punisher, 0, BEH_HOSTILE,
@@ -2056,27 +3015,47 @@ void divine_retribution( int god )
             }
 
             if (success)
+#ifdef JP
+                simple_god_message("があなたに対して軍勢を送り込んだ！", god);
+#else
                 simple_god_message(" sends forces against you!", god);
+#endif
         }
         break;
 
     case GOD_VEHUMET:
         // conjuration and summoning theme
+#ifdef JP
+        simple_god_message("の報復があなたを捉えた。", god);
+#else
         simple_god_message("'s vengence finds you.", god);
+#endif
         miscast_effect( coinflip() ? SPTYP_CONJURATION : SPTYP_SUMMONING,
                         8 + you.experience_level, random2avg(98, 3), 100,
+#ifdef JP
+                        "ヴェフメットの怒り" );
+#else
                         "the wrath of Vehumet" );
+#endif
         break;
 
     case GOD_NEMELEX_XOBEH:
         // like Xom, this might actually help the player -- bwr`
+#ifdef JP
+        simple_god_message("はあなたが処罰のデッキからカードを引くように仕向けた。",
+#else
         simple_god_message(" makes you to draw from the Deck of Punishment.",
+#endif
                            god);
         deck_of_cards(DECK_OF_PUNISHMENT);
         break;
 
     case GOD_SIF_MUNA:
+#ifdef JP
+        simple_god_message("の怒りがあなたを捉えた。", god);
+#else
         simple_god_message("'s wrath finds you.", god);
+#endif
         dec_penance(GOD_SIF_MUNA, 1);
 
         // magic and intelligence theme:
@@ -2095,7 +3074,13 @@ void divine_retribution( int god )
 
         case 5:
         case 6:
-            miscast_effect(SK_DIVINATIONS, 9, 90, 100, "the will of Sif Muna");
+#ifdef JP
+            //miscast_effect(SK_DIVINATIONS, 9, 90, 100, "シフ・ムーナの意思");
+            miscast_effect(SPTYP_DIVINATION, 9, 90, 100, "シフ・ムーナの意思"); //fixed 2005/04/02
+#else
+            //miscast_effect(SK_DIVINATIONS, 9, 90, 100, "the will of Sif Muna");
+            miscast_effect(SPTYP_DIVINATION, 9, 90, 100, "the will of Sif Muna"); //fixed 2005/04/02
+#endif
             break;
 
         case 7:
@@ -2103,17 +3088,25 @@ void divine_retribution( int god )
             if (you.magic_points)
             {
                 dec_mp( 100 );  // this should zero it.
+#ifdef JP
+                mpr( "あなたは突然に魔力を吸い取られた！",
+#else
                 mpr( "You suddenly feel drained of magical energy!",
+#endif
                      MSGCH_WARN );
             }
             break;
 
         case 9:
-            // This will set all the extendable duration spells to 
-            // a duration of one round, thus potentially exposing 
+            // This will set all the extendable duration spells to
+            // a duration of one round, thus potentially exposing
             // the player to real danger.
             antimagic();
+#ifdef JP
+            mpr( "あなたは魔法が消沈するのを知覚した。", MSGCH_WARN );
+#else
             mpr( "You sense a dampening of magic.", MSGCH_WARN );
+#endif
             break;
         }
         break;
@@ -2126,13 +3119,17 @@ void divine_retribution( int god )
     // Sometimes divine experiences are overwelming...
     if (one_chance_in(5) && you.experience_level < random2(37))
     {
-        if (coinflip()) 
+        if (coinflip())
             confuse_player( 3 + random2(10) );
         else
         {
             if (you.slow < 90)
             {
+#ifdef JP
+                mpr( "神との接触があなたを疲労困憊させた！",
+#else
                 mpr( "The divine experience leaves you feeling exhausted!",
+#endif
                      MSGCH_WARN );
 
                 slow_player( random2(20) );
@@ -2152,7 +3149,11 @@ void excommunication(void)
     you.piety = 0;
     redraw_skill( you.your_name, player_title() );
 
+#ifdef JP
+    mpr("あなたは今までの信仰を棄てた！");
+#else
     mpr("You have lost your religion!");
+#endif
     more();
 
     switch (old_god)
@@ -2163,37 +3164,73 @@ void excommunication(void)
         break;
 
     case GOD_KIKUBAAQUDGHA:
+#ifdef JP
+        simple_god_message( "はあなたの信仰放棄を快く思っていない！", old_god );
+#else
         simple_god_message( " does not appreciate desertion!", old_god );
+#endif
         miscast_effect( SPTYP_NECROMANCY, 5 + you.experience_level,
+#ifdef JP
+                        random2avg(88, 3), 100, "キクバークッグァの悪意" );
+#else
                         random2avg(88, 3), 100, "the malice of Kikubaaqudgha" );
+#endif
         inc_penance( old_god, 30 );
         break;
 
     case GOD_YREDELEMNUL:
+#ifdef JP
+        simple_god_message( "はあなたの信仰放棄を快く思っていない！", old_god );
+#else
         simple_god_message( " does not appreciate desertion!", old_god );
+#endif
         miscast_effect( SPTYP_NECROMANCY, 5 + you.experience_level,
+#ifdef JP
+                        random2avg(88, 3), 100, "イレデレンヌルの立腹" );
+#else
                         random2avg(88, 3), 100, "the anger of Yredelemnul" );
+#endif
         inc_penance( old_god, 30 );
         break;
 
     case GOD_VEHUMET:
+#ifdef JP
+        simple_god_message( "はあなたの信仰放棄を快く思っていない！", old_god );
+#else
         simple_god_message( " does not appreciate desertion!", old_god );
+#endif
         miscast_effect( (coinflip() ? SPTYP_CONJURATION : SPTYP_SUMMONING),
                         8 + you.experience_level, random2avg(98, 3), 100,
+#ifdef JP
+                        "ヴェフメットの激怒" );
+#else
                         "the wrath of Vehumet" );
+#endif
         inc_penance( old_god, 25 );
         break;
 
     case GOD_MAKHLEB:
+#ifdef JP
+        simple_god_message( "はあなたの信仰放棄を快く思っていない！", old_god );
+#else
         simple_god_message( " does not appreciate desertion!", old_god );
+#endif
         miscast_effect( (coinflip() ? SPTYP_CONJURATION : SPTYP_SUMMONING),
                         8 + you.experience_level, random2avg(98, 3), 100,
+#ifdef JP
+                        "マクレブの憤怒" );
+#else
                         "the fury of Makhleb" );
+#endif
         inc_penance( old_god, 25 );
         break;
 
     case GOD_TROG:
+#ifdef JP
+        simple_god_message( "はあなたの信仰放棄を快く思っていない！", old_god );
+#else
         simple_god_message( " does not appreciate desertion!", old_god );
+#endif
 
         // Penence has to come before retribution to prevent "mollify"
         inc_penance( old_god, 50 );
@@ -2230,7 +3267,11 @@ void altar_prayer(void)
         }
     }
 
+#ifdef JP
+    mpr( "あなたは祭壇に跪いて、祈りを捧げた。" );
+#else
     mpr( "You kneel at the altar and pray." );
+#endif
 
     if (you.religion == GOD_SHINING_ONE || you.religion == GOD_XOM)
         return;
@@ -2251,12 +3292,16 @@ void altar_prayer(void)
         case GOD_OKAWARU:
         case GOD_MAKHLEB:
         case GOD_NEMELEX_XOBEH:
+#ifdef JP
+            it_name(i, DESC_PLAIN, str_pass);
+#else
             it_name(i, DESC_CAP_THE, str_pass);
+#endif
             strcpy(info, str_pass);
             strcat(info, sacrifice[you.religion - 1]);
             mpr(info);
 
-            if (mitm[i].base_type == OBJ_CORPSES 
+            if (mitm[i].base_type == OBJ_CORPSES
                 || random2(value) >= 50
                 || player_under_penance())
             {
@@ -2267,7 +3312,11 @@ void altar_prayer(void)
             break;
 
         case GOD_SIF_MUNA:
+#ifdef JP
+            it_name(i, DESC_PLAIN, str_pass);
+#else
             it_name(i, DESC_CAP_THE, str_pass);
+#endif
             strcpy(info, str_pass);
             strcat(info, sacrifice[you.religion - 1]);
             mpr(info);
@@ -2283,7 +3332,11 @@ void altar_prayer(void)
             if (mitm[i].base_type != OBJ_CORPSES)
                 break;
 
+#ifdef JP
+            it_name(i, DESC_PLAIN, str_pass);
+#else
             it_name(i, DESC_CAP_THE, str_pass);
+#endif
             strcpy(info, str_pass);
             strcat(info, sacrifice[you.religion - 1]);
             mpr(info);
@@ -2299,13 +3352,17 @@ void altar_prayer(void)
                 break;
             }
 
+#ifdef JP
+            it_name(i, DESC_PLAIN, str_pass);
+#else
             it_name(i, DESC_CAP_THE, str_pass);
+#endif
             strcpy(info, str_pass);
             strcat(info, sacrifice[you.religion - 1]);
             mpr(info);
 
-            if (random2(value) >= random2(50) 
-                || (mitm[i].base_type == OBJ_WEAPONS 
+            if (random2(value) >= random2(50)
+                || (mitm[i].base_type == OBJ_WEAPONS
                     && (you.piety < 30 || player_under_penance())))
             {
                 gain_piety(1);
@@ -2324,9 +3381,17 @@ void altar_prayer(void)
 
 void god_pitch(unsigned char which_god)
 {
+#ifdef JP
+    strcpy(info, "あなたは");
+#else
     strcpy(info, "You kneel at the altar of ");
+#endif
     strcat(info, god_name(which_god));
+#ifdef JP
+    strcat(info, "の祭壇に跪いた。");
+#else
     strcat(info, ".");
+#endif
     mpr(info);
 
     more();
@@ -2338,15 +3403,24 @@ void god_pitch(unsigned char which_god)
         && (which_god == GOD_ZIN || which_god == GOD_SHINING_ONE
             || which_god == GOD_ELYVILON))
     {
+#ifdef JP
+        simple_god_message("はあなたのような存在からの崇拝は受け容れない！",
+#else
         simple_god_message(" does not accept worship from those such as you!",
+#endif
                            which_god);
         return;
     }
 
     describe_god( which_god, false );
 
-    snprintf( info, INFO_SIZE, "Do you wish to %sjoin this religion?", 
+#ifdef JP
+    snprintf( info, INFO_SIZE, "あなたはこの宗派を%s信仰することを望みますか？",
+              (you.worshipped[which_god]) ? "再び" : "" );
+#else
+    snprintf( info, INFO_SIZE, "Do you wish to %sjoin this religion?",
               (you.worshipped[which_god]) ? "re" : "" );
+#endif
 
     if (!yesno( info ))
     {
@@ -2354,7 +3428,11 @@ void god_pitch(unsigned char which_god)
         return;
     }
 
+#ifdef JP
+    if (!yesno("信仰の意思は確かですか？"))
+#else
     if (!yesno("Are you sure?"))
+#endif
     {
         redraw_screen();
         return;
@@ -2366,11 +3444,16 @@ void god_pitch(unsigned char which_god)
 
     you.religion = which_god;   //jmf: moved up so god_speaks gives right colour
     you.piety = 15;             // to prevent near instant excommunication
-    you.gift_timeout = 0; 
+    you.gift_timeout = 0;
     set_god_ability_slots();    // remove old god's slots, reserve new god's
 
-    snprintf( info, INFO_SIZE, " welcomes you%s!", 
+#ifdef JP
+    snprintf( info, INFO_SIZE, "はあなたの入信を%s歓迎した！",
+              (you.worshipped[which_god]) ? "再び" : "" );
+#else
+    snprintf( info, INFO_SIZE, " welcomes you%s!",
               (you.worshipped[which_god]) ? " back" : "" );
+#endif
 
     simple_god_message( info );
     more();
@@ -2389,7 +3472,11 @@ void god_pitch(unsigned char which_god)
         if (you.penance[GOD_SHINING_ONE] > 0)
         {
             inc_penance(GOD_SHINING_ONE, 30);
+#ifdef JP
+            god_speaks(GOD_SHINING_ONE, "『定命の者よ、お前は悪業の代価を支払うことになろう！！』");
+#else
             god_speaks(GOD_SHINING_ONE, "\"You will pay for your evil ways, mortal!\"");
+#endif
         }
     }
     redraw_skill( you.your_name, player_title() );
@@ -2398,7 +3485,11 @@ void god_pitch(unsigned char which_god)
 void offer_corpse(int corpse)
 {
     char str_pass[ ITEMNAME_SIZE ];
+#ifdef JP
+    it_name(corpse, DESC_PLAIN, str_pass);
+#else
     it_name(corpse, DESC_CAP_THE, str_pass);
+#endif
     strcpy(info, str_pass);
     strcat(info, sacrifice[you.religion - 1]);
     mpr(info);
@@ -2516,7 +3607,11 @@ void handle_god_time(void)
             break;
 
         default:
+#ifdef JP
+            DEBUGSTR("まずい神だ。主教もいない！");
+#else
             DEBUGSTR("Bad god, no bishop!");
+#endif
         }
     }
 }                               // end handle_god_time()

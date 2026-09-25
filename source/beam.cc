@@ -53,6 +53,10 @@
 #include "stuff.h"
 #include "view.h"
 
+#ifdef USE_TILE
+#include "tiles.h"
+#endif
+
 #define BEAM_STOP       1000        // all beams stopped by subtracting this
                                     // from remaining range
 #define MON_RESIST      0           // monster resisted
@@ -94,11 +98,26 @@ static void explosion_cell(struct bolt &beam, int x, int y, bool drawOnly);
 
 static void zappy(char z_type, int power, struct bolt &pbolt);
 
+#ifdef JP
+static unsigned char beam_zenkaku[2*256+1] ="\
+　！”＃＄％＆’（）＊＋，－．／\
+０１２３４５６７８９：；＜＝＞？\
+＠ＡＢＣＤＥＦＧＨＩＪＫＬＭＮＯ\
+ＰＱＲＳＴＵＶＷＸＹＺ［＼］＾＿\
+‘ａｂｃｄｅｆｇｈｉｊｋｌｍｎｏ\
+ｐｑｒｓｔｕｖｗｘｙｚ｛｜｝～■\
+回†・Π∩Υ□≡》";
+#endif
+
 void zapping(char ztype, int power, struct bolt &pbolt)
 {
 
 #if DEBUG_DIAGNOSTICS
-    snprintf( info, INFO_SIZE, "zapping:  power=%d", power ); 
+#ifdef JP
+    snprintf( info, INFO_SIZE, "zapping:  power=%d", power );
+#else
+    snprintf( info, INFO_SIZE, "zapping:  power=%d", power );
+#endif
     mpr( info, MSGCH_DIAGNOSTICS );
 #endif
 
@@ -126,7 +145,11 @@ void zapping(char ztype, int power, struct bolt &pbolt)
     if (ztype == ZAP_LIGHTNING && !silenced(you.x_pos, you.y_pos))
         // needs to check silenced at other location, too {dlb}
     {
+#ifdef JP
+        mpr("あなたは雷鳴が力強く轟くのを耳にした！");
+#else
         mpr("You hear a mighty clap of thunder!");
+#endif
         noisy( 25, you.x_pos, you.y_pos );
     }
 
@@ -151,7 +174,7 @@ dice_def calc_dice( int num_dice, int max_damage )
     }
     else
     {
-        // Divied the damage among the dice, and add one 
+        // Divied the damage among the dice, and add one
         // occasionally to make up for the fractions. -- bwr
         ret.size = max_damage / num_dice;
         ret.size += (random2( num_dice ) < max_damage % num_dice);
@@ -167,15 +190,15 @@ static void zappy( char z_type, int power, struct bolt &pbolt )
     int temp_rand = 0;          // probability determination {dlb}
 
     // Note: The incoming power is not linear in the case of spellcasting.
-    // The power curve currently allows for the character to reasonably 
+    // The power curve currently allows for the character to reasonably
     // get up to a power level of about a 100, but more than that will
     // be very hard (and the maximum is 200).  The low level power caps
     // provide the useful feature in that they allow for low level spells
-    // to have quick advancement, but don't cause them to obsolete the 
+    // to have quick advancement, but don't cause them to obsolete the
     // higher level spells. -- bwr
     //
-    // I've added some example characters below to show how little 
-    // people should be concerned about the power caps.  
+    // I've added some example characters below to show how little
+    // people should be concerned about the power caps.
     //
     // The example characters are simplified to three stats:
     //
@@ -184,19 +207,19 @@ static void zappy( char z_type, int power, struct bolt &pbolt )
     // - Skills: This represents the character having Spellcasting
     //   and the average of the component skills at this level.
     //   Although, Spellcasting probably isn't quite as high as
-    //   other spell skills for a lot of characters, note that it 
+    //   other spell skills for a lot of characters, note that it
     //   contributes much less to the total power (about 20%).
     //
     // - Enhancers:  These are equipment that the player can use to
     //   apply additional magnifiers (x1.5) to power.  There are
     //   also inhibitors that reduce power (/2.0), but we're not
-    //   concerned about those here.  Anyways, the character can 
+    //   concerned about those here.  Anyways, the character can
     //   currently have up to 3 levels (for x1.5, x2.25, x3.375).
     //   The lists below should help to point out the difficulty
     //   and cost of getting more than one level of enhancement.
     //
     //   Here's a list of current magnifiers:
-    //   
+    //
     //   - rings of fire/cold
     //   - staff of fire/cold/air/earth/poison/death/conjure/enchant/summon
     //   - staff of Olgreb (poison)
@@ -208,7 +231,7 @@ static void zappy( char z_type, int power, struct bolt &pbolt )
     //   The maximum enhancement, by school (but capped at 3):
     //
     //   - Necromancy:  4 (Mummies), 3 (others)
-    //   - Fire:        4 
+    //   - Fire:        4
     //   - Cold:        3
     //   - Conjuration: 2
     //   - Enchantment: 2
@@ -221,9 +244,9 @@ static void zappy( char z_type, int power, struct bolt &pbolt )
     switch (z_type)
     {
     // level 1
-    // 
-    // This cap is to keep these easy and very cheap spells from 
-    // becoming too powerful. 
+    //
+    // This cap is to keep these easy and very cheap spells from
+    // becoming too powerful.
     //
     // Example characters with about 25 power:
     //
@@ -247,9 +270,9 @@ static void zappy( char z_type, int power, struct bolt &pbolt )
 
     // level 2/3
     //
-    // The following examples should make it clear that in the 
-    // early game this cap is only limiting to serious spellcasters 
-    // (they could easily reach the 20-10-0 example).  
+    // The following examples should make it clear that in the
+    // early game this cap is only limiting to serious spellcasters
+    // (they could easily reach the 20-10-0 example).
     //
     // Example characters with about 50 power:
     //
@@ -272,7 +295,7 @@ static void zappy( char z_type, int power, struct bolt &pbolt )
     // that a high level character can easily have 75 power.
     //
     // Example characters with about 75 power:
-    // 
+    //
     // - int 10, skills 27, 1 enhancer
     // - int 15, skills 27, 0 enhancers
     // - int 15, skills 16, 1 enhancer
@@ -282,9 +305,9 @@ static void zappy( char z_type, int power, struct bolt &pbolt )
 
     // level 4
     //
-    // The following examples should make it clear that this is the 
-    // effective maximum power.  Its not easy to get to 100 power, 
-    // but 20-20-1 or 25-16-1 is certainly attainable by a high level 
+    // The following examples should make it clear that this is the
+    // effective maximum power.  Its not easy to get to 100 power,
+    // but 20-20-1 or 25-16-1 is certainly attainable by a high level
     // spellcaster.  As you can see from the examples at 150 and 200,
     // getting much power beyond this is very difficult.
     //
@@ -308,14 +331,14 @@ static void zappy( char z_type, int power, struct bolt &pbolt )
     // levels 5-7
     //
     // These spells used to be capped, but its very hard to raise
-    // power over 100, and these examples should show that. 
+    // power over 100, and these examples should show that.
     // Only the twinkiest of characters are expected to get to 150.
-    // 
+    //
     // Example characters with about 150 power:
     //
     // - int 15, skills 27, 3 enhancers (actually, only 146)
     // - int 20, skills 27, 2 enhancers (actually, only 137)
-    // - int 20, skills 21, 3 enhancers 
+    // - int 20, skills 21, 3 enhancers
     // - int 25, skills 26, 2 enhancers
     // - int 30, skills 21, 2 enhancers
     // - int 40, skills 24, 1 enhancer
@@ -340,7 +363,7 @@ static void zappy( char z_type, int power, struct bolt &pbolt )
     // levels 8-9
     //
     // These spells are capped at 200 (which is the cap in calc_spell_power).
-    // As an example of how little of a cap that is, consider the fact 
+    // As an example of how little of a cap that is, consider the fact
     // that a 70-27-3 character has an uncapped power of 251.  Characters
     // are never expected to get to this cap.
     //
@@ -423,18 +446,26 @@ static void zappy( char z_type, int power, struct bolt &pbolt )
     switch (z_type)
     {
     case ZAP_STRIKING:                                  // cap 25
+#ifdef JP
+        strcpy(pbolt.beam_name, "力場の矢");
+#else
         strcpy(pbolt.beam_name, "force bolt");
+#endif
         pbolt.colour = BLACK;
         pbolt.range = 8 + random2(5);
         pbolt.damage = dice_def( 1, 5 );                // dam: 5
         pbolt.hit = 8 + power / 10;                     // 25: 10
-        pbolt.type = SYM_SPACE; 
+        pbolt.type = SYM_SPACE;
         pbolt.flavour = BEAM_MMISSILE;                  // unresistable
         pbolt.obviousEffect = true;
         break;
 
     case ZAP_MAGIC_DARTS:                               // cap 25
+#ifdef JP
+        strcpy(pbolt.beam_name, "魔法の矢");
+#else
         strcpy(pbolt.beam_name, "magic dart");
+#endif
         pbolt.colour = LIGHTMAGENTA;
         pbolt.range = random2(5) + 8;
         pbolt.damage = dice_def( 1, 3 + power / 5 );    // 25: 1d8
@@ -445,7 +476,11 @@ static void zappy( char z_type, int power, struct bolt &pbolt )
         break;
 
     case ZAP_STING:                                     // cap 25
+#ifdef JP
+        strcpy(pbolt.beam_name, "毒針");
+#else
         strcpy(pbolt.beam_name, "sting");
+#endif
         pbolt.colour = GREEN;
         pbolt.range = 8 + random2(5);
         pbolt.damage = dice_def( 1, 3 + power / 5 );    // 25: 1d8
@@ -457,7 +492,11 @@ static void zappy( char z_type, int power, struct bolt &pbolt )
         break;
 
     case ZAP_ELECTRICITY:                               // cap 20
+#ifdef JP
+        strcpy(pbolt.beam_name, "電撃");
+#else
         strcpy(pbolt.beam_name, "zap");
+#endif
         pbolt.colour = LIGHTCYAN;
         pbolt.range = 6 + random2(8);                   // extended in beam
         pbolt.damage = dice_def( 1, 3 + random2(power) / 2 ); // 25: 1d11
@@ -470,15 +509,23 @@ static void zappy( char z_type, int power, struct bolt &pbolt )
         break;
 
     case ZAP_DISRUPTION:                                // cap 25
+#ifdef JP
         strcpy(pbolt.beam_name, "0");
+#else
+        strcpy(pbolt.beam_name, "0");
+#endif
         pbolt.flavour = BEAM_DISINTEGRATION;
         pbolt.range = 7 + random2(8);
-        pbolt.damage = dice_def( 1, 4 + power / 5 );    // 25: 1d9 
+        pbolt.damage = dice_def( 1, 4 + power / 5 );    // 25: 1d9
         pbolt.ench_power *= 3;
         break;
 
     case ZAP_PAIN:                                      // cap 25
+#ifdef JP
         strcpy(pbolt.beam_name, "0");
+#else
+        strcpy(pbolt.beam_name, "0");
+#endif
         pbolt.flavour = BEAM_PAIN;
         pbolt.range = 7 + random2(8);
         pbolt.damage = dice_def( 1, 4 + power / 5 );    // 25: 1d9
@@ -487,7 +534,11 @@ static void zappy( char z_type, int power, struct bolt &pbolt )
         break;
 
     case ZAP_FLAME_TONGUE:                              // cap 25
+#ifdef JP
+        strcpy(pbolt.beam_name, "炎");
+#else
         strcpy(pbolt.beam_name, "flame");
+#endif
         pbolt.colour = RED;
 
         pbolt.range = 1 + random2(2) + random2(power) / 10;
@@ -503,13 +554,24 @@ static void zappy( char z_type, int power, struct bolt &pbolt )
         break;
 
     case ZAP_SMALL_SANDBLAST:                           // cap 25
+#ifdef JP
+        strcpy(pbolt.beam_name, "");
+#else
         strcpy(pbolt.beam_name, "blast of ");
+#endif
 
         temp_rand = random2(4);
 
+#ifdef JP
+        strcpy(pbolt.beam_name, (temp_rand == 0) ? "砂埃" :
+                                (temp_rand == 1) ? "土煙" :
+                                (temp_rand == 2) ? "砂塵" : "砂");
+        strcat(pbolt.beam_name, "の突風");
+#else
         strcat(pbolt.beam_name, (temp_rand == 0) ? "dust" :
                                 (temp_rand == 1) ? "dirt" :
                                 (temp_rand == 2) ? "grit" : "sand");
+#endif
 
         pbolt.colour = BROWN;
         pbolt.range = (random2(power) > random2(30)) ? 2 : 1;
@@ -522,7 +584,11 @@ static void zappy( char z_type, int power, struct bolt &pbolt )
         break;
 
     case ZAP_SANDBLAST:                                 // cap 50
+#ifdef JP
+        strcpy(pbolt.beam_name, coinflip() ? "飛礫の雨" : "飛礫の雨");
+#else
         strcpy(pbolt.beam_name, coinflip() ? "blast of rock" : "rocky blast");
+#endif
         pbolt.colour = BROWN;
 
         pbolt.range = 2 + random2(power) / 20;
@@ -538,7 +604,11 @@ static void zappy( char z_type, int power, struct bolt &pbolt )
         break;
 
     case ZAP_BONE_SHARDS:
+#ifdef JP
+        strcpy(pbolt.beam_name, "骨片の散弾");
+#else
         strcpy(pbolt.beam_name, "spray of bone shards");
+#endif
         pbolt.colour = LIGHTGREY;
         pbolt.range = 7 + random2(10);
 
@@ -556,7 +626,11 @@ static void zappy( char z_type, int power, struct bolt &pbolt )
         break;
 
     case ZAP_FLAME:                                     // cap 50
+#ifdef JP
+        strcpy(pbolt.beam_name, "炎の塊");
+#else
         strcpy(pbolt.beam_name, "puff of flame");
+#endif
         pbolt.colour = RED;
         pbolt.range = 8 + random2(5);
         pbolt.damage = dice_def( 2, 4 + power / 10 );   // 25: 2d6  50: 2d9
@@ -568,7 +642,11 @@ static void zappy( char z_type, int power, struct bolt &pbolt )
         break;
 
     case ZAP_FROST:                                     // cap 50
+#ifdef JP
+        strcpy(pbolt.beam_name, "冷気の塊");
+#else
         strcpy(pbolt.beam_name, "puff of frost");
+#endif
         pbolt.colour = WHITE;
         pbolt.range = 8 + random2(5);
         pbolt.damage = dice_def( 2, 4 + power / 10 );   // 25: 2d6  50: 2d9
@@ -580,7 +658,11 @@ static void zappy( char z_type, int power, struct bolt &pbolt )
         break;
 
     case ZAP_STONE_ARROW:                               // cap 100
+#ifdef JP
+        strcpy(pbolt.beam_name, "石錐の矢");
+#else
         strcpy(pbolt.beam_name, "stone arrow");
+#endif
         pbolt.colour = LIGHTGREY;
         pbolt.range = 8 + random2(5);
         pbolt.damage = dice_def( 2, 4 + power / 8 );    // 25: 2d7  50: 2d10
@@ -592,7 +674,11 @@ static void zappy( char z_type, int power, struct bolt &pbolt )
         break;
 
     case ZAP_STICKY_FLAME:                              // cap 100
+#ifdef JP
+        strcpy(pbolt.beam_name, "焼夷の炎");        // extra damage
+#else
         strcpy(pbolt.beam_name, "sticky flame");        // extra damage
+#endif
         pbolt.colour = RED;
         pbolt.range = 8 + random2(5);
         pbolt.damage = dice_def( 2, 3 + power / 12 );   // 50: 2d7  100: 2d11
@@ -604,11 +690,15 @@ static void zappy( char z_type, int power, struct bolt &pbolt )
         break;
 
     case ZAP_MYSTIC_BLAST:                              // cap 100
+#ifdef JP
+        strcpy(pbolt.beam_name, "エネルギーの爆裂球");
+#else
         strcpy(pbolt.beam_name, "orb of energy");
+#endif
         pbolt.colour = LIGHTMAGENTA;
         pbolt.range = 8 + random2(5);
-        pbolt.damage = calc_dice( 2, 15 + (power * 2) / 5 ); 
-        pbolt.hit = 10 + power / 7;                     // 50: 17   100: 24 
+        pbolt.damage = calc_dice( 2, 15 + (power * 2) / 5 );
+        pbolt.hit = 10 + power / 7;                     // 50: 17   100: 24
         pbolt.type = SYM_ZAP;
         pbolt.flavour = BEAM_MMISSILE;                  // unresistable
 
@@ -616,7 +706,11 @@ static void zappy( char z_type, int power, struct bolt &pbolt )
         break;
 
     case ZAP_ICE_BOLT:                                  // cap 100
+#ifdef JP
+        strcpy(pbolt.beam_name, "氷の矢");
+#else
         strcpy(pbolt.beam_name, "bolt of ice");
+#endif
         pbolt.colour = WHITE;
         pbolt.range = 8 + random2(5);
         pbolt.damage = calc_dice( 3, 10 + power / 2 );
@@ -626,7 +720,11 @@ static void zappy( char z_type, int power, struct bolt &pbolt )
         break;
 
     case ZAP_DISPEL_UNDEAD:                             // cap 100
+#ifdef JP
         strcpy(pbolt.beam_name, "0");
+#else
+        strcpy(pbolt.beam_name, "0");
+#endif
         pbolt.flavour = BEAM_DISPEL_UNDEAD;
         pbolt.range = 7 + random2(8);
         pbolt.damage = calc_dice( 3, 20 + (power * 3) / 4 );
@@ -635,7 +733,11 @@ static void zappy( char z_type, int power, struct bolt &pbolt )
         break;
 
     case ZAP_MAGMA:                                     // cap 150
+#ifdef JP
+        strcpy(pbolt.beam_name, "溶岩の矢");
+#else
         strcpy(pbolt.beam_name, "bolt of magma");
+#endif
         pbolt.colour = RED;
         pbolt.range = 5 + random2(4);
         pbolt.damage = calc_dice( 4, 10 + (power * 3) / 5 );
@@ -648,7 +750,11 @@ static void zappy( char z_type, int power, struct bolt &pbolt )
         break;
 
     case ZAP_FIRE:                                      // cap 150
+#ifdef JP
+        strcpy(pbolt.beam_name, "猛火の矢");
+#else
         strcpy(pbolt.beam_name, "bolt of fire");
+#endif
         pbolt.colour = RED;
         pbolt.range = 7 + random2(10);
         pbolt.damage = calc_dice( 6, 20 + (power * 3) / 4 );
@@ -661,7 +767,11 @@ static void zappy( char z_type, int power, struct bolt &pbolt )
         break;
 
     case ZAP_COLD:                                      // cap 150
+#ifdef JP
+        strcpy(pbolt.beam_name, "凍結の矢");
+#else
         strcpy(pbolt.beam_name, "bolt of cold");
+#endif
         pbolt.colour = WHITE;
         pbolt.range = 7 + random2(10);
         pbolt.damage = calc_dice( 6, 20 + (power * 3) / 4 );
@@ -674,7 +784,11 @@ static void zappy( char z_type, int power, struct bolt &pbolt )
         break;
 
     case ZAP_VENOM_BOLT:                                // cap 150
+#ifdef JP
+        strcpy(pbolt.beam_name, "毒液の矢");
+#else
         strcpy(pbolt.beam_name, "bolt of poison");
+#endif
         pbolt.colour = LIGHTGREEN;
         pbolt.range = 8 + random2(10);
         pbolt.damage = calc_dice( 4, 15 + power / 2 );
@@ -687,10 +801,14 @@ static void zappy( char z_type, int power, struct bolt &pbolt )
         break;
 
     case ZAP_NEGATIVE_ENERGY:                           // cap 150
+#ifdef JP
+        strcpy(pbolt.beam_name, "負のエネルギーの矢");
+#else
         strcpy(pbolt.beam_name, "bolt of negative energy");
+#endif
         pbolt.colour = DARKGREY;
         pbolt.range = 7 + random2(10);
-        pbolt.damage = calc_dice( 4, 15 + (power * 3) / 5 ); 
+        pbolt.damage = calc_dice( 4, 15 + (power * 3) / 5 );
         pbolt.hit = 8 + power / 20;                     // 50: 10   100: 13
         pbolt.type = SYM_ZAP;
         pbolt.flavour = BEAM_NEG;                       // drains levels
@@ -700,7 +818,11 @@ static void zappy( char z_type, int power, struct bolt &pbolt )
         break;
 
     case ZAP_IRON_BOLT:                                 // cap 150
+#ifdef JP
+        strcpy(pbolt.beam_name, "鉄塊の矢");
+#else
         strcpy(pbolt.beam_name, "iron bolt");
+#endif
         pbolt.colour = LIGHTCYAN;
         pbolt.range = 5 + random2(5);
         pbolt.damage = calc_dice( 9, 15 + (power * 3) / 4 );
@@ -711,7 +833,11 @@ static void zappy( char z_type, int power, struct bolt &pbolt )
         break;
 
     case ZAP_POISON_ARROW:                              // cap 150
+#ifdef JP
+        strcpy(pbolt.beam_name, "毒素の矢");
+#else
         strcpy(pbolt.beam_name, "poison arrow");
+#endif
         pbolt.colour = LIGHTGREEN;
         pbolt.range = 8 + random2(5);
         pbolt.damage = calc_dice( 4, 15 + power );
@@ -723,7 +849,11 @@ static void zappy( char z_type, int power, struct bolt &pbolt )
 
 
     case ZAP_DISINTEGRATION:                            // cap 150
+#ifdef JP
         strcpy(pbolt.beam_name, "0");
+#else
+        strcpy(pbolt.beam_name, "0");
+#endif
         pbolt.flavour = BEAM_DISINTEGRATION;
         pbolt.range = 7 + random2(8);
         pbolt.damage = calc_dice( 3, 15 + (power * 3) / 4 );
@@ -734,7 +864,11 @@ static void zappy( char z_type, int power, struct bolt &pbolt )
 
     case ZAP_LIGHTNING:                                 // cap 150
         // also for breath (at pow = lev * 2; max dam: 33)
+#ifdef JP
+        strcpy(pbolt.beam_name, "稲妻の矢");
+#else
         strcpy(pbolt.beam_name, "bolt of lightning");
+#endif
         pbolt.colour = LIGHTCYAN;
         pbolt.range = 8 + random2(10);                  // extended in beam
         pbolt.damage = calc_dice( 1, 10 + (power * 3) / 5 );
@@ -747,7 +881,11 @@ static void zappy( char z_type, int power, struct bolt &pbolt )
         break;
 
     case ZAP_FIREBALL:                                  // cap 150
+#ifdef JP
+        strcpy(pbolt.beam_name, "ファイアボール");
+#else
         strcpy(pbolt.beam_name, "fireball");
+#endif
         pbolt.colour = RED;
         pbolt.range = 8 + random2(5);
         pbolt.damage = calc_dice( 3, 10 + power / 2 );
@@ -757,7 +895,11 @@ static void zappy( char z_type, int power, struct bolt &pbolt )
         break;
 
     case ZAP_ORB_OF_ELECTRICITY:                        // cap 150
+#ifdef JP
+        strcpy(pbolt.beam_name, "電撃の爆裂球");
+#else
         strcpy(pbolt.beam_name, "orb of electricity");
+#endif
         pbolt.colour = LIGHTBLUE;
         pbolt.range = 9 + random2(12);
         pbolt.damage = calc_dice( 1, 15 + (power * 4) / 5 );
@@ -768,7 +910,11 @@ static void zappy( char z_type, int power, struct bolt &pbolt )
         break;
 
     case ZAP_ORB_OF_FRAGMENTATION:                      // cap 150
+#ifdef JP
+        strcpy(pbolt.beam_name, "金属片の爆裂球");
+#else
         strcpy(pbolt.beam_name, "metal orb");
+#endif
         pbolt.colour = CYAN;
         pbolt.range = 9 + random2(7);
         pbolt.damage = calc_dice( 3, 30 + (power * 3) / 4 );
@@ -778,7 +924,11 @@ static void zappy( char z_type, int power, struct bolt &pbolt )
         break;
 
     case ZAP_CLEANSING_FLAME:                           // cap 200
+#ifdef JP
+        strcpy(pbolt.beam_name, "黄金の炎");
+#else
         strcpy(pbolt.beam_name, "golden flame");
+#endif
         pbolt.colour = YELLOW;
         pbolt.range = 7 + random2(10);
         pbolt.damage = calc_dice( 6, 30 + power );
@@ -791,7 +941,11 @@ static void zappy( char z_type, int power, struct bolt &pbolt )
         break;
 
     case ZAP_CRYSTAL_SPEAR:                             // cap 200
+#ifdef JP
+        strcpy(pbolt.beam_name, "水晶の槍");
+#else
         strcpy(pbolt.beam_name, "crystal spear");
+#endif
         pbolt.colour = WHITE;
         pbolt.range = 7 + random2(10);
         pbolt.damage = calc_dice( 12, 30 + (power * 4) / 3 );
@@ -803,7 +957,11 @@ static void zappy( char z_type, int power, struct bolt &pbolt )
         break;
 
     case ZAP_HELLFIRE:                                  // cap 200
+#ifdef JP
+        strcpy(pbolt.beam_name, "地獄の業火");
+#else
         strcpy(pbolt.beam_name, "hellfire");
+#endif
         pbolt.colour = RED;
         pbolt.range = 7 + random2(10);
         pbolt.damage = calc_dice( 3, 10 + (power * 3) / 4 );
@@ -816,7 +974,11 @@ static void zappy( char z_type, int power, struct bolt &pbolt )
         break;
 
     case ZAP_ICE_STORM:                                 // cap 200
+#ifdef JP
+        strcpy(pbolt.beam_name, "凍気の嵐");
+#else
         strcpy(pbolt.beam_name, "great blast of cold");
+#endif
         pbolt.colour = BLUE;
         pbolt.range = 9 + random2(5);
         pbolt.damage = calc_dice( 6, 15 + power );
@@ -828,7 +990,11 @@ static void zappy( char z_type, int power, struct bolt &pbolt )
         break;
 
     case ZAP_BEAM_OF_ENERGY:    // bolt of innacuracy
+#ifdef JP
+        strcpy(pbolt.beam_name, "エネルギーの光線");
+#else
         strcpy(pbolt.beam_name, "narrow beam of energy");
+#endif
         pbolt.colour = YELLOW;
         pbolt.range = 7 + random2(10);
         pbolt.damage = calc_dice( 12, 40 + (power * 3) / 2 );
@@ -842,7 +1008,11 @@ static void zappy( char z_type, int power, struct bolt &pbolt )
 
     case ZAP_SPIT_POISON:       // cap 50
         // max pow = lev + mut * 5 = 42
+#ifdef JP
+        strcpy(pbolt.beam_name, "毒の飛沫");
+#else
         strcpy(pbolt.beam_name, "splash of poison");
+#endif
         pbolt.colour = GREEN;
 
         pbolt.range = 3 + random2( 1 + power / 2 );
@@ -858,7 +1028,11 @@ static void zappy( char z_type, int power, struct bolt &pbolt )
 
     case ZAP_BREATHE_FIRE:      // cap 50
         // max pow = lev + mut * 4 + 12 = 51 (capped to 50)
+#ifdef JP
+        strcpy(pbolt.beam_name, "炎のブレス");
+#else
         strcpy(pbolt.beam_name, "fiery breath");
+#endif
         pbolt.colour = RED;
 
         pbolt.range = 3 + random2( 1 + power / 2 );
@@ -876,7 +1050,11 @@ static void zappy( char z_type, int power, struct bolt &pbolt )
 
     case ZAP_BREATHE_FROST:     // cap 50
         // max power = lev = 27
+#ifdef JP
+        strcpy(pbolt.beam_name, "凍結のブレス");
+#else
         strcpy(pbolt.beam_name, "freezing breath");
+#endif
         pbolt.colour = WHITE;
 
         pbolt.range = 3 + random2( 1 + power / 2 );
@@ -894,7 +1072,11 @@ static void zappy( char z_type, int power, struct bolt &pbolt )
 
     case ZAP_BREATHE_ACID:      // cap 50
         // max power = lev for ability, 50 for minor destruction (max dam: 57)
+#ifdef JP
+        strcpy(pbolt.beam_name, "強酸");
+#else
         strcpy(pbolt.beam_name, "acid");
+#endif
         pbolt.colour = YELLOW;
 
         pbolt.range = 3 + random2( 1 + power / 2 );
@@ -912,7 +1094,11 @@ static void zappy( char z_type, int power, struct bolt &pbolt )
 
     case ZAP_BREATHE_POISON:    // leaves clouds of gas // cap 50
         // max power = lev = 27
+#ifdef JP
+        strcpy(pbolt.beam_name, "猛毒のガス");
+#else
         strcpy(pbolt.beam_name, "poison gas");
+#endif
         pbolt.colour = GREEN;
 
         pbolt.range = 3 + random2( 1 + power / 2 );
@@ -929,7 +1115,11 @@ static void zappy( char z_type, int power, struct bolt &pbolt )
         break;
 
     case ZAP_BREATHE_POWER:     // cap 50
+#ifdef JP
+        strcpy(pbolt.beam_name, "エネルギーの矢");
+#else
         strcpy(pbolt.beam_name, "bolt of energy");
+#endif
         // max power = lev = 27
 
         pbolt.colour = BLUE;
@@ -955,7 +1145,11 @@ static void zappy( char z_type, int power, struct bolt &pbolt )
 
     case ZAP_BREATHE_STEAM:     // cap 50
         // max power = lev = 27
+#ifdef JP
+        strcpy(pbolt.beam_name, "蒸気の爆裂球");
+#else
         strcpy(pbolt.beam_name, "ball of steam");
+#endif
         pbolt.colour = LIGHTGREY;
 
         pbolt.range = 6 + random2(5);
@@ -972,44 +1166,72 @@ static void zappy( char z_type, int power, struct bolt &pbolt )
         break;
 
     case ZAP_SLOWING:
+#ifdef JP
         strcpy(pbolt.beam_name, "0");
+#else
+        strcpy(pbolt.beam_name, "0");
+#endif
         pbolt.flavour = BEAM_SLOW;
         // pbolt.isBeam = true;
         break;
 
     case ZAP_HASTING:
+#ifdef JP
         strcpy(pbolt.beam_name, "0");
+#else
+        strcpy(pbolt.beam_name, "0");
+#endif
         pbolt.flavour = BEAM_HASTE;
         // pbolt.isBeam = true;
         break;
 
     case ZAP_PARALYSIS:
+#ifdef JP
         strcpy(pbolt.beam_name, "0");
+#else
+        strcpy(pbolt.beam_name, "0");
+#endif
         pbolt.flavour = BEAM_PARALYSIS;
         // pbolt.isBeam = true;
         break;
 
     case ZAP_CONFUSION:
+#ifdef JP
         strcpy(pbolt.beam_name, "0");
+#else
+        strcpy(pbolt.beam_name, "0");
+#endif
         pbolt.flavour = BEAM_CONFUSION;
         // pbolt.isBeam = true;
         break;
 
     case ZAP_INVISIBILITY:
+#ifdef JP
         strcpy(pbolt.beam_name, "0");
+#else
+        strcpy(pbolt.beam_name, "0");
+#endif
         pbolt.flavour = BEAM_INVISIBILITY;
         // pbolt.isBeam = true;
         break;
 
     case ZAP_HEALING:
+#ifdef JP
         strcpy(pbolt.beam_name, "0");
+#else
+        strcpy(pbolt.beam_name, "0");
+#endif
         pbolt.flavour = BEAM_HEALING;
         pbolt.damage = dice_def( 1, 7 + power / 3 );
         // pbolt.isBeam = true;
         break;
 
     case ZAP_DIGGING:
+#ifdef JP
         strcpy(pbolt.beam_name, "0");
+#else
+        strcpy(pbolt.beam_name, "0");
+#endif
         pbolt.flavour = BEAM_DIGGING;
         // not ordinary "0" beam range {dlb}
         pbolt.range = 3 + random2( power / 5 ) + random2(5);
@@ -1017,49 +1239,77 @@ static void zappy( char z_type, int power, struct bolt &pbolt )
         break;
 
     case ZAP_TELEPORTATION:
+#ifdef JP
         strcpy(pbolt.beam_name, "0");
+#else
+        strcpy(pbolt.beam_name, "0");
+#endif
         pbolt.flavour = BEAM_TELEPORT;
         pbolt.range = 9 + random2(5);
         // pbolt.isBeam = true;
         break;
 
     case ZAP_POLYMORPH_OTHER:
+#ifdef JP
         strcpy(pbolt.beam_name, "0");
+#else
+        strcpy(pbolt.beam_name, "0");
+#endif
         pbolt.flavour = BEAM_POLYMORPH;
         pbolt.range = 9 + random2(5);
         // pbolt.isBeam = true;
         break;
 
     case ZAP_ENSLAVEMENT:
+#ifdef JP
         strcpy(pbolt.beam_name, "0");
+#else
+        strcpy(pbolt.beam_name, "0");
+#endif
         pbolt.flavour = BEAM_CHARM;
         pbolt.range = 7 + random2(5);
         // pbolt.isBeam = true;
         break;
 
     case ZAP_BANISHMENT:
+#ifdef JP
         strcpy(pbolt.beam_name, "0");
+#else
+        strcpy(pbolt.beam_name, "0");
+#endif
         pbolt.flavour = BEAM_BANISH;
         pbolt.range = 7 + random2(5);
         // pbolt.isBeam = true;
         break;
 
     case ZAP_DEGENERATION:
+#ifdef JP
         strcpy(pbolt.beam_name, "0");
+#else
+        strcpy(pbolt.beam_name, "0");
+#endif
         pbolt.flavour = BEAM_DEGENERATE;
         pbolt.range = 7 + random2(5);
         // pbolt.isBeam = true;
         break;
 
     case ZAP_ENSLAVE_UNDEAD:
+#ifdef JP
         strcpy(pbolt.beam_name, "0");
+#else
+        strcpy(pbolt.beam_name, "0");
+#endif
         pbolt.flavour = BEAM_ENSLAVE_UNDEAD;
         pbolt.range = 7 + random2(5);
         // pbolt.isBeam = true;
         break;
 
     case ZAP_AGONY:
+#ifdef JP
+        strcpy(pbolt.beam_name, "0苦悶");
+#else
         strcpy(pbolt.beam_name, "0agony");
+#endif
         pbolt.flavour = BEAM_PAIN;
         pbolt.range = 7 + random2(8);
         pbolt.ench_power *= 5;
@@ -1067,7 +1317,11 @@ static void zappy( char z_type, int power, struct bolt &pbolt )
         break;
 
     case ZAP_CONTROL_DEMON:
+#ifdef JP
         strcpy(pbolt.beam_name, "0");
+#else
+        strcpy(pbolt.beam_name, "0");
+#endif
         pbolt.flavour = BEAM_ENSLAVE_DEMON;
         pbolt.range = 7 + random2(5);
         pbolt.ench_power *= 3;
@@ -1076,14 +1330,22 @@ static void zappy( char z_type, int power, struct bolt &pbolt )
         break;
 
     case ZAP_SLEEP:             //jmf: added
+#ifdef JP
         strcpy(pbolt.beam_name, "0");
+#else
+        strcpy(pbolt.beam_name, "0");
+#endif
         pbolt.flavour = BEAM_SLEEP;
         pbolt.range = 7 + random2(5);
         // pbolt.isBeam = true;
         break;
 
     case ZAP_BACKLIGHT: //jmf: added
+#ifdef JP
         strcpy(pbolt.beam_name, "0");
+#else
+        strcpy(pbolt.beam_name, "0");
+#endif
         pbolt.flavour = BEAM_BACKLIGHT;
         pbolt.colour = BLUE;
         pbolt.range = 7 + random2(5);
@@ -1091,7 +1353,11 @@ static void zappy( char z_type, int power, struct bolt &pbolt )
         break;
 
     case ZAP_DEBUGGING_RAY:
+#ifdef JP
+        strcpy( pbolt.beam_name, "廃棄の光" );
+#else
         strcpy( pbolt.beam_name, "debugging ray" );
+#endif
         pbolt.colour = random_colour();
         pbolt.range = 7 + random2(10);
         pbolt.damage = dice_def( 1500, 1 );             // dam: 1500
@@ -1103,7 +1369,11 @@ static void zappy( char z_type, int power, struct bolt &pbolt )
         break;
 
     default:
+#ifdef JP
+        strcpy(pbolt.beam_name, "バグな光線");
+#else
         strcpy(pbolt.beam_name, "buggy beam");
+#endif
         pbolt.colour = random_colour();
         pbolt.range = 7 + random2(10);
         pbolt.damage = dice_def( 1, 0 );
@@ -1148,7 +1418,6 @@ static void zappy( char z_type, int power, struct bolt &pbolt )
  *
  */
 
-
 void fire_beam( struct bolt &pbolt, item_def *item )
 {
     int dx, dy;             // total delta between source & target
@@ -1163,13 +1432,33 @@ void fire_beam( struct bolt &pbolt, item_def *item )
     bool fuzzyOK;           // fuzzification resulted in OK move
     bool sideBlocked, topBlocked, random_beam;
 
+#ifdef USE_TILE
+    int tile_beam = -1;
+
+    if (Options.use_tile)
+    {
+        if (item)
+        {
+            tile_beam = tileidx_item_throw(*item,
+                         pbolt.target_x-pbolt.source_x,
+                         pbolt.target_y-pbolt.source_y);
+        }
+    }
+#endif
+
 #if DEBUG_DIAGNOSTICS
+#ifdef JP
     snprintf( info, INFO_SIZE, "%s%s (%d,%d) to (%d,%d): ty=%d col=%d flav=%d hit=%d dam=%dd%d",
-             (pbolt.isBeam) ? "beam" : "missile", 
+             (pbolt.isBeam) ? "beam" : "missile",
              (pbolt.isTracer) ? " tracer" : "",
-             pbolt.source_x, pbolt.source_y, 
-             pbolt.target_x, pbolt.target_y, 
-             pbolt.type, pbolt.colour, pbolt.flavour, 
+#else
+    snprintf( info, INFO_SIZE, "%s%s (%d,%d) to (%d,%d): ty=%d col=%d flav=%d hit=%d dam=%dd%d",
+             (pbolt.isBeam) ? "beam" : "missile",
+             (pbolt.isTracer) ? " tracer" : "",
+#endif
+             pbolt.source_x, pbolt.source_y,
+             pbolt.target_x, pbolt.target_y,
+             pbolt.type, pbolt.colour, pbolt.flavour,
              pbolt.hit, pbolt.damage.num, pbolt.damage.size );
 
     mpr( info, MSGCH_DIAGNOSTICS );
@@ -1400,6 +1689,21 @@ void fire_beam( struct bolt &pbolt, item_def *item )
             // draw new position
             int drawx = tx - you.x_pos + 18;
             int drawy = ty - you.y_pos + 9;
+
+#ifdef USE_TILE
+        if (Options.use_tile)
+        {
+                int tile_x = tx - you.x_pos + 8;
+                int tile_y = ty - you.y_pos + 8;
+
+                if (tile_beam == -1) tile_beam = tileidx_bolt(pbolt);
+                if (tile_beam != -1 && tile_x>=0 && tile_y>=0
+                     && tile_x<17 && tile_y<17)
+                    TileDrawBolt(tile_x, tile_y, tile_beam);
+        }
+        else
+#endif
+        {
             // bounds check
             if (drawx > 8 && drawx < 26 && drawy > 0 && drawy < 18)
             {
@@ -1407,16 +1711,25 @@ void fire_beam( struct bolt &pbolt, item_def *item )
                     textcolor(random_colour());
                 else
                     textcolor(pbolt.colour);
-
+#ifdef JP
+                if (Options.use_zenkaku)
+                    gotoxy(drawx *2 -18, drawy);
+                else
+#endif
                 gotoxy(drawx, drawy);
-                putch(pbolt.type);
+#ifdef JP
+              if (Options.use_zenkaku)
+              {
+                  writeWChar( &beam_zenkaku[( (char)pbolt.type - ' ' )*2] );
+              }
+              else
+#endif
+                  putch(pbolt.type);
 
 #ifdef LINUX
                 // get curses to update the screen so we can see the beam
                 update_screen();
 #endif
-
-                delay(15);
 
 #ifdef MISSILE_TRAILS_OFF
                 if (!pbolt.isBeam || pbolt.beam_name[0] == '0')
@@ -1424,7 +1737,12 @@ void fire_beam( struct bolt &pbolt, item_def *item )
                                          // is usually enough
 #endif
             }
-
+        }// Not Tile
+#ifdef WINDOWS
+                delay(15);
+#else
+                delay(15);
+#endif
         }
 
         // set some stuff up for the next iteration
@@ -1488,14 +1806,22 @@ int mons_adjust_flavoured( struct monsters *monster, struct bolt &pbolt,
         if (resist > 1)
         {
             if (doFlavouredEffects)
+#ifdef JP
+                simple_monster_message(monster, "には効いていないようだ。");
+#else
                 simple_monster_message(monster, " appears unharmed.");
+#endif
 
             hurted = 0;
         }
         else if (resist == 1)
         {
             if (doFlavouredEffects)
+#ifdef JP
+                simple_monster_message(monster, "は呪文に抵抗した。");
+#else
                 simple_monster_message(monster, " resists.");
+#endif
 
             hurted /= 3;
         }
@@ -1506,12 +1832,20 @@ int mons_adjust_flavoured( struct monsters *monster, struct bolt &pbolt,
                 || monster->type == MONS_SIMULACRUM_LARGE)
             {
                 if (doFlavouredEffects)
+#ifdef JP
+                    simple_monster_message(monster, "は溶けだした！");
+#else
                     simple_monster_message(monster, " melts!");
+#endif
             }
             else
             {
                 if (doFlavouredEffects)
+#ifdef JP
+                    simple_monster_message(monster, "は激しく燃えあがった！");
+#else
                     simple_monster_message(monster, " is burned terribly!");
+#endif
             }
 
             hurted *= 15;
@@ -1525,21 +1859,33 @@ int mons_adjust_flavoured( struct monsters *monster, struct bolt &pbolt,
         if (resist > 1)
         {
             if (doFlavouredEffects)
+#ifdef JP
+                simple_monster_message(monster, "には効いていないようだ。");
+#else
                 simple_monster_message(monster, " appears unharmed.");
+#endif
 
             hurted = 0;
         }
         else if (resist == 1)
         {
             if (doFlavouredEffects)
+#ifdef JP
+                simple_monster_message(monster, "は呪文に抵抗した。");
+#else
                 simple_monster_message(monster, " resists.");
+#endif
 
             hurted /= 3;
         }
         else if (resist < 0)
         {
             if (doFlavouredEffects)
+#ifdef JP
+                simple_monster_message(monster, "は凍りついた！");
+#else
                 simple_monster_message(monster, " is frozen!");
+#endif
 
             hurted *= 15;
             hurted /= 10;
@@ -1550,7 +1896,11 @@ int mons_adjust_flavoured( struct monsters *monster, struct bolt &pbolt,
         if (mons_res_elec(monster) > 0)
         {
             if (doFlavouredEffects)
+#ifdef JP
+                simple_monster_message(monster, "には効いていないようだ。");
+#else
                 simple_monster_message(monster, " appears unharmed.");
+#endif
 
             hurted = 0;
         }
@@ -1561,7 +1911,11 @@ int mons_adjust_flavoured( struct monsters *monster, struct bolt &pbolt,
         if (mons_res_poison(monster) > 0)
         {
             if (doFlavouredEffects)
+#ifdef JP
+                simple_monster_message( monster, "には効いていないようだ。" );
+#else
                 simple_monster_message( monster, " appears unharmed." );
+#endif
 
             hurted = 0;
         }
@@ -1576,9 +1930,13 @@ int mons_adjust_flavoured( struct monsters *monster, struct bolt &pbolt,
         {
             if (doFlavouredEffects)
             {
+#ifdef JP
+                simple_monster_message( monster, "は幾らか耐性を示した。" );
+#else
                 simple_monster_message( monster, " partially resists." );
+#endif
 
-                // Poison arrow can poison any living thing regardless of 
+                // Poison arrow can poison any living thing regardless of
                 // poison resistance. -- bwr
                 const int holy = mons_holiness( monster->type );
                 if (holy == MH_PLANT || holy == MH_NATURAL)
@@ -1597,7 +1955,11 @@ int mons_adjust_flavoured( struct monsters *monster, struct bolt &pbolt,
         if (mons_res_negative_energy(monster) > 0)
         {
             if (doFlavouredEffects)
+#ifdef JP
+                simple_monster_message(monster, "には効いていないようだ。");
+#else
                 simple_monster_message(monster, " appears unharmed.");
+#endif
 
             hurted = 0;
         }
@@ -1607,7 +1969,11 @@ int mons_adjust_flavoured( struct monsters *monster, struct bolt &pbolt,
             if (!doFlavouredEffects)
                 return (hurted);
 
+#ifdef JP
+            simple_monster_message(monster, "は衰弱した。");
+#else
             simple_monster_message(monster, " is drained.");
+#endif
 
             if (one_chance_in(5))
                 monster->hit_dice--;
@@ -1630,7 +1996,11 @@ int mons_adjust_flavoured( struct monsters *monster, struct bolt &pbolt,
             || mons_holiness(monster->type) == MH_HOLY)
         {
             if (doFlavouredEffects)
+#ifdef JP
+                simple_monster_message(monster, "には効いていないようだ。");
+#else
                 simple_monster_message(monster, " appears unharmed.");
+#endif
 
             hurted = 0;
         }
@@ -1643,14 +2013,22 @@ int mons_adjust_flavoured( struct monsters *monster, struct bolt &pbolt,
         if (resist > 0)
         {
             if (doFlavouredEffects)
+#ifdef JP
+                simple_monster_message(monster, "は幾らか耐性を示した。");
+#else
                 simple_monster_message(monster, " partially resists.");
+#endif
 
             hurted /= 2;
         }
         else if (resist < 0)
         {
             if (doFlavouredEffects)
+#ifdef JP
+                simple_monster_message(monster, "は凍りついた！");
+#else
                 simple_monster_message(monster, " is frozen!");
+#endif
 
             hurted *= 13;
             hurted /= 10;
@@ -1664,7 +2042,11 @@ int mons_adjust_flavoured( struct monsters *monster, struct bolt &pbolt,
         if (resist > 0)
         {
             if (doFlavouredEffects)
+#ifdef JP
+                simple_monster_message(monster, "は幾らか耐性を示した。");
+#else
                 simple_monster_message(monster, " partially resists.");
+#endif
 
             hurted /= 2;
         }
@@ -1675,32 +2057,52 @@ int mons_adjust_flavoured( struct monsters *monster, struct bolt &pbolt,
                 || monster->type == MONS_SIMULACRUM_LARGE)
             {
                 if (doFlavouredEffects)
+#ifdef JP
+                    simple_monster_message(monster, "は溶けだした！");
+#else
                     simple_monster_message(monster, " melts!");
+#endif
             }
             else
             {
                 if (doFlavouredEffects)
+#ifdef JP
+                    simple_monster_message(monster, "は激しく燃えあがった！");
+#else
                     simple_monster_message(monster, " is burned terribly!");
+#endif
             }
 
             hurted *= 12;
             hurted /= 10;
         }
     }
+#ifdef JP
+    else if (stricmp(pbolt.beam_name, "地獄の業火") == 0)
+#else
     else if (stricmp(pbolt.beam_name, "hellfire") == 0)
+#endif
     {
         resist = mons_res_fire(monster);
         if (resist > 2)
         {
             if (doFlavouredEffects)
+#ifdef JP
+                simple_monster_message(monster, "には効いていないようだ。");
+#else
                 simple_monster_message(monster, " appears unharmed.");
+#endif
 
             hurted = 0;
         }
         else if (resist > 0)
         {
             if (doFlavouredEffects)
+#ifdef JP
+                simple_monster_message(monster, "は幾らか耐性を示した。");
+#else
                 simple_monster_message(monster, " partially resists.");
+#endif
 
             hurted /= 2;
         }
@@ -1711,12 +2113,20 @@ int mons_adjust_flavoured( struct monsters *monster, struct bolt &pbolt,
                 || monster->type == MONS_SIMULACRUM_LARGE)
             {
                 if (doFlavouredEffects)
+#ifdef JP
+                    simple_monster_message(monster, "は溶けだした！");
+#else
                     simple_monster_message(monster, " melts!");
+#endif
             }
             else
             {
                 if (doFlavouredEffects)
+#ifdef JP
+                    simple_monster_message(monster, "は激しく燃えあがった！");
+#else
                     simple_monster_message(monster, " is burned terribly!");
+#endif
             }
 
             hurted *= 12;       /* hellfire */
@@ -1758,21 +2168,33 @@ bool mass_enchantment( int wh_enchant, int pow, int origin )
 
             if (check_mons_resist_magic( monster, pow ))
             {
+#ifdef JP
+                simple_monster_message(monster, "は呪文に抵抗した。");
+#else
                 simple_monster_message(monster, " resists.");
-                continue; 
+#endif
+                continue;
             }
         }
         else if (mons_holiness(monster->type) == MH_NATURAL)
         {
             if (check_mons_resist_magic( monster, pow ))
             {
+#ifdef JP
+                simple_monster_message(monster, "は呪文に抵抗した。");
+#else
                 simple_monster_message(monster, " resists.");
+#endif
                 continue;
             }
         }
         else  // trying to enchant an unnatural creature doesn't work
         {
+#ifdef JP
+            simple_monster_message(monster, "は影響を受けていない。");
+#else
             simple_monster_message(monster, " is unaffected.");
+#endif
             continue;
         }
 
@@ -1789,15 +2211,27 @@ bool mass_enchantment( int wh_enchant, int pow, int origin )
                 {
                 case ENCH_FEAR:
                     simple_monster_message(monster,
+#ifdef JP
+                                           "は脅えあがったようだ！");
+#else
                                            " looks frightened!");
+#endif
                     break;
                 case ENCH_CONFUSION:
                     simple_monster_message(monster,
+#ifdef JP
+                                           "はひどく混乱したようだ。");
+#else
                                            " looks rather confused.");
+#endif
                     break;
                 case ENCH_CHARM:
                     simple_monster_message(monster,
+#ifdef JP
+                                           "はあなたの意思に服従した。");
+#else
                                            " submits to your will.");
+#endif
                     break;
                 default:
                     // oops, I guess not!
@@ -1835,7 +2269,11 @@ int mons_ench_f2(struct monsters *monster, struct bolt &pbolt)
         // try to remove haste,  if monster is hasted
         if (mons_del_ench(monster, ENCH_HASTE))
         {
+#ifdef JP
+            if (simple_monster_message(monster, "はもはや高速に動いてはいない。"))
+#else
             if (simple_monster_message(monster, " is no longer moving quickly."))
+#endif
                 pbolt.obviousEffect = true;
 
             return (MON_AFFECTED);
@@ -1846,7 +2284,11 @@ int mons_ench_f2(struct monsters *monster, struct bolt &pbolt)
         {
             // put in an exception for fungi, plants and other things you won't
             // notice slow down.
+#ifdef JP
+            if (simple_monster_message(monster, "の動きが鈍重になったようだ。"))
+#else
             if (simple_monster_message(monster, " seems to slow down."))
+#endif
                 pbolt.obviousEffect = true;
         }
         return (MON_AFFECTED);
@@ -1854,7 +2296,11 @@ int mons_ench_f2(struct monsters *monster, struct bolt &pbolt)
     case BEAM_HASTE:                  // 1 = haste
         if (mons_del_ench(monster, ENCH_SLOW))
         {
+#ifdef JP
+            if (simple_monster_message(monster, "から鈍重さが失せた。"))
+#else
             if (simple_monster_message(monster, " is no longer moving slowly."))
+#endif
                 pbolt.obviousEffect = true;
 
             return (MON_AFFECTED);
@@ -1865,7 +2311,11 @@ int mons_ench_f2(struct monsters *monster, struct bolt &pbolt)
         {
             // put in an exception for fungi, plants and other things you won't
             // notice speed up.
+#ifdef JP
+            if (simple_monster_message(monster, "の動作が高速になったようだ。"))
+#else
             if (simple_monster_message(monster, " seems to speed up."))
+#endif
                 pbolt.obviousEffect = true;
         }
         return (MON_AFFECTED);
@@ -1876,12 +2326,20 @@ int mons_ench_f2(struct monsters *monster, struct bolt &pbolt)
             if (monster->hit_points == monster->max_hit_points)
             {
                 if (simple_monster_message(monster,
+#ifdef JP
+                                        "の負傷が完治した！"))
+#else
                                         "'s wounds heal themselves!"))
+#endif
                     pbolt.obviousEffect = true;
             }
             else
             {
+#ifdef JP
+                if (simple_monster_message(monster, "の負傷は幾らか癒された。"))
+#else
                 if (simple_monster_message(monster, " is healed somewhat."))
+#endif
                     pbolt.obviousEffect = true;
             }
         }
@@ -1890,7 +2348,11 @@ int mons_ench_f2(struct monsters *monster, struct bolt &pbolt)
     case BEAM_PARALYSIS:                  /* 3 = paralysis */
         monster->speed_increment = 0;
 
+#ifdef JP
+        if (simple_monster_message(monster, "が突然動かなくなった！"))
+#else
         if (simple_monster_message(monster, " suddenly stops moving!"))
+#endif
             pbolt.obviousEffect = true;
 
         if (grd[monster->x][monster->y] == DNGN_LAVA_X
@@ -1903,10 +2365,17 @@ int mons_ench_f2(struct monsters *monster, struct bolt &pbolt)
                 if (is_near)
                 {
                     strcpy(info, ptr_monam(monster, DESC_CAP_THE));
+#ifdef JP
+                    strcat(info, "は");
+                    strcat(info, (grd[monster->x][monster->y] == DNGN_WATER_X)
+                                ? "水" : "溶岩");
+                    strcat(info, "の中に落ちた！");
+#else
                     strcat(info, " falls into the ");
                     strcat(info, (grd[monster->x][monster->y] == DNGN_WATER_X)
                                 ? "water" : "lava");
                     strcat(info, "!");
+#endif
                     mpr(info);
                 }
 
@@ -1931,7 +2400,11 @@ int mons_ench_f2(struct monsters *monster, struct bolt &pbolt)
         {
             // put in an exception for fungi, plants and other things you won't
             // notice becoming confused.
+#ifdef JP
+            if (simple_monster_message(monster, "は混乱したようだ。"))
+#else
             if (simple_monster_message(monster, " appears confused."))
+#endif
                 pbolt.obviousEffect = true;
         }
         return (MON_AFFECTED);
@@ -1946,9 +2419,15 @@ int mons_ench_f2(struct monsters *monster, struct bolt &pbolt)
             // for visibility of the monster (and its now invisible) -- bwr
             if (mons_near( monster ))
             {
-                snprintf( info, INFO_SIZE, "%s flickers %s", 
-                          buff, player_see_invis() ? "for a moment." 
+#ifdef JP
+                snprintf( info, INFO_SIZE, "%sは%s",
+                          buff, player_see_invis() ? "一瞬だけ明滅した。"
+                                                   : "明滅して、姿を消した！" );
+#else
+                snprintf( info, INFO_SIZE, "%s flickers %s",
+                          buff, player_see_invis() ? "for a moment."
                                                    : "and vanishes!" );
+#endif
                 mpr( info );
             }
 
@@ -1961,7 +2440,11 @@ int mons_ench_f2(struct monsters *monster, struct bolt &pbolt)
         {
             // put in an exception for fungi, plants and other things you won't
             // notice becoming charmed.
+#ifdef JP
+            if (simple_monster_message(monster, "は魅了された。"))
+#else
             if (simple_monster_message(monster, " is charmed."))
+#endif
                 pbolt.obviousEffect = true;
         }
         return (MON_AFFECTED);
@@ -2024,9 +2507,15 @@ void poison_monster( struct monsters *monster, bool fromPlayer, int levels,
     // note: order important here
     if (mons_add_ench( monster, ench ) && new_strength > old_strength)
     {
-        simple_monster_message( monster, 
-                                (old_strength == 0) ? " looks ill." 
+#ifdef JP
+        simple_monster_message( monster,
+                                (old_strength == 0) ? "は毒に冒されたようだ。"
+                                                    : "は更に重く毒に冒されたようだ。" );
+#else
+        simple_monster_message( monster,
+                                (old_strength == 0) ? " looks ill."
                                                     : " looks even sicker." );
+#endif
     }
 
     // finally, take care of deity preferences
@@ -2053,7 +2542,7 @@ void sticky_flame_monster( int mn, bool fromPlayer, int levels )
         return;
 
     // who gets the credit if monster dies of napalm?
-    currentFlame = mons_has_ench( monster, ENCH_STICKY_FLAME_I, 
+    currentFlame = mons_has_ench( monster, ENCH_STICKY_FLAME_I,
                                            ENCH_STICKY_FLAME_IV );
 
     if (currentFlame != ENCH_NONE)
@@ -2096,7 +2585,11 @@ void sticky_flame_monster( int mn, bool fromPlayer, int levels )
 
     // actually do flame
     if (mons_add_ench( monster, currentStrength ))
+#ifdef JP
+        simple_monster_message(monster, "は燃えたぎる液体を浴びた！");
+#else
         simple_monster_message(monster, " is covered in liquid fire!");
+#endif
 
 }                               // end sticky_flame_monster
 
@@ -2235,7 +2728,11 @@ static void beam_explodes(struct bolt &beam, int x, int y)
 
 
     // cloud producer -- POISON BLAST
+#ifdef JP
+    if (strcmp(beam.beam_name, "毒素の放射") == 0)
+#else
     if (strcmp(beam.beam_name, "blast of poison") == 0)
+#endif
     {
         cloud_type = YOU_KILL(beam.thrower) ? CLOUD_POISON : CLOUD_POISON_MON;
         big_cloud( cloud_type, x, y, 0, 7 + random2(5) );
@@ -2243,7 +2740,11 @@ static void beam_explodes(struct bolt &beam, int x, int y)
     }
 
     // cloud producer -- FOUL VAPOR (SWAMP DRAKE?)
+#ifdef JP
+    if (strcmp(beam.beam_name, "穢れた蒸気") == 0)
+#else
     if (strcmp(beam.beam_name, "foul vapour") == 0)
+#endif
     {
         cloud_type = YOU_KILL(beam.thrower) ? CLOUD_STINK : CLOUD_STINK_MON;
         big_cloud( cloud_type, x, y, 0, 9 );
@@ -2251,16 +2752,26 @@ static void beam_explodes(struct bolt &beam, int x, int y)
     }
 
     // special cases - orbs & blasts of cold
+#ifdef JP
+    if (strcmp(beam.beam_name, "電撃の爆裂球") == 0
+        || strcmp(beam.beam_name, "金属片の爆裂球") == 0
+        || strcmp(beam.beam_name, "凍気の嵐") == 0)
+#else
     if (strcmp(beam.beam_name, "orb of electricity") == 0
         || strcmp(beam.beam_name, "metal orb") == 0
         || strcmp(beam.beam_name, "great blast of cold") == 0)
+#endif
     {
         explosion1( beam );
         return;
     }
 
     // cloud producer only -- stinking cloud
+#ifdef JP
+    if (strcmp(beam.beam_name, "瘴気の爆裂球") == 0)
+#else
     if (strcmp(beam.beam_name, "ball of vapour") == 0)
+#endif
     {
         explosion1( beam );
         return;
@@ -2279,15 +2790,27 @@ static bool beam_term_on_target(struct bolt &beam)
         return (true);
 
     // POISON BLAST
+#ifdef JP
+    if (strcmp(beam.beam_name, "毒素の放射") == 0)
+#else
     if (strcmp(beam.beam_name, "blast of poison") == 0)
+#endif
         return (true);
 
     // FOUL VAPOR (SWAMP DRAKE)
+#ifdef JP
+    if (strcmp(beam.beam_name, "穢れた蒸気") == 0)
+#else
     if (strcmp(beam.beam_name, "foul vapour") == 0)
+#endif
         return (true);
 
     // STINKING CLOUD
+#ifdef JP
+    if (strcmp(beam.beam_name, "瘴気の爆裂球") == 0)
+#else
     if (strcmp(beam.beam_name, "ball of vapour") == 0)
+#endif
         return (true);
 
     return (false);
@@ -2541,7 +3064,7 @@ static bool affectsWalls(struct bolt &beam)
     if (beam.flavour == BEAM_DIGGING)
         return (true);
 
-    // Isn't this much nicer than the hack to remove ice bolts, disrupt, 
+    // Isn't this much nicer than the hack to remove ice bolts, disrupt,
     // and needles (just because they were also coloured "white") -- bwr
     if (beam.flavour == BEAM_DISINTEGRATION && beam.damage.num >= 3)
         return (true);
@@ -2578,7 +3101,11 @@ static int affect_wall(struct bolt &beam, int x, int y)
             {
                 if (!silenced(you.x_pos, you.y_pos))
                 {
+#ifdef JP
+                    mpr("あなたは岩を削る騒音を耳にした。");
+#else
                     mpr("You hear a grinding noise.");
+#endif
                     beam.obviousEffect = true;
                 }
 
@@ -2601,7 +3128,11 @@ static int affect_wall(struct bolt &beam, int x, int y)
             grd[ x ][ y ] = DNGN_FLOOR;
             if (!silenced(you.x_pos, you.y_pos))
             {
+#ifdef JP
+                mpr("あなたは岩を削る騒音を耳にした。");
+#else
                 mpr("You hear a grinding noise.");
+#endif
                 beam.obviousEffect = true;
             }
         }
@@ -2614,14 +3145,26 @@ static int affect_wall(struct bolt &beam, int x, int y)
             if (!silenced(you.x_pos, you.y_pos))
             {
                 if (!see_grid( x, y ))
+#ifdef JP
+                    mpr("あなたは耳障りな金切り声を耳にした！");
+#else
                     mpr("You hear a hideous screaming!");
+#endif
                 else
+#ifdef JP
+                    mpr("像は金切り声をあげながら崩壊した！");
+#else
                     mpr("The statue screams as its substance crumbles away!");
+#endif
             }
             else
             {
                 if (see_grid(x,y))
+#ifdef JP
+                    mpr("像は捻れ、振動し、そして崩壊した！");
+#else
                     mpr("The statue twists and shakes as its substance crumbles away!");
+#endif
             }
 
             if (targ_grid == DNGN_SILVER_STATUE)
@@ -2673,7 +3216,11 @@ static int affect_place_clouds(struct bolt &beam, int x, int y)
             if (!silenced(x, y)
                 && !silenced(you.x_pos, you.y_pos))
             {
+#ifdef JP
+                mpr("あなたはジュージューという音を耳にした。");
+#else
                 mpr("You hear a sizzling sound!");
+#endif
             }
 
             delete_cloud( clouty );
@@ -2682,7 +3229,11 @@ static int affect_place_clouds(struct bolt &beam, int x, int y)
     }
 
     // POISON BLAST
+#ifdef JP
+    if (strcmp(beam.beam_name, "毒素の放射") == 0)
+#else
     if (strcmp(beam.beam_name, "blast of poison") == 0)
+#endif
     {
         cloud_type = YOU_KILL(beam.thrower) ? CLOUD_POISON : CLOUD_POISON_MON;
 
@@ -2699,29 +3250,49 @@ static int affect_place_clouds(struct bolt &beam, int x, int y)
     }
 
     // ORB OF ENERGY
+#ifdef JP
+    if (strcmp(beam.beam_name, "エネルギーの爆裂球") == 0)
+#else
     if (strcmp(beam.beam_name, "orb of energy") == 0)
+#endif
         place_cloud( CLOUD_PURP_SMOKE, x, y, random2(5) + 1 );
 
     // GREAT BLAST OF COLD
+#ifdef JP
+    if (strcmp(beam.beam_name, "凍気の嵐") == 0)
+#else
     if (strcmp(beam.beam_name, "great blast of cold") == 0)
+#endif
         place_cloud( CLOUD_COLD, x, y, random2(5) + 3 );
 
 
     // BALL OF STEAM
+#ifdef JP
+    if (strcmp(beam.beam_name, "蒸気の爆裂球") == 0)
+#else
     if (strcmp(beam.beam_name, "ball of steam") == 0)
+#endif
     {
         cloud_type = YOU_KILL(beam.thrower) ? CLOUD_STEAM : CLOUD_STEAM_MON;
         place_cloud( cloud_type, x, y, random2(5) + 2 );
     }
 
     // STICKY FLAME
+#ifdef JP
+    if (strcmp(beam.beam_name, "焼夷の炎") == 0)
+#else
     if (strcmp(beam.beam_name, "sticky flame") == 0)
+#endif
     {
         place_cloud( CLOUD_BLACK_SMOKE, x, y, random2(4) + 2 );
     }
 
     // POISON GAS
+#ifdef JP
+    if (strcmp(beam.beam_name, "猛毒のガス") == 0)
+#else
     if (strcmp(beam.beam_name, "poison gas") == 0)
+#endif
     {
         cloud_type = YOU_KILL(beam.thrower) ? CLOUD_POISON : CLOUD_POISON_MON;
         place_cloud( cloud_type, x, y, random2(4) + 3 );
@@ -2733,7 +3304,7 @@ static int affect_place_clouds(struct bolt &beam, int x, int y)
 // following two functions used with explosions:
 static void affect_place_explosion_clouds(struct bolt &beam, int x, int y)
 {
-    int cloud_type; 
+    int cloud_type;
     int duration;
 
     // first check: FIRE/COLD over water/lava
@@ -2786,7 +3357,7 @@ static void affect_place_explosion_clouds(struct bolt &beam, int x, int y)
             break;
 
         case BEAM_POTION_RANDOM:
-            switch (random2(10)) 
+            switch (random2(10))
             {
             case 0:  cloud_type = CLOUD_FIRE;           break;
             case 1:  cloud_type = CLOUD_STINK;          break;
@@ -2809,18 +3380,30 @@ static void affect_place_explosion_clouds(struct bolt &beam, int x, int y)
     }
 
     // then check for more specific explosion cloud types.
+#ifdef JP
+    if (stricmp(beam.beam_name, "氷の嵐") == 0)
+#else
     if (stricmp(beam.beam_name, "ice storm") == 0)
+#endif
     {
         place_cloud( CLOUD_COLD, x, y, 2 + random2avg(5, 2) );
     }
 
+#ifdef JP
+    if (stricmp(beam.beam_name, "悪臭の雲") == 0)
+#else
     if (stricmp(beam.beam_name, "stinking cloud") == 0)
+#endif
     {
         duration =  1 + random2(4) + random2( (beam.ench_power / 50) + 1 );
         place_cloud( CLOUD_STINK, x, y, duration );
     }
 
+#ifdef JP
+    if (strcmp(beam.beam_name, "火焔の嵐") == 0)
+#else
     if (strcmp(beam.beam_name, "great blast of fire") == 0)
+#endif
     {
         duration = 1 + random2(5) + roll_dice( 2, beam.ench_power / 5 );
 
@@ -2855,7 +3438,11 @@ static void affect_items(struct bolt &beam, int x, int y)
         break;
     }
 
+#ifdef JP
+    if (stricmp(beam.beam_name, "地獄の業火") == 0)
+#else
     if (stricmp(beam.beam_name, "hellfire") == 0)
+#endif
         objs_vulnerable = OBJ_SCROLLS;
 
     if (igrd[x][y] != NON_ITEM)
@@ -2867,13 +3454,21 @@ static void affect_items(struct bolt &beam, int x, int y)
 
             if (objs_vulnerable == OBJ_SCROLLS && see_grid(x,y))
             {
+#ifdef JP
+                mpr("あなたは煙が上がるのを目にした。");
+#else
                 mpr("You see a puff of smoke.");
+#endif
             }
 
             if (objs_vulnerable == OBJ_POTIONS && !silenced(x,y)
                 && !silenced(you.x_pos, you.y_pos))
             {
+#ifdef JP
+                mpr("あなたはガラスの割れる音を耳にした。");
+#else
                 mpr("You hear glass shatter.");
+#endif
             }
         }
     }
@@ -2912,7 +3507,7 @@ static int affect_player( struct bolt &beam )
     // check for tracer
     if (beam.isTracer)
     {
-        // check can see player 
+        // check can see player
         // XXX: note the cheat to allow for ME_ALERT to target the player...
         // replace this with a time since alert system, rather than just
         // peeking to see if the character is still there. -- bwr
@@ -2939,12 +3534,12 @@ static int affect_player( struct bolt &beam )
     // use beamHit,  NOT beam.hit,  for modification of tohit.. geez!
     beamHit = beam.hit;
 
-    if (beam.beam_name[0] != '0') 
+    if (beam.beam_name[0] != '0')
     {
         if (!beam.isExplosion && !beam.aimedAtFeet)
         {
             // BEGIN BEAM/MISSILE
-            int dodge = random2limit( player_evasion(), 40 ) 
+            int dodge = random2limit( player_evasion(), 40 )
                         + random2( you.dex ) / 3 - 2;
 
             if (beam.isBeam)
@@ -2967,9 +3562,15 @@ static int affect_player( struct bolt &beam )
 
                 if (beamHit < dodge)
                 {
+#ifdef JP
+                    strcpy(info, "");
+                    strcat(info, beam.beam_name);
+                    strcat(info, "はあなたに当たらなかった。");
+#else
                     strcpy(info, "The ");
                     strcat(info, beam.beam_name);
                     strcat(info, " misses you.");
+#endif
                     mpr(info);
                     return (0);           // no extra used by miss!
                 }
@@ -2977,21 +3578,25 @@ static int affect_player( struct bolt &beam )
             else
             {
                 // non-beams can be blocked or dodged
-                if (you.equip[EQ_SHIELD] != -1 
+                if (you.equip[EQ_SHIELD] != -1
                         && !beam.aimedAtFeet
                         && player_shield_class() > 0)
                 {
                     int exer = one_chance_in(3) ? 1 : 0;
-                    const int hit = random2( beam.hit * 5 
+                    const int hit = random2( beam.hit * 5
                                         + 10 * you.shield_blocks * you.shield_blocks );
 
-                    const int block = random2(player_shield_class()) 
+                    const int block = random2(player_shield_class())
                                         + (random2(you.dex) / 5) - 1;
 
                     if (hit < block)
                     {
                         you.shield_blocks++;
+#ifdef JP
+                        snprintf( info, INFO_SIZE, "あなたは%sを防御した。",
+#else
                         snprintf( info, INFO_SIZE, "You block the %s.",
+#endif
                                                     beam.beam_name );
                         mpr( info );
 
@@ -3017,9 +3622,15 @@ static int affect_player( struct bolt &beam )
                 // miss message
                 if (beamHit < dodge || you.duration[DUR_DEFLECT_MISSILES])
                 {
+#ifdef JP
+                    strcpy(info, "");
+                    strcat(info, beam.beam_name);
+                    strcat(info, "はあなたに当たらなかった。");
+#else
                     strcpy(info, "The ");
                     strcat(info, beam.beam_name);
                     strcat(info, " misses you.");
+#endif
                     return (0);
                 }
             }
@@ -3028,7 +3639,7 @@ static int affect_player( struct bolt &beam )
     else
     {
         // BEGIN enchantment beam
-        if (beam.flavour != BEAM_HASTE 
+        if (beam.flavour != BEAM_HASTE
             && beam.flavour != BEAM_INVISIBILITY
             && beam.flavour != BEAM_HEALING
             && ((beam.flavour != BEAM_TELEPORT && beam.flavour != BEAM_BANISH)
@@ -3082,7 +3693,11 @@ static int affect_player( struct bolt &beam )
             break;
 
         case BEAM_POLYMORPH:
+#ifdef JP
+            mpr("この呪文は他者にのみ作用する！");
+#else
             mpr("This is polymorph other only!");
+#endif
             beam.obviousEffect = true;
             break;
 
@@ -3094,10 +3709,18 @@ static int affect_player( struct bolt &beam )
         case BEAM_BANISH:
             if (you.level_type == LEVEL_ABYSS)
             {
+#ifdef JP
+                mpr("あなたは罠に捕えられたようだ。");
+#else
                 mpr("You feel trapped.");
+#endif
                 break;
             }
+#ifdef JP
+            mpr("あなたはアビスに突き落とされた！");
+#else
             mpr("You are cast into the Abyss!");
+#endif
             more();
             banished(DNGN_ENTER_ABYSS);
             beam.obviousEffect = true;
@@ -3106,14 +3729,26 @@ static int affect_player( struct bolt &beam )
         case BEAM_PAIN:      // pain
             if (you.is_undead || you.mutation[MUT_TORMENT_RESISTANCE])
             {
+#ifdef JP
+                mpr("あなたは影響を受けない。");
+#else
                 mpr("You are unaffected.");
+#endif
                 break;
             }
 
+#ifdef JP
+            mpr("苦痛があなたの全身を貫いた！");
+#else
             mpr("Pain shoots through your body!");
+#endif
 
             if (!beam.aux_source)
+#ifdef JP
+                beam.aux_source = "神経を冒す苦痛によって";
+#else
                 beam.aux_source = "by nerve-wracking pain";
+#endif
 
             beam_ouch( roll_dice( beam.damage ), beam );
             beam.obviousEffect = true;
@@ -3122,24 +3757,44 @@ static int affect_player( struct bolt &beam )
         case BEAM_DISPEL_UNDEAD:
             if (!you.is_undead)
             {
+#ifdef JP
+                mpr("あなたは影響を受けない。");
+#else
                 mpr("You are unaffected.");
+#endif
                 break;
             }
 
+#ifdef JP
+            mpr( "あなたは激しく痙攣した！" );
+#else
             mpr( "You convulse!" );
+#endif
 
             if (!beam.aux_source)
+#ifdef JP
+                beam.aux_source = "ディスペルによって";
+#else
                 beam.aux_source = "by dispel undead";
+#endif
 
             beam_ouch( roll_dice( beam.damage ), beam );
             beam.obviousEffect = true;
             break;
 
         case BEAM_DISINTEGRATION:
+#ifdef JP
+            mpr("あなたは爆破された！");
+#else
             mpr("You are blasted!");
+#endif
 
             if (!beam.aux_source)
+#ifdef JP
+                beam.aux_source = "分解の矢";
+#else
                 beam.aux_source = "disintegration bolt";
+#endif
 
             beam_ouch( roll_dice( beam.damage ), beam );
             beam.obviousEffect = true;
@@ -3147,7 +3802,11 @@ static int affect_player( struct bolt &beam )
 
         default:
             // _all_ enchantments should be enumerated here!
+#ifdef JP
+            mpr("ソフトウェアバグがあなたの爪先を齧った！");
+#else
             mpr("Software bugs nibble your toes!");
+#endif
             break;
         }               // end of switch (beam.colour)
 
@@ -3160,15 +3819,20 @@ static int affect_player( struct bolt &beam )
 
     // THE BEAM IS NOW GUARANTEED TO BE A NON-ENCHANTMENT WHICH HIT
 
-    snprintf( info, INFO_SIZE, "The %s %s you!", 
+#ifdef JP
+    snprintf( info, INFO_SIZE, "%sがあなた%s！",
+                beam.beam_name, (beam.isExplosion ? "を巻き込んだ" : "に命中した") );
+#else
+    snprintf( info, INFO_SIZE, "The %s %s you!",
                 beam.beam_name, (beam.isExplosion ? "engulfs" : "hits") );
+#endif
     mpr( info );
 
     int hurted = 0;
     int burn_power = (beam.isExplosion) ? 5 : ((beam.isBeam) ? 3 : 2);
 
     // Roll the damage
-    hurted += roll_dice( beam.damage ); 
+    hurted += roll_dice( beam.damage );
 
 #if DEBUG_DIAGNOSTICS
     int roll = hurted;
@@ -3185,7 +3849,11 @@ static int affect_player( struct bolt &beam )
     }
 
 #if DEBUG_DIAGNOSTICS
+#ifdef JP
     snprintf( info, INFO_SIZE, "Player damage: rolled=%d; after AC=%d",
+#else
+    snprintf( info, INFO_SIZE, "Player damage: rolled=%d; after AC=%d",
+#endif
               roll, hurted );
 
     mpr( info, MSGCH_DIAGNOSTICS );
@@ -3206,12 +3874,21 @@ static int affect_player( struct bolt &beam )
     hurted = check_your_resists( hurted, beam.flavour );
 
     // poisoning
+#ifdef JP
+    if (strstr(beam.beam_name, "毒") != NULL
+       && (strstr(beam.beam_name, "毒針") == NULL)
+#else
     if (strstr(beam.beam_name, "poison") != NULL
-        && beam.flavour != BEAM_POISON 
+#endif
+        && beam.flavour != BEAM_POISON
         && beam.flavour != BEAM_POISON_ARROW
         && !player_res_poison())
     {
+#ifdef JP
+        if (hurted || (strstr( beam.beam_name, "吹き矢針" ) != NULL
+#else
         if (hurted || (strstr( beam.beam_name, "needle" ) != NULL
+#endif
                         && random2(100) < 90 - (3 * player_AC())))
         {
             poison_player( 1 + random2(3) );
@@ -3219,7 +3896,11 @@ static int affect_player( struct bolt &beam )
     }
 
     // sticky flame
+#ifdef JP
+    if (strcmp(beam.beam_name, "焼夷の炎") == 0
+#else
     if (strcmp(beam.beam_name, "sticky flame") == 0
+#endif
         && (you.species != SP_MOTTLED_DRACONIAN
             || you.experience_level < 6))
     {
@@ -3228,11 +3909,19 @@ static int affect_player( struct bolt &beam )
     }
 
     // simple cases for scroll burns
+#ifdef JP
+    if (beam.flavour == BEAM_LAVA || stricmp(beam.beam_name, "地獄の業火") == 0)
+#else
     if (beam.flavour == BEAM_LAVA || stricmp(beam.beam_name, "hellfire") == 0)
+#endif
         scrolls_burn( burn_power, OBJ_SCROLLS );
 
     // more complex (geez..)
+#ifdef JP
+    if (beam.flavour == BEAM_FIRE && strcmp(beam.beam_name, "蒸気の爆裂球") != 0)
+#else
     if (beam.flavour == BEAM_FIRE && strcmp(beam.beam_name, "ball of steam") != 0)
+#endif
         scrolls_burn( burn_power, OBJ_SCROLLS );
 
     // potions exploding
@@ -3247,7 +3936,11 @@ static int affect_player( struct bolt &beam )
         scrolls_burn( 2, OBJ_FOOD );
 
 #if DEBUG_DIAGNOSTICS
+#ifdef JP
     snprintf( info, INFO_SIZE, "Damage: %d", hurted );
+#else
+    snprintf( info, INFO_SIZE, "Damage: %d", hurted );
+#endif
     mpr( info, MSGCH_DIAGNOSTICS );
 #endif
 
@@ -3268,7 +3961,11 @@ static int  affect_monster(struct bolt &beam, struct monsters *mon)
         return (0);
 
     // fire storm creates these, so we'll avoid affecting them
+#ifdef JP
+    if (strcmp(beam.beam_name, "火焔の嵐") == 0
+#else
     if (strcmp(beam.beam_name, "great blast of fire") == 0
+#endif
         && mon->type == MONS_FIRE_VORTEX)
     {
         return (0);
@@ -3313,12 +4010,12 @@ static int  affect_monster(struct bolt &beam, struct monsters *mon)
             if (mons_friendly(mon) && YOU_KILL(beam.thrower))
                 naughty(NAUGHTY_ATTACK_FRIEND, 5);
 
-            behaviour_event( mon, ME_ANNOY, 
+            behaviour_event( mon, ME_ANNOY,
                         MON_KILL(beam.thrower) ? beam.beam_source : MHITYOU );
         }
         else
         {
-            behaviour_event( mon, ME_ALERT, 
+            behaviour_event( mon, ME_ALERT,
                         MON_KILL(beam.thrower) ? beam.beam_source : MHITYOU );
         }
 
@@ -3332,11 +4029,19 @@ static int  affect_monster(struct bolt &beam, struct monsters *mon)
         switch(ench_result)
         {
             case MON_RESIST:
+#ifdef JP
+                if (simple_monster_message(mon, "は呪文に抵抗した。"))
+#else
                 if (simple_monster_message(mon, " resists."))
+#endif
                     beam.msgGenerated = true;
                 break;
             case MON_UNAFFECTED:
+#ifdef JP
+                if (simple_monster_message(mon, "は影響を受けていない。"))
+#else
                 if (simple_monster_message(mon, " is unaffected."))
+#endif
                     beam.msgGenerated = true;
                 break;
             default:
@@ -3378,7 +4083,7 @@ static int  affect_monster(struct bolt &beam, struct monsters *mon)
 
 #if DEBUG_DIAGNOSTICS
     const int old_hurt = hurt_final;
-#endif 
+#endif
 
     // check monster resists,  _without_ side effects (since the
     // beam/missile might yet miss!)
@@ -3387,8 +4092,12 @@ static int  affect_monster(struct bolt &beam, struct monsters *mon)
 #if DEBUG_DIAGNOSTICS
     if (!beam.isTracer)
     {
-        snprintf( info, INFO_SIZE, 
-              "Monster: %s; Damage: pre-AC: %d; post-AC: %d; post-resist: %d", 
+        snprintf( info, INFO_SIZE,
+#ifdef JP
+              "Monster: %s; Damage: pre-AC: %d; post-AC: %d; post-resist: %d",
+#else
+              "Monster: %s; Damage: pre-AC: %d; post-AC: %d; post-resist: %d",
+#endif
                   ptr_monam( mon, DESC_PLAIN ), hurt, old_hurt, hurt_final );
 
         mpr( info, MSGCH_DIAGNOSTICS );
@@ -3444,7 +4153,7 @@ static int  affect_monster(struct bolt &beam, struct monsters *mon)
         }
         else
         {
-            behaviour_event(mon, ME_ANNOY, 
+            behaviour_event(mon, ME_ANNOY,
                     MON_KILL(beam.thrower) ? beam.beam_source : MHITYOU );
         }
     }
@@ -3455,11 +4164,19 @@ static int  affect_monster(struct bolt &beam, struct monsters *mon)
         // if the PLAYER cannot see the monster, don't tell them anything!
         if (player_monster_visible( &menv[tid] ) && mons_near(mon))
         {
+#ifdef JP
+            strcpy(info, "");
+            strcat(info, beam.beam_name);
+            strcat(info, "は");
+            strcat(info, ptr_monam(mon, DESC_NOCAP_THE));
+            strcat(info, "から外れた。");
+#else
             strcpy(info, "The ");
             strcat(info, beam.beam_name);
             strcat(info, " misses ");
             strcat(info, ptr_monam(mon, DESC_NOCAP_THE));
             strcat(info, ".");
+#endif
             mpr(info);
         }
         return (0);
@@ -3468,16 +4185,29 @@ static int  affect_monster(struct bolt &beam, struct monsters *mon)
     // the beam hit.
     if (mons_near(mon))
     {
+#ifdef JP
+        strcpy(info, beam.beam_name);
+        strcat(info, "が");
+        if (player_monster_visible( &menv[tid] ))
+            strcat(info, ptr_monam(mon, DESC_NOCAP_THE));
+        else
+            strcat(info, "何者か");
+        strcat(info, beam.isExplosion?"を巻き込んだ":"に命中した");
+#else
         strcpy(info, "The ");
         strcat(info, beam.beam_name);
         strcat(info, beam.isExplosion?" engulfs ":" hits ");
-
         if (player_monster_visible( &menv[tid] ))
             strcat(info, ptr_monam(mon, DESC_NOCAP_THE));
         else
             strcat(info, "something");
+#endif
 
+#ifdef JP
+        strcat(info, "。");
+#else
         strcat(info, ".");
+#endif
         mpr(info);
     }
     else
@@ -3487,9 +4217,15 @@ static int  affect_monster(struct bolt &beam, struct monsters *mon)
         if (!silenced(you.x_pos, you.y_pos) && beam.flavour == BEAM_MISSILE
                 && YOU_KILL(beam.thrower))
         {
+#ifdef JP
+            strcpy(info, "");
+            strcat(info, beam.beam_name);
+            strcat(info, "は何者かに命中した。");
+#else
             strcpy(info, "The ");
             strcat(info, beam.beam_name);
             strcat(info, " hits something.");
+#endif
             mpr(info);
         }
     }
@@ -3514,7 +4250,11 @@ static int  affect_monster(struct bolt &beam, struct monsters *mon)
             print_wounds(mon);
 
         // sticky flame
+#ifdef JP
+        if (strcmp(beam.beam_name, "焼夷の炎") == 0)
+#else
         if (strcmp(beam.beam_name, "sticky flame") == 0)
+#endif
         {
             int levels = 1 + random2( hurt_final ) / 2;
             if (levels > 4)
@@ -3526,15 +4266,24 @@ static int  affect_monster(struct bolt &beam, struct monsters *mon)
 
         /* looks for missiles which aren't poison but
            are poison*ed* */
+#ifdef JP
+        if (strstr(beam.beam_name, "毒") != NULL
+           && (strstr(beam.beam_name, "毒針") == NULL)
+#else
         if (strstr(beam.beam_name, "poison") != NULL
+#endif
             && beam.flavour != BEAM_POISON
             && beam.flavour != BEAM_POISON_ARROW)
         {
+#ifdef JP
+            if (strstr(beam.beam_name, "吹き矢針") != NULL
+#else
             if (strstr(beam.beam_name, "needle") != NULL
+#endif
                 && random2(100) < 90 - (3 * mon->armour_class))
             {
                 poison_monster( mon, YOU_KILL(beam.thrower), 2 );
-            } 
+            }
             else if (random2(hurt_final) - random2(mon->armour_class) > 0)
             {
                 poison_monster( mon, YOU_KILL(beam.thrower) );
@@ -3558,7 +4307,11 @@ static int affect_monster_enchantment(struct bolt &beam, struct monsters *mon)
             return (MON_RESIST);
         }
 
+#ifdef JP
+        if (simple_monster_message(mon, "は少し不確定になったようだ。"))
+#else
         if (simple_monster_message(mon, " looks slightly unstable."))
+#endif
             beam.obviousEffect = true;
 
         monster_teleport(mon, false);
@@ -3587,7 +4340,11 @@ static int affect_monster_enchantment(struct bolt &beam, struct monsters *mon)
 
         if (you.level_type == LEVEL_ABYSS)
         {
+#ifdef JP
+            simple_monster_message(mon, "は一瞬の間ぐらついた。");
+#else
             simple_monster_message(mon, " wobbles for a moment.");
+#endif
         }
         else
             monster_die(mon, KILL_RESET, beam.beam_source);
@@ -3618,7 +4375,11 @@ static int affect_monster_enchantment(struct bolt &beam, struct monsters *mon)
         if (mons_holiness(mon->type) != MH_UNDEAD)
             return (MON_UNAFFECTED);
 
+#ifdef JP
+        if (simple_monster_message(mon, "は激しく痙攣した！"))
+#else
         if (simple_monster_message(mon, " convulses!"))
+#endif
             beam.obviousEffect = true;
 
         hurt_monster( mon, roll_dice( beam.damage ) );
@@ -3626,11 +4387,15 @@ static int affect_monster_enchantment(struct bolt &beam, struct monsters *mon)
         goto deathCheck;
     }
 
-    if (beam.flavour == BEAM_ENSLAVE_UNDEAD 
+    if (beam.flavour == BEAM_ENSLAVE_UNDEAD
         && mons_holiness(mon->type) == MH_UNDEAD)
     {
 #if DEBUG_DIAGNOSTICS
-        snprintf( info, INFO_SIZE, "HD: %d; pow: %d", 
+#ifdef JP
+        snprintf( info, INFO_SIZE, "HD: %d; pow: %d",
+#else
+        snprintf( info, INFO_SIZE, "HD: %d; pow: %d",
+#endif
                   mon->hit_dice, beam.ench_power );
 
         mpr( info, MSGCH_DIAGNOSTICS );
@@ -3639,7 +4404,11 @@ static int affect_monster_enchantment(struct bolt &beam, struct monsters *mon)
         if (check_mons_resist_magic( mon, beam.ench_power ))
             return (MON_RESIST);
 
+#ifdef JP
+        simple_monster_message(mon, "は虜になった。");
+#else
         simple_monster_message(mon, " is enslaved.");
+#endif
         beam.obviousEffect = true;
 
         // wow, permanent enslaving
@@ -3647,11 +4416,15 @@ static int affect_monster_enchantment(struct bolt &beam, struct monsters *mon)
         return (MON_AFFECTED);
     }
 
-    if (beam.flavour == BEAM_ENSLAVE_DEMON 
+    if (beam.flavour == BEAM_ENSLAVE_DEMON
         && mons_holiness(mon->type) == MH_DEMONIC)
     {
 #if DEBUG_DIAGNOSTICS
-        snprintf( info, INFO_SIZE, "HD: %d; pow: %d", 
+#ifdef JP
+        snprintf( info, INFO_SIZE, "HD: %d; pow: %d",
+#else
+        snprintf( info, INFO_SIZE, "HD: %d; pow: %d",
+#endif
                   mon->hit_dice, beam.ench_power );
 
         mpr( info, MSGCH_DIAGNOSTICS );
@@ -3660,7 +4433,11 @@ static int affect_monster_enchantment(struct bolt &beam, struct monsters *mon)
         if (mon->hit_dice * 4 >= random2(beam.ench_power))
             return (MON_RESIST);
 
+#ifdef JP
+        simple_monster_message(mon, "は虜になった。");
+#else
         simple_monster_message(mon, " is enslaved.");
+#endif
         beam.obviousEffect = true;
 
         // wow, permanent enslaving
@@ -3669,12 +4446,12 @@ static int affect_monster_enchantment(struct bolt &beam, struct monsters *mon)
     }
 
     //
-    // Everything past this point must pass this magic resistance test. 
+    // Everything past this point must pass this magic resistance test.
     //
     // Using check_mons_resist_magic here since things like disintegrate
     // are beyond this point. -- bwr
     if (check_mons_resist_magic( mon, beam.ench_power )
-        && beam.flavour != BEAM_HASTE 
+        && beam.flavour != BEAM_HASTE
         && beam.flavour != BEAM_HEALING
         && beam.flavour != BEAM_INVISIBILITY)
     {
@@ -3686,10 +4463,18 @@ static int affect_monster_enchantment(struct bolt &beam, struct monsters *mon)
         if (mons_res_negative_energy( mon ))
             return (MON_UNAFFECTED);
 
+#ifdef JP
+        if (simple_monster_message(mon, "は苦痛に痙攣した！"))
+#else
         if (simple_monster_message(mon, " convulses in agony!"))
+#endif
             beam.obviousEffect = true;
 
+#ifdef JP
+        if (strstr( beam.beam_name, "苦悶" ) != NULL)
+#else
         if (strstr( beam.beam_name, "agony" ) != NULL)
+#endif
         {
             // AGONY
             mon->hit_points = mon->hit_points / 2;
@@ -3708,7 +4493,11 @@ static int affect_monster_enchantment(struct bolt &beam, struct monsters *mon)
 
     if (beam.flavour == BEAM_DISINTEGRATION)     /* disrupt/disintegrate */
     {
+#ifdef JP
+        if (simple_monster_message(mon, "は爆破された。"))
+#else
         if (simple_monster_message(mon, " is blasted."))
+#endif
             beam.obviousEffect = true;
 
         hurt_monster( mon, roll_dice( beam.damage ) );
@@ -3720,12 +4509,16 @@ static int affect_monster_enchantment(struct bolt &beam, struct monsters *mon)
     if (beam.flavour == BEAM_SLEEP)
     {
         if (mons_has_ench( mon, ENCH_SLEEP_WARY ))  // slept recently
-            return (MON_RESIST);        
+            return (MON_RESIST);
 
-        if (mons_holiness(mon->type) != MH_NATURAL) // no unnatural 
+        if (mons_holiness(mon->type) != MH_NATURAL) // no unnatural
             return (MON_UNAFFECTED);
 
+#ifdef JP
+        if (simple_monster_message(mon, "はまどろんでいる……。"))
+#else
         if (simple_monster_message(mon, " looks drowsy..."))
+#endif
             beam.obviousEffect = true;
 
         mon->behaviour = BEH_SLEEP;
@@ -3806,7 +4599,11 @@ static int  range_used_on_hit(struct bolt &beam)
     }
 
     // hellfire stops for nobody!
+#ifdef JP
+    if (strcmp( beam.beam_name, "地獄の業火" ) == 0)
+#else
     if (strcmp( beam.beam_name, "hellfire" ) == 0)
+#endif
         return (0);
 
     // generic explosion
@@ -3846,38 +4643,74 @@ static void explosion1(struct bolt &pbolt)
     // gets burned by it anyway.  :)
     pbolt.msgGenerated = true;
 
+#ifdef JP
+    if (stricmp(pbolt.beam_name, "地獄の業火") == 0)
+#else
     if (stricmp(pbolt.beam_name, "hellfire") == 0)
+#endif
     {
+#ifdef JP
+        seeMsg = "地獄の業火が爆発した！";
+        hearMsg = "You hear a strangely unpleasant explosion.";
+#else
         seeMsg = "The hellfire explodes!";
         hearMsg = "You hear a strangely unpleasant explosion.";
+#endif
 
         pbolt.type = SYM_BURST;
         pbolt.flavour = BEAM_HELLFIRE;
     }
 
+#ifdef JP
+    if (stricmp(pbolt.beam_name, "黄金の炎") == 0)
+#else
     if (stricmp(pbolt.beam_name, "golden flame") == 0)
+#endif
     {
+#ifdef JP
+        seeMsg = "炎が爆発した！";
+        hearMsg = "あなたは奇妙な爆発音を耳にした。";
+#else
         seeMsg = "The flame explodes!";
         hearMsg = "You hear a strange explosion.";
+#endif
 
         pbolt.type = SYM_BURST;
         pbolt.flavour = BEAM_HOLY;     // same as golden flame? [dlb]
     }
 
+#ifdef JP
+    if (stricmp(pbolt.beam_name, "ファイアボール") == 0)
+#else
     if (stricmp(pbolt.beam_name, "fireball") == 0)
+#endif
     {
+#ifdef JP
+        seeMsg = "ファイアボールが爆発した！";
+        hearMsg = "あなたは爆発音を耳にした。";
+#else
         seeMsg = "The fireball explodes!";
         hearMsg = "You hear an explosion.";
+#endif
 
         pbolt.type = SYM_BURST;
         pbolt.flavour = BEAM_FIRE;
         ex_size = 1;
     }
 
+#ifdef JP
+    if (stricmp(pbolt.beam_name, "電撃の爆裂球") == 0)
+#else
     if (stricmp(pbolt.beam_name, "orb of electricity") == 0)
+#endif
     {
+#ifdef JP
+        seeMsg = "電気の球体が爆発した！";
+        hearMsg = "あなたは雷鳴を耳にした！";
+#else
         seeMsg = "The orb of electricity explodes!";
         hearMsg = "You hear a clap of thunder!";
+#endif
 
         pbolt.type = SYM_BURST;
         pbolt.flavour = BEAM_ELECTRICITY;
@@ -3886,52 +4719,112 @@ static void explosion1(struct bolt &pbolt)
         ex_size = 2;
     }
 
+#ifdef JP
+    if (stricmp(pbolt.beam_name, "エネルギーの爆裂球") == 0)
+#else
     if (stricmp(pbolt.beam_name, "orb of energy") == 0)
+#endif
     {
+#ifdef JP
+        seeMsg = "エネルギーの球体が爆発した。";
+        hearMsg = "あなたは爆音を耳にした。";
+#else
         seeMsg = "The orb of energy explodes.";
         hearMsg = "You hear an explosion.";
+#endif
     }
 
+#ifdef JP
+    if (stricmp(pbolt.beam_name, "金属片の爆裂球") == 0)
+#else
     if (stricmp(pbolt.beam_name, "metal orb") == 0)
+#endif
     {
+#ifdef JP
+        seeMsg = "球体が爆発し、致命的な散弾が撒き散らされた！";
+        hearMsg = "あなたは爆音を耳にした。";
+#else
         seeMsg = "The orb explodes into a blast of deadly shrapnel!";
         hearMsg = "You hear an explosion!";
+#endif
 
+#ifdef JP
+        strcpy(pbolt.beam_name, "榴散弾の雨");
+#else
         strcpy(pbolt.beam_name, "blast of shrapnel");
+#endif
         pbolt.type = SYM_ZAP;
         pbolt.flavour = BEAM_FRAG;     // sets it from pure damage to shrapnel (which is absorbed extra by armour)
     }
 
+#ifdef JP
+    if (stricmp(pbolt.beam_name, "凍気の嵐") == 0)
+#else
     if (stricmp(pbolt.beam_name, "great blast of cold") == 0)
+#endif
     {
+#ifdef JP
+        seeMsg = "突風が爆発して凄まじい氷の嵐が巻き起こった！";
+        hearMsg = "あなたは激しい嵐の音を耳にした。";
+#else
         seeMsg = "The blast explodes into a great storm of ice!";
         hearMsg = "You hear a raging storm!";
+#endif
 
+#ifdef JP
+        strcpy(pbolt.beam_name, "氷の嵐");
+#else
         strcpy(pbolt.beam_name, "ice storm");
+#endif
         pbolt.damage.num = 6;
         pbolt.type = SYM_ZAP;
         pbolt.colour = WHITE;
         ex_size = 2 + (random2( pbolt.ench_power ) > 75);
     }
 
+#ifdef JP
+    if (stricmp(pbolt.beam_name, "瘴気の爆裂球") == 0)
+#else
     if (stricmp(pbolt.beam_name, "ball of vapour") == 0)
+#endif
     {
+#ifdef JP
+        seeMsg = "球体は拡散して悪臭を放つ雲になった！";
+        hearMsg = "あなたはゆるやかな『プゥ～』という音を耳にした。.";
+        strcpy(pbolt.beam_name, "悪臭の雲");
+#else
         seeMsg = "The ball expands into a vile cloud!";
         hearMsg = "You hear a gentle \'poof\'.";
         strcpy(pbolt.beam_name, "stinking cloud");
+#endif
     }
 
+#ifdef JP
+    if (stricmp(pbolt.beam_name, "ポーション") == 0)
+#else
     if (stricmp(pbolt.beam_name, "potion") == 0)
+#endif
     {
+#ifdef JP
+        seeMsg = "ポーションが爆発を巻き起こした！";
+        hearMsg = "あなたは爆音を耳にした。";
+        strcpy(pbolt.beam_name, "雲");
+#else
         seeMsg = "The potion explodes!";
         hearMsg = "You hear an explosion!";
         strcpy(pbolt.beam_name, "cloud");
+#endif
     }
 
     if (seeMsg == NULL)
     {
+#ifdef JP
+        seeMsg = "光線が爆裂しソフトウェアバグの雲が発生した！";
+        hearMsg = "あなたは拍手の音を耳にした！";
+#else
         seeMsg = "The beam explodes into a cloud of software bugs!";
         hearMsg = "You hear the sound of one hand clapping!";
+#endif
     }
 
 
@@ -3970,10 +4863,14 @@ void explosion( struct bolt &beam, bool hole_in_the_middle )
     beam.isExplosion = true;
 
 #if DEBUG_DIAGNOSTICS
-    snprintf( info, INFO_SIZE, 
+    snprintf( info, INFO_SIZE,
+#ifdef JP
               "explosion at (%d, %d) : t=%d c=%d f=%d hit=%d dam=%dd%d",
-              beam.target_x, beam.target_y, 
-              beam.type, beam.colour, beam.flavour, 
+#else
+              "explosion at (%d, %d) : t=%d c=%d f=%d hit=%d dam=%dd%d",
+#endif
+              beam.target_x, beam.target_y,
+              beam.type, beam.colour, beam.flavour,
               beam.hit, beam.damage.num, beam.damage.size );
 
     mpr( info, MSGCH_DIAGNOSTICS );
@@ -4021,7 +4918,7 @@ void explosion( struct bolt &beam, bool hole_in_the_middle )
         // do center -- but only if its affected
         if (!hole_in_the_middle)
             explosion_cell(beam, 0, 0, drawing);
- 
+
         // do the rest of it
         for(int rad = 1; rad <= r; rad ++)
         {
@@ -4106,20 +5003,44 @@ static void explosion_cell(struct bolt &beam, int x, int y, bool drawOnly)
     {
         int drawx = realx - you.x_pos + 18;
         int drawy = realy - you.y_pos + 9;
+#ifdef USE_TILE
+        int tile_x = realx - you.x_pos + 8;
+        int tile_y = realy - you.y_pos + 8;
+#endif
 
         if (see_grid(realx, realy) || (realx == you.x_pos && realy == you.y_pos))
         {
-            // bounds check
-            if (drawx > 8 && drawx < 26 && drawy > 0 && drawy < 18)
-            {
-                if (beam.colour == BLACK)
-                    textcolor(random_colour());
-                else
-                    textcolor(beam.colour);
+#ifdef USE_TILE
+        if (Options.use_tile)
+        {
+                if (tile_x>=0 && tile_y>=0 && tile_x<17 && tile_y<17)
+                     TileDrawBolt(tile_x, tile_y, tileidx_bolt(beam));
+        }
+        else
+#endif
+        {
+                // bounds check
+                if (drawx > 8 && drawx < 26 && drawy > 0 && drawy < 18)
+                {
+                    if (beam.colour == BLACK)
+                        textcolor(random_colour());
+                    else
+                        textcolor(beam.colour);
 
-                gotoxy(drawx, drawy);
-                putch('#');
-            }
+#ifdef JP
+                    if (Options.use_zenkaku)
+                        gotoxy(drawx *2 -18, drawy);
+                    else
+#endif
+                        gotoxy(drawx, drawy);
+#ifdef JP
+                    if (Options.use_zenkaku)
+                        writeWChar( &beam_zenkaku[('#' - ' ')*2] );
+                    else
+#endif
+                    putch('#');
+                }
+        }//Not Tile
         }
     }
 }

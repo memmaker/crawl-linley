@@ -66,13 +66,70 @@
 #include "view.h"
 #include "wpn-misc.h"
 
+// from itemname.cc
+extern char id[4][50];
+
 bool drink_fountain(void);
 static void throw_it(struct bolt &pbolt, int throw_2);
 void use_randart(unsigned char item_wield_2);
 static bool enchant_weapon( int which_stat, bool quiet = false );
 static bool enchant_armour( void );
 
-void wield_weapon(bool auto_wield)
+// Rather messy - we've gathered all the can't-wield logic from wield_weapon()
+// here.
+bool can_wield(const item_def& weapon)
+{
+    if (you.berserker)   return false;
+    if (you.attribute[ATTR_TRANSFORMATION] != TRAN_NONE
+            && !can_equip( EQ_WEAPON ))
+        return false;
+
+    if (you.equip[EQ_WEAPON] != -1
+            && you.inv[you.equip[EQ_WEAPON]].base_type == OBJ_WEAPONS
+            && item_cursed( you.inv[you.equip[EQ_WEAPON]] ))
+        return false;
+
+    if (weapon.base_type != OBJ_WEAPONS && weapon.base_type == OBJ_STAVES
+            && you.equip[EQ_SHIELD] != -1)
+        return false;
+
+    if ((you.species < SP_OGRE || you.species > SP_OGRE_MAGE)
+            && mass_item( weapon ) >= 500)
+        return false;
+
+    if ((you.species == SP_HALFLING || you.species == SP_GNOME
+            || you.species == SP_KOBOLD || you.species == SP_SPRIGGAN)
+            && (weapon.sub_type == WPN_GREAT_SWORD
+                || weapon.sub_type == WPN_TRIPLE_SWORD
+                || weapon.sub_type == WPN_GREAT_MACE
+                || weapon.sub_type == WPN_GREAT_FLAIL
+                || weapon.sub_type == WPN_BATTLEAXE
+                || weapon.sub_type == WPN_EXECUTIONERS_AXE
+                || weapon.sub_type == WPN_HALBERD
+                || weapon.sub_type == WPN_GLAIVE
+                || weapon.sub_type == WPN_GIANT_CLUB
+                || weapon.sub_type == WPN_GIANT_SPIKED_CLUB
+                || weapon.sub_type == WPN_SCYTHE))
+        return false;
+
+    if (hands_reqd_for_weapon( weapon.base_type,
+                              weapon.sub_type ) == HANDS_TWO_HANDED
+            && you.equip[EQ_SHIELD] != -1)
+        return false;
+
+        int weap_brand = get_weapon_brand( weapon );
+
+    if ((you.is_undead || you.species == SP_DEMONSPAWN)
+            && (!is_fixed_artefact( weapon )
+                && (weap_brand == SPWPN_HOLY_WRATH
+                    || weap_brand == SPWPN_DISRUPTION)))
+        return false;
+
+    // We can wield this weapon. Phew!
+    return true;
+}
+
+void wield_weapon(bool auto_wield, int slot)
 {
     int item_slot = 0;
     char str_pass[ ITEMNAME_SIZE ];
@@ -93,7 +150,11 @@ void wield_weapon(bool auto_wield)
     {
         if (!can_equip( EQ_WEAPON ))
         {
+#ifdef JP
+            mpr("あなたは現在の姿では武器を振るうことはできない。");
+#else
             mpr("You can't wield anything in your present form.");
+#endif
             return;
         }
     }
@@ -102,13 +163,21 @@ void wield_weapon(bool auto_wield)
         && you.inv[you.equip[EQ_WEAPON]].base_type == OBJ_WEAPONS
         && item_cursed( you.inv[you.equip[EQ_WEAPON]] ))
     {
+#ifdef JP
+        mpr("あなたは武器を手放せないので、取りかえることはできない！");
+#else
         mpr("You can't unwield your weapon to draw a new one!");
+#endif
         return;
     }
 
     if (you.sure_blade)
     {
+#ifdef JP
+        mpr("あなたの武器との結合は消え去っていった。");
+#else
         mpr("The bond with your blade fades away.");
+#endif
         you.sure_blade = 0;
     }
 
@@ -118,14 +187,25 @@ void wield_weapon(bool auto_wield)
             item_slot = 1;
         else
             item_slot = 0;
+        if (slot != -1) item_slot = slot;
     }
 
-    // Prompt if not using the auto swap command, 
+    bool force_unwield = you.inv[item_slot].base_type != OBJ_WEAPONS
+                   && you.inv[item_slot].base_type != OBJ_MISSILES
+                   && you.inv[item_slot].base_type != OBJ_STAVES;
+    // Prompt if not using the auto swap command,
     // or if the swap slot is empty.
-    if (!auto_wield || !is_valid_item( you.inv[item_slot] ))
+    if (!auto_wield || !is_valid_item(you.inv[item_slot]) || force_unwield)
     {
+        if (!auto_wield)
+#ifdef JP
+        item_slot = prompt_invent_item( "どのアイテムを手にしますか？(- で装備解除)",
+#else
         item_slot = prompt_invent_item( "Wield which item (- for none)?",
+#endif
                                         OBJ_WEAPONS, true, true, true, '-' );
+        else
+            item_slot = PROMPT_GOT_SPECIAL;
 
         if (item_slot == PROMPT_ABORT)
         {
@@ -143,10 +223,18 @@ void wield_weapon(bool auto_wield)
                 canned_msg( MSG_EMPTY_HANDED );
                 you.time_taken *= 3;
                 you.time_taken /= 10;
+#ifdef USE_TILE
+                if (Options.use_tile)
+                    TilePlayerRefresh();
+#endif
             }
             else
             {
+#ifdef JP
+                mpr( "あなたの手はすでに空だ。" );
+#else
                 mpr( "You are already empty-handed." );
+#endif
             }
             return;
         }
@@ -154,7 +242,11 @@ void wield_weapon(bool auto_wield)
 
     if (item_slot == you.equip[EQ_WEAPON])
     {
+#ifdef JP
+        mpr("あなたはすでにそれを装備している！");
+#else
         mpr("You are already wielding that!");
+#endif
         return;
     }
 
@@ -162,7 +254,11 @@ void wield_weapon(bool auto_wield)
     {
         if (item_slot == you.equip[i])
         {
+#ifdef JP
+            mpr("あなたは今それを身に着けている！");
+#else
             mpr("You are wearing that object!");
+#endif
             return;
         }
     }
@@ -172,7 +268,11 @@ void wield_weapon(bool auto_wield)
         if (you.inv[item_slot].base_type == OBJ_STAVES
             && you.equip[EQ_SHIELD] != -1)
         {
+#ifdef JP
+            mpr("あなたはそれを盾と一緒には扱えない。");
+#else
             mpr("You can't wield that with a shield.");
+#endif
             return;
         }
 
@@ -186,7 +286,11 @@ void wield_weapon(bool auto_wield)
         if ((you.species < SP_OGRE || you.species > SP_OGRE_MAGE)
             && mass_item( you.inv[item_slot] ) >= 500)
         {
+#ifdef JP
+            mpr("それはあなたが振るうには大きくて重すぎる。");
+#else
             mpr("That's too large and heavy for you to wield.");
+#endif
             return;
         }
 
@@ -205,7 +309,11 @@ void wield_weapon(bool auto_wield)
                 || you.inv[item_slot].sub_type == WPN_GIANT_SPIKED_CLUB
                 || you.inv[item_slot].sub_type == WPN_SCYTHE))
         {
+#ifdef JP
+            mpr("それはあなたが振るうには大きすぎる。");
+#else
             mpr("That's too large for you to wield.");
+#endif
             return;
 
         }
@@ -214,7 +322,11 @@ void wield_weapon(bool auto_wield)
                               you.inv[item_slot].sub_type ) == HANDS_TWO_HANDED
             && you.equip[EQ_SHIELD] != -1)
         {
+#ifdef JP
+            mpr("あなたはそれを盾と一緒には扱えない。");
+#else
             mpr("You can't wield that with a shield.");
+#endif
             return;
         }
 
@@ -222,10 +334,14 @@ void wield_weapon(bool auto_wield)
 
         if ((you.is_undead || you.species == SP_DEMONSPAWN)
             && (!is_fixed_artefact( you.inv[item_slot] )
-                && (weap_brand == SPWPN_HOLY_WRATH 
+                && (weap_brand == SPWPN_HOLY_WRATH
                     || weap_brand == SPWPN_DISRUPTION)))
         {
+#ifdef JP
+            mpr("この武器をあなたが振るうのは不可能だ。");
+#else
             mpr("This weapon will not allow you to wield it.");
+#endif
             you.turn_is_over = 1;
             return;
         }
@@ -241,7 +357,10 @@ void wield_weapon(bool auto_wield)
 
     in_name( item_slot, DESC_INVENTORY_EQUIP, str_pass );
     mpr( str_pass );
-
+#ifdef USE_TILE
+    if (Options.use_tile)
+        TilePlayerRefresh();
+#endif
     // warn player about low str/dex or throwing skill
     wield_warning();
 
@@ -267,7 +386,11 @@ void wield_effects(int item_wield_2, bool showMsgs)
         if (you.inv[item_wield_2].sub_type == MISC_LANTERN_OF_SHADOWS)
         {
             if (showMsgs)
+#ifdef JP
+                mpr("辺りは揺らめく影で満たされた。");
+#else
                 mpr("The area is filled with flickering shadows.");
+#endif
 
             you.special_wield = SPWLD_SHADOW;
         }
@@ -296,7 +419,11 @@ void wield_effects(int item_wield_2, bool showMsgs)
                 || you.religion == GOD_ELYVILON))
         {
             if (showMsgs)
+#ifdef JP
+                mpr("あなたはこのような不浄な武器を用いるべきではない。");
+#else
                 mpr("You really shouldn't be using a nasty item like this.");
+#endif
         }
 
         set_ident_flags( you.inv[item_wield_2], ISFLAG_EQ_WEAPON_MASK );
@@ -306,7 +433,7 @@ void wield_effects(int item_wield_2, bool showMsgs)
             i_dam = randart_wpn_property(you.inv[item_wield_2], RAP_BRAND);
             use_randart(item_wield_2);
         }
-        else 
+        else
         {
             i_dam = you.inv[item_wield_2].special;
         }
@@ -320,108 +447,213 @@ void wield_effects(int item_wield_2, bool showMsgs)
                 {
                 case SPWPN_SWORD_OF_CEREBOV:
                 case SPWPN_FLAMING:
+#ifdef JP
+                    mpr("それは吹きあがる炎に包まれた。");
+#else
                     mpr("It bursts into flame!");
+#endif
                     break;
 
                 case SPWPN_FREEZING:
+#ifdef JP
+                    mpr("それは冷たい蒼に輝いた。");
+#else
                     mpr("It glows with a cold blue light!");
+#endif
                     break;
 
                 case SPWPN_HOLY_WRATH:
+#ifdef JP
+                    mpr("それは神聖な光に柔らかく輝いた。");
+#else
                     mpr("It softly glows with a divine radiance!");
+#endif
                     break;
 
                 case SPWPN_ELECTROCUTION:
+#ifdef JP
+                    mpr("あなたは電光の爆ぜる音を耳にした。");
+#else
                     mpr("You hear the crackle of electricity.");
+#endif
                     break;
 
                 case SPWPN_ORC_SLAYING:
                     mpr((you.species == SP_HILL_ORC)
+#ifdef JP
+                            ? "あなたは突然に自殺への願望を覚えた。"
+                            : "あなたは突然にオークを殺したい欲望を覚えた。");
+#else
                             ? "You feel a sudden desire to commit suicide."
                             : "You feel a sudden desire to kill orcs!");
+#endif
                     break;
 
                 case SPWPN_VENOM:
+#ifdef JP
+                    mpr("それは毒を滴らせはじめた！");
+#else
                     mpr("It begins to drip with poison!");
+#endif
                     break;
 
                 case SPWPN_PROTECTION:
+#ifdef JP
+                    mpr("あなたは護りの力を感じた！");
+#else
                     mpr("You feel protected!");
+#endif
                     break;
 
                 case SPWPN_DRAINING:
+#ifdef JP
+                    mpr("あなたは邪悪な霊気を感じ取った。");
+#else
                     mpr("You sense an unholy aura.");
+#endif
                     break;
 
                 case SPWPN_SPEED:
+#ifdef JP
+                    mpr("あなたの手はうずうずしている！");
+#else
                     mpr("Your hands tingle!");
+#endif
                     break;
 
                 case SPWPN_FLAME:
+#ifdef JP
+                    mpr("それは一瞬赤熱を発した。");
+#else
                     mpr("It glows red for a moment.");
+#endif
                     break;
 
                 case SPWPN_FROST:
+#ifdef JP
+                    mpr("それは霜に覆われている。");
+#else
                     mpr("It is covered in frost.");
+#endif
                     break;
 
                 case SPWPN_VAMPIRICISM:
                     if (!you.is_undead)
+#ifdef JP
+                        mpr("あなたは奇妙な飢えを感じた。");
+#else
                         mpr("You feel a strange hunger.");
+#endif
                     else
+#ifdef JP
+                        mpr("あなたは奇妙な空腹感を感じた。");
+#else
                         mpr("You feel strangely empty.");
+#endif
                     break;
 
                 case SPWPN_DISRUPTION:
+#ifdef JP
+                    mpr("あなたは聖なる霊気を感じた。");
+#else
                     mpr("You sense a holy aura.");
+#endif
                     break;
 
                 case SPWPN_PAIN:
+#ifdef JP
+                    mpr("灼けるような痛みがあなたの腕を駆けのぼった！");
+#else
                     mpr("A searing pain shoots up your arm!");
+#endif
                     break;
 
                 case SPWPN_SINGING_SWORD:
+#ifdef JP
+                    mpr("『謳う剣』は歓喜の唸りを上げた！");
+#else
                     mpr("The Singing Sword hums in delight!");
+#endif
                     break;
 
                 case SPWPN_WRATH_OF_TROG:
+#ifdef JP
+                    mpr("あなたは残忍な衝動を覚えた！");
+#else
                     mpr("You feel bloodthirsty!");
+#endif
                     break;
 
                 case SPWPN_SCYTHE_OF_CURSES:
+#ifdef JP
+                    mpr("戦慄が脊髄まで走った。");
+#else
                     mpr("A shiver runs down your spine.");
+#endif
                     break;
 
                 case SPWPN_GLAIVE_OF_PRUNE:
+#ifdef JP
+                    mpr("あなたはプルーンの気分になった。");
+#else
                     mpr("You feel pruney.");
+#endif
                     break;
 
                 case SPWPN_SCEPTRE_OF_TORMENT:
+#ifdef JP
+                    mpr("恐ろしい灼けるような痛みがあなたの腕を駆けのぼった！");
+#else
                     mpr("A terribly searing pain shoots up your arm!");
+#endif
                     break;
 
                 case SPWPN_SWORD_OF_ZONGULDROK:
+#ifdef JP
+                    mpr("あなたは非常に邪悪な霊気を感じた。");
+#else
                     mpr("You sense an extremely unholy aura.");
+#endif
                     break;
 
                 case SPWPN_SWORD_OF_POWER:
+#ifdef JP
+                    mpr("あなたは凄まじい力の霊気を感じた。");
+#else
                     mpr("You sense an aura of extreme power.");
+#endif
                     break;
 
                 case SPWPN_STAFF_OF_OLGREB:
                     // mummies cannot smell
                     if (you.species != SP_MUMMY)
+#ifdef JP
+                        mpr("あなたは塩素の臭いを嗅いだ。");
+#else
                         mpr("You smell chlorine.");
+#endif
                     else
+#ifdef JP
+                        mpr("杖はうっすらと緑に輝いた。");
+#else
                         mpr("The staff glows slightly green.");
+#endif
                     break;
 
                 case SPWPN_VAMPIRES_TOOTH:
                     // mummies cannot smell, and do not hunger {dlb}
                     if (!you.is_undead)
+#ifdef JP
+                        mpr("あなたは奇妙な飢えに苛まれ、空気から血の臭いを嗅ぎだした。");
+#else
                         mpr("You feel a strange hunger, and smell blood on the air...");
+#endif
                     else
+#ifdef JP
+                        mpr("あなたは奇妙な空腹感を感じた。");
+#else
                         mpr("You feel strangely empty.");
+#endif
                     break;
 
                 default:
@@ -437,7 +669,11 @@ void wield_effects(int item_wield_2, bool showMsgs)
                 break;
 
             case SPWPN_DISTORTION:
+#ifdef JP
+                miscast_effect( SPTYP_TRANSLOCATION, 9, 90, 100, "歪曲の効果" );
+#else
                 miscast_effect( SPTYP_TRANSLOCATION, 9, 90, 100, "a distortion effect" );
+#endif
                 break;
 
             case SPWPN_SINGING_SWORD:
@@ -480,14 +716,22 @@ void wield_effects(int item_wield_2, bool showMsgs)
                 break;
 
             case SPWPN_STAFF_OF_WUCAD_MU:
+#ifdef JP
+                miscast_effect( SPTYP_DIVINATION, 9, 90, 100, "ウカド・ムーの杖" );
+#else
                 miscast_effect( SPTYP_DIVINATION, 9, 90, 100, "the Staff of Wucad Mu" );
+#endif
                 you.special_wield = SPWLD_WUCAD_MU;
                 break;
             }
         }
 
         if (item_cursed( you.inv[item_wield_2] ))
+#ifdef JP
+            mpr("それはあなたの手から離れない！");
+#else
             mpr("It sticks to your hand!");
+#endif
     }
 }                               // end wield_weapon()
 
@@ -504,7 +748,7 @@ bool armour_prompt( const std::string & mesg, int *index )
     ASSERT(index != NULL);
 
     bool  succeeded = false;
-    int   slot;   
+    int   slot;
 
     if (inv_count() < 1)
         canned_msg(MSG_NOTHING_CARRIED);
@@ -519,6 +763,8 @@ bool armour_prompt( const std::string & mesg, int *index )
             *index = slot;
             succeeded = true;
         }
+        else
+            canned_msg(MSG_OK);
     }
 
     return (succeeded);
@@ -544,7 +790,11 @@ void wear_armour(void)
 {
     int armour_wear_2;
 
+#ifdef JP
+    if (!armour_prompt("どのアイテムを身に着けますか？", &armour_wear_2))
+#else
     if (!armour_prompt("Wear which item?", &armour_wear_2))
+#endif
         return;
 
     do_wear_armour( armour_wear_2, false );
@@ -557,7 +807,11 @@ bool do_wear_armour( int item, bool quiet )
     if (!is_valid_item( you.inv[item] ))
     {
         if (!quiet)
+#ifdef JP
+           mpr("あなたはそのようなものは持っていない。");
+#else
            mpr("You don't have any such object.");
+#endif
 
         return (false);
     }
@@ -565,7 +819,11 @@ bool do_wear_armour( int item, bool quiet )
     if (you.inv[item].base_type != OBJ_ARMOUR)
     {
         if (!quiet)
+#ifdef JP
+           mpr("あなたはそれを身に着けることはできない。");
+#else
            mpr("You can't wear that.");
+#endif
 
         return (false);
     }
@@ -573,7 +831,11 @@ bool do_wear_armour( int item, bool quiet )
     if (item == you.equip[EQ_WEAPON])
     {
         if (!quiet)
+#ifdef JP
+           mpr("あなたはそれを手に持ったままだ！");
+#else
            mpr("You are wielding that object!");
+#endif
 
         return (false);
     }
@@ -583,7 +845,11 @@ bool do_wear_armour( int item, bool quiet )
         if (item == you.equip[loopy])
         {
             if (!quiet)
+#ifdef JP
+               mpr("あなたはすでにそれを身に着けている！");
+#else
                mpr("You are already wearing that!");
+#endif
 
             return (false);
         }
@@ -600,7 +866,11 @@ bool do_wear_armour( int item, bool quiet )
                       you.inv[you.equip[EQ_WEAPON]].sub_type) == HANDS_TWO_HANDED)
     {
         if (!quiet)
+#ifdef JP
+           mpr("あなたがそうするには三本目の腕が必要だ！");
+#else
            mpr("You'd need three hands to do that!");
+#endif
 
         return (false);
     }
@@ -610,7 +880,11 @@ bool do_wear_armour( int item, bool quiet )
         if (you.species != SP_NAGA && you.inv[item].plus2 == TBOOT_NAGA_BARDING)
         {
             if (!quiet)
+#ifdef JP
+               mpr("あなたはそれを身に着けことはできない！");
+#else
                mpr("You can't wear that!");
+#endif
 
             return (false);
         }
@@ -618,7 +892,11 @@ bool do_wear_armour( int item, bool quiet )
         if (you.species != SP_CENTAUR && you.inv[item].plus2 == TBOOT_CENTAUR_BARDING)
         {
             if (!quiet)
+#ifdef JP
+               mpr("あなたはそれを身に着けることはできない！");
+#else
                mpr("You can't wear that!");
+#endif
 
             return (false);
         }
@@ -626,7 +904,11 @@ bool do_wear_armour( int item, bool quiet )
         if (player_is_swimming() && you.species == SP_MERFOLK)
         {
             if (!quiet)
+#ifdef JP
+               mpr("あなたは今、脚を持っていない！");
+#else
                mpr("You don't currently have feet!");
+#endif
 
             return (false);
         }
@@ -677,7 +959,11 @@ bool do_wear_armour( int item, bool quiet )
     else if (!can_equip( wh_equip ))
     {
         if (!quiet)
+#ifdef JP
+           mpr("あなたの形態ではそれを着用できない。");
+#else
            mpr("You can't wear that in your present form.");
+#endif
 
         return (false);
     }
@@ -688,7 +974,11 @@ bool do_wear_armour( int item, bool quiet )
         && !is_light_armour( you.inv[item] ))
     {
         if (!quiet)
+#ifdef JP
+           mpr("あなたは重い鎧を着たままでは泳げない！");
+#else
            mpr("You can't swim in that!");
+#endif
 
         return (false);
     }
@@ -707,7 +997,11 @@ bool do_wear_armour( int item, bool quiet )
                     || cmp_helmet_type( you.inv[item], THELM_HELMET ))))
         {
             if (!quiet)
+#ifdef JP
+               mpr("この防具はあなたの体には合わない。");
+#else
                mpr("This armour doesn't fit on your body.");
+#endif
 
             return (false);
         }
@@ -728,7 +1022,11 @@ bool do_wear_armour( int item, bool quiet )
                     || cmp_helmet_type( you.inv[item], THELM_HELMET ))))
         {
             if (!quiet)
+#ifdef JP
+               mpr("この防具はあなたの体には合わない。");
+#else
                mpr("This armour doesn't fit on your body.");
+#endif
 
             return (false);
         }
@@ -752,7 +1050,11 @@ bool do_wear_armour( int item, bool quiet )
         else
         {
             if (!quiet)
+#ifdef JP
+               mpr("あなたはクロークが邪魔で鎧を着ることができない。");
+#else
                mpr("Your cloak prevents you from wearing the armour.");
+#endif
 
             return (false);
         }
@@ -819,7 +1121,11 @@ bool takeoff_armour(int item)
 {
     if (you.inv[item].base_type != OBJ_ARMOUR)
     {
+#ifdef JP
+        mpr("あなたはそれを着てはいない！");
+#else
         mpr("You aren't wearing that!");
+#endif
         return false;
     }
 
@@ -830,7 +1136,11 @@ bool takeoff_armour(int item)
             if (item == you.equip[loopy])
             {
                 in_name(item, DESC_CAP_YOUR, info);
+#ifdef JP
+                strcat(info, "はあなたの体から離れない！");
+#else
                 strcat(info, " is stuck to your body!");
+#endif
                 mpr(info);
                 return false;
             }
@@ -855,14 +1165,22 @@ bool takeoff_armour(int item)
             }
             else
             {
+#ifdef JP
+                mpr("あなたはクロークが邪魔で鎧を脱ぐことができない。");
+#else
                 mpr("Your cloak prevents you from removing the armour.");
+#endif
                 return false;
             }
         }
 
         if (item != you.equip[EQ_BODY_ARMOUR])
         {
+#ifdef JP
+            mpr("あなたはそれを身に着けてはいない！");
+#else
             mpr("You aren't wearing that!");
+#endif
             return false;
         }
 
@@ -877,7 +1195,11 @@ bool takeoff_armour(int item)
         case ARM_SHIELD:
             if (item != you.equip[EQ_SHIELD])
             {
+#ifdef JP
+                mpr("あなたはそれを身に着けてはいない！");
+#else
                 mpr("You aren't wearing that!");
+#endif
                 return false;
             }
             break;
@@ -885,7 +1207,11 @@ bool takeoff_armour(int item)
         case ARM_CLOAK:
             if (item != you.equip[EQ_CLOAK])
             {
+#ifdef JP
+                mpr("あなたはそれを身に着けてはいない！");
+#else
                 mpr("You aren't wearing that!");
+#endif
                 return false;
             }
             break;
@@ -893,7 +1219,11 @@ bool takeoff_armour(int item)
         case ARM_HELMET:
             if (item != you.equip[EQ_HELMET])
             {
+#ifdef JP
+                mpr("あなたはそれを身に着けてはいない！");
+#else
                 mpr("You aren't wearing that!");
+#endif
                 return false;
             }
             break;
@@ -902,7 +1232,11 @@ bool takeoff_armour(int item)
         case ARM_GLOVES:
             if (item != you.equip[EQ_GLOVES])
             {
+#ifdef JP
+                mpr("あなたはそれを身に着けてはいない！");
+#else
                 mpr("You aren't wearing that!");
+#endif
                 return false;
             }
             break;
@@ -910,7 +1244,11 @@ bool takeoff_armour(int item)
         case ARM_BOOTS:
             if (item != you.equip[EQ_BOOTS])
             {
+#ifdef JP
+                mpr("あなたはそれを身に着けてはいない！");
+#else
                 mpr("You aren't wearing that!");
+#endif
                 return false;
             }
             break;
@@ -948,7 +1286,11 @@ void throw_anything(void)
         return;
     }
 
+#ifdef JP
+    throw_slot = prompt_invent_item( "どのアイテムを投げますか？", OBJ_MISSILES );
+#else
     throw_slot = prompt_invent_item( "Throw which item?", OBJ_MISSILES );
+#endif
     if (throw_slot == PROMPT_ABORT)
     {
         canned_msg( MSG_OK );
@@ -958,7 +1300,11 @@ void throw_anything(void)
     if (throw_slot == you.equip[EQ_WEAPON]
              && (item_cursed( you.inv[you.equip[EQ_WEAPON]] )))
     {
+#ifdef JP
+        mpr("それはあなたの手から離れない！");
+#else
         mpr("That thing is stuck to your hand!");
+#endif
         return;
     }
     else
@@ -967,7 +1313,11 @@ void throw_anything(void)
         {
             if (throw_slot == you.equip[loopy])
             {
+#ifdef JP
+                mpr("あなたはそれを身に着けてしまっている！");
+#else
                 mpr("You are wearing that object!");
+#endif
                 return;
             }
         }
@@ -1035,7 +1385,7 @@ int get_fire_item_index( void )
         {
         case FIRE_LAUNCHER:
             // check if we have ammo for a wielded launcher:
-            if (weapon != -1 
+            if (weapon != -1
                 && you.inv[ weapon ].base_type == OBJ_WEAPONS
                 && launches_things( you.inv[ weapon ].sub_type ))
             {
@@ -1097,12 +1447,20 @@ void shoot_thing(void)
 
     if (item == ENDOFPACK)
     {
+#ifdef JP
+        mpr("飛び道具にふさわしいものを持っていない。");
+#else
         mpr("No suitable missiles.");
+#endif
         return;
     }
 
     in_name( item, DESC_INVENTORY_EQUIP, str_pass );
+#ifdef JP
+    snprintf( info, INFO_SIZE, "射撃: %s", str_pass );
+#else
     snprintf( info, INFO_SIZE, "Firing: %s", str_pass );
+#endif
     mpr( info );
 
     throw_it( beam, item );
@@ -1127,7 +1485,7 @@ static void throw_it(struct bolt &pbolt, int throw_2)
     bool thrown = false;        // item is sensible thrown item
 
     // Making a copy of the item: changed only for venom launchers
-    item_def item = you.inv[throw_2];  
+    item_def item = you.inv[throw_2];
     item.quantity = 1;
 
     char str_pass[ ITEMNAME_SIZE ];
@@ -1176,7 +1534,8 @@ static void throw_it(struct bolt &pbolt, int throw_2)
     case OBJ_BOOKS:      pbolt.type = SYM_OBJECT;  break;
         // this does not seem right, but value was 11 {dlb}
         // notice how the .type does not match the class -- hmmm... {dlb}
-    case OBJ_STAVES:      pbolt.type = SYM_CHUNK;  break;
+    case OBJ_STAVES:     pbolt.type = SYM_CHUNK;   break;
+    //default:             pbolt.type = SYM_ZAP  ;   break;
     }
 
     pbolt.source_x = you.x_pos;
@@ -1256,7 +1615,7 @@ static void throw_it(struct bolt &pbolt, int throw_2)
         // check for matches;  dwarven,elven,orcish
         if (!cmp_equip_race( you.inv[you.equip[EQ_WEAPON]], 0 ))
         {
-            if (get_equip_race( you.inv[you.equip[EQ_WEAPON]] ) 
+            if (get_equip_race( you.inv[you.equip[EQ_WEAPON]] )
                         == get_equip_race( item ))
             {
                 baseHit += 1;
@@ -1415,19 +1774,31 @@ static void throw_it(struct bolt &pbolt, int throw_2)
             item_name( item, DESC_PLAIN, str_pass );
             strcpy( pbolt.beam_name, str_pass );
         }
-        
+
         // Note that bow_brand is known since the bow is equiped.
         if ((bow_brand == SPWPN_FLAME || ammo_brand == SPMSL_FLAME)
             && ammo_brand != SPMSL_ICE && bow_brand != SPWPN_FROST)
         {
             baseDam += 1 + random2(5);
             pbolt.flavour = BEAM_FIRE;
+#ifdef JP
+            strcpy(pbolt.beam_name, "");
+#else
             strcpy(pbolt.beam_name, "bolt of ");
+#endif
 
             if (poisoned)
+#ifdef JP
+                strcat(pbolt.beam_name, "毒の塗られた");
+#else
                 strcat(pbolt.beam_name, "poison ");
+#endif
 
+#ifdef JP
+            strcat(pbolt.beam_name, "炎の矢");
+#else
             strcat(pbolt.beam_name, "flame");
+#endif
             pbolt.colour = RED;
             pbolt.type = SYM_BOLT;
             pbolt.thrower = KILL_YOU_MISSILE;
@@ -1446,12 +1817,24 @@ static void throw_it(struct bolt &pbolt, int throw_2)
         {
             baseDam += 1 + random2(5);
             pbolt.flavour = BEAM_COLD;
+#ifdef JP
+            strcpy(pbolt.beam_name, "");
+#else
             strcpy(pbolt.beam_name, "bolt of ");
+#endif
 
             if (poisoned)
+#ifdef JP
+                strcat(pbolt.beam_name, "毒の塗られた");
+#else
                 strcat(pbolt.beam_name, "poison ");
+#endif
 
+#ifdef JP
+            strcat(pbolt.beam_name, "冷気の矢");
+#else
             strcat(pbolt.beam_name, "frost");
+#endif
             pbolt.colour = WHITE;
             pbolt.type = SYM_BOLT;
             pbolt.thrower = KILL_YOU_MISSILE;
@@ -1486,10 +1869,18 @@ static void throw_it(struct bolt &pbolt, int throw_2)
         {
             set_ident_flags(you.inv[you.equip[EQ_WEAPON]], ISFLAG_KNOW_PLUSES);
 
+#ifdef JP
+            strcpy(info, "あなたは");
+#else
             strcpy(info, "You are wielding ");
+#endif
             in_name(you.equip[EQ_WEAPON], DESC_NOCAP_A, str_pass);
             strcat(info, str_pass);
+#ifdef JP
+            strcat(info, "を手にしている。");
+#else
             strcat(info, ".");
+#endif
             mpr(info);
 
             more();
@@ -1629,8 +2020,12 @@ static void throw_it(struct bolt &pbolt, int throw_2)
     }
 
 #if DEBUG_DIAGNOSTICS
-    snprintf( info, INFO_SIZE, 
+    snprintf( info, INFO_SIZE,
+#ifdef JP
               "H:%d+%d;a%dl%d.  D:%d+%d;a%dl%d -> %d,%dd%d",
+#else
+              "H:%d+%d;a%dl%d.  D:%d+%d;a%dl%d -> %d,%dd%d",
+#endif
               baseHit, exHitBonus, ammoHitBonus, lnchHitBonus,
               baseDam, exDamBonus, ammoDamBonus, lnchDamBonus,
               pbolt.hit, pbolt.damage.num, pbolt.damage.size );
@@ -1645,23 +2040,44 @@ static void throw_it(struct bolt &pbolt, int throw_2)
         unwield_item( throw_2 );
         you.equip[EQ_WEAPON] = -1;
         canned_msg( MSG_EMPTY_HANDED );
+    item = you.inv[throw_2]; //投射用のアイテムコピーを更新
     }
 
     // create message
     if (launched)
+#ifdef JP
+        strcpy(info, "あなたは");
+#else
         strcpy(info, "You shoot ");
+#endif
     else
+#ifdef JP
+        strcpy(info, "あなたは");
+#else
         strcpy(info, "You throw ");
-
+#endif
     item_name( item,  DESC_NOCAP_A, str_pass );
-
     strcat(info, str_pass);
+
+#ifdef JP
+    strcat(info, "を");
+    if (launched)
+    strcat(info, "撃った。");
+    else
+    strcat(info, "投げた。");
+#else
     strcat(info, ".");
+#endif
     mpr(info);
 
     // ensure we're firing a 'missile'-type beam
     pbolt.isBeam = false;
     pbolt.isTracer = false;
+
+    // mark this item as thrown if it's a missile, so that we'll pick it up
+    // when we walk over it.
+    if (wepClass == OBJ_MISSILES || wepClass == OBJ_WEAPONS)
+        item.flags |= ISFLAG_THROWN;
 
     // using copy, since the launched item might be differect (venom blowgun)
     fire_beam( pbolt, &item );
@@ -1676,6 +2092,10 @@ static void throw_it(struct bolt &pbolt, int throw_2)
     alert_nearby_monsters();
 
     you.turn_is_over = 1;
+#ifdef USE_TILE
+    if (Options.use_tile)
+        TilePlayerRefresh();
+#endif
 }                               // end throw_it()
 
 void puton_ring(void)
@@ -1696,7 +2116,11 @@ void puton_ring(void)
         return;
     }
 
+#ifdef JP
+    item_slot = prompt_invent_item( "どの宝石を身に着けますか？",
+#else
     item_slot = prompt_invent_item( "Put on which piece of jewellery?",
+#endif
                                     OBJ_JEWELLERY );
 
     if (item_slot == PROMPT_ABORT)
@@ -1709,13 +2133,21 @@ void puton_ring(void)
         || item_slot == you.equip[EQ_RIGHT_RING]
         || item_slot == you.equip[EQ_AMULET])
     {
+#ifdef JP
+        mpr("あなたはすでにそれを身に着けている！");
+#else
         mpr("You've already put that on!");
+#endif
         return;
     }
 
     if (item_slot == you.equip[EQ_WEAPON])
     {
+#ifdef JP
+        mpr("あなたはそれを手に持ったままだ。");
+#else
         mpr("You are wielding that object.");
+#endif
         return;
     }
 
@@ -1723,7 +2155,11 @@ void puton_ring(void)
     {
         //jmf: let's not take our inferiority complex out on players, eh? :-p
         //mpr("You're sadly mistaken if you consider that jewellery.")
+#ifdef JP
+        mpr("装身具には宝石類しか身につけることができない。");
+#else
         mpr("You can only put on jewellery.");
+#endif
         return;
     }
 
@@ -1734,7 +2170,11 @@ void puton_ring(void)
         if (you.equip[EQ_GLOVES] != -1
             && item_cursed( you.inv[you.equip[EQ_GLOVES]] ))
         {
+#ifdef JP
+            mpr("あなたは手袋を脱げないので、指輪を嵌めることはできない！");
+#else
             mpr("You can't take your gloves off to put on a ring!");
+#endif
             return;
         }
 
@@ -1743,17 +2183,29 @@ void puton_ring(void)
             && you.equip[EQ_RIGHT_RING] != -1)
         {
             // and you are trying to wear body you.equip.
+#ifdef JP
+            mpr("あなたはすでに両手に指輪を嵌めている。");
+#else
             mpr("You've already put a ring on each hand.");
+#endif
             return;
         }
     }
     else if (you.equip[EQ_AMULET] != -1)
     {
+#ifdef JP
+        strcpy(info, "あなたはすでに護符を身に着けている。");
+#else
         strcpy(info, "You are already wearing an amulet.");
+#endif
 
         if (one_chance_in(20))
         {
+#ifdef JP
+            strcat(info, "なかなか素敵ですよ。");
+#else
             strcat(info, " And I must say it looks quite fetching.");
+#endif
         }
 
         mpr(info);
@@ -1772,6 +2224,26 @@ void puton_ring(void)
         hand_used = 2;
     else if (you.equip[EQ_LEFT_RING] == -1 && you.equip[EQ_RIGHT_RING] == -1)
     {
+#ifdef JP
+        /*
+        mpr("どちらの手の指に嵌めますか？(l:左手 r:右手)", MSGCH_PROMPT);
+
+        int keyin = get_ch();
+
+        if (keyin == 'l')
+            hand_used = 0;
+        else if (keyin == 'r')
+            hand_used = 1;
+        else if (keyin == ESCAPE)
+            return;
+        else
+        {
+            mpr("あなたにはそんな手はない。");
+            return;
+        }
+        */
+        hand_used = 0; //日本語版では左右を問わず左手から順に指輪を装備させる
+#else
         mpr("Put on which hand (l or r)?", MSGCH_PROMPT);
 
         int keyin = get_ch();
@@ -1787,11 +2259,15 @@ void puton_ring(void)
             mpr("You don't have such a hand!");
             return;
         }
+#endif
     }
 
     you.equip[ EQ_LEFT_RING + hand_used ] = item_slot;
 
     int ident = ID_TRIED_TYPE;
+
+    if (id[ IDTYPE_JEWELLERY ][you.inv[you.equip[EQ_LEFT_RING + hand_used]].sub_type] == ID_KNOWN_TYPE)
+        ident = ID_KNOWN_TYPE;
 
     switch (you.inv[item_slot].sub_type)
     {
@@ -1821,7 +2297,11 @@ void puton_ring(void)
     case RING_INVISIBILITY:
         if (!you.invis)
         {
+#ifdef JP
+            mpr("あなたは一瞬透明になった。");
+#else
             mpr("You become transparent for a moment.");
+#endif
             ident = ID_KNOWN_TYPE;
         }
         break;
@@ -1856,7 +2336,11 @@ void puton_ring(void)
         break;
 
     case RING_LEVITATION:
+#ifdef JP
+        mpr("あなたは浮力を感じた。");
+#else
         mpr("You feel buoyant.");
+#endif
         ident = ID_KNOWN_TYPE;
         break;
 
@@ -1866,7 +2350,11 @@ void puton_ring(void)
         break;
 
     case AMU_RAGE:
+#ifdef JP
+        mpr("あなたは誰かをずたずたに切り刻みたいという衝動を覚えた。");
+#else
         mpr("You feel a brief urge to hack something to bits.");
+#endif
         ident = ID_KNOWN_TYPE;
         break;
     }
@@ -1879,18 +2367,23 @@ void puton_ring(void)
         use_randart(item_slot);
     else
     {
-        set_ident_type( you.inv[item_slot].base_type, 
+        set_ident_type( you.inv[item_slot].base_type,
                         you.inv[item_slot].sub_type, ident );
     }
 
-    if (ident == ID_KNOWN_TYPE)
+    if ( (ident == ID_KNOWN_TYPE) && !is_random_artefact( you.inv[item_slot] ) )
         set_ident_flags( you.inv[item_slot], ISFLAG_EQ_JEWELLERY_MASK );
 
     if (item_cursed( you.inv[item_slot] ))
     {
-        snprintf( info, INFO_SIZE, 
-                  "Oops, that %s feels deathly cold.", (is_amulet) ? "amulet" 
+        snprintf( info, INFO_SIZE,
+#ifdef JP
+                  "うわ！この%sは凄まじく冷たい！"   , (is_amulet) ? "護符"
+                                                                   : "指輪" );
+#else
+                  "Oops, that %s feels deathly cold.", (is_amulet) ? "amulet"
                                                                    : "ring" );
+#endif
         mpr(info);
     }
 
@@ -1910,7 +2403,11 @@ void remove_ring(void)
     if (you.equip[EQ_LEFT_RING] == -1 && you.equip[EQ_RIGHT_RING] == -1
         && you.equip[EQ_AMULET] == -1)
     {
+#ifdef JP
+        mpr("あなたは指輪も護符も身に着けていない。");
+#else
         mpr("You aren't wearing any rings or amulets.");
+#endif
         return;
     }
 
@@ -1920,11 +2417,15 @@ void remove_ring(void)
         return;
     }
 
-    if (you.equip[EQ_GLOVES] != -1 
+    if (you.equip[EQ_GLOVES] != -1
         && item_cursed( you.inv[you.equip[EQ_GLOVES]] )
         && you.equip[EQ_AMULET] == -1)
     {
+#ifdef JP
+        mpr("あなたは手袋を脱げないので、指輪を外すことはできない！");
+#else
         mpr("You can't take your gloves off to remove any rings!");
+#endif
         return;
     }
 
@@ -1948,8 +2449,12 @@ void remove_ring(void)
 
     if (hand_used == 10)
     {
+#ifdef JP
+        int equipn = prompt_invent_item( "どの装身具を外しますか？",
+#else
         int equipn = prompt_invent_item( "Remove which piece of jewellery?",
-                                         OBJ_JEWELLERY ); 
+#endif
+                                         OBJ_JEWELLERY );
 
         if (equipn == PROMPT_ABORT)
         {
@@ -1959,7 +2464,11 @@ void remove_ring(void)
 
         if (you.inv[equipn].base_type != OBJ_JEWELLERY)
         {
+#ifdef JP
+            mpr("それは装身具ではない。");
+#else
             mpr("That isn't a piece of jewellery.");
+#endif
             return;
         }
 
@@ -1971,38 +2480,63 @@ void remove_ring(void)
             hand_used = 2;
         else
         {
+#ifdef JP
+            mpr("あなたはそれを身に着けてはいない。");
+#else
             mpr("You aren't wearing that.");
+#endif
             return;
         }
     }
 
-    if (you.equip[EQ_GLOVES] != -1 
+    if (you.equip[EQ_GLOVES] != -1
         && item_cursed( you.inv[you.equip[EQ_GLOVES]] )
         && (hand_used == 0 || hand_used == 1))
     {
+#ifdef JP
+        mpr("あなたは手袋を脱げないので、指輪を外すことはできない！");
+#else
         mpr("You can't take your gloves off to remove any rings!");
+#endif
         return;
     }
 
     if (you.equip[hand_used + 7] == -1)
     {
+#ifdef JP
+        mpr("あなたが本当にそうしたいとは思えない。");
+#else
         mpr("I don't think you really meant that.");
+#endif
         return;
     }
 
     if (item_cursed( you.inv[you.equip[hand_used + 7]] ))
     {
+#ifdef JP
+        mpr("それはあなたから離れない！");
+#else
         mpr("It's stuck to you!");
+#endif
 
         set_ident_flags( you.inv[you.equip[hand_used + 7]], ISFLAG_KNOW_CURSE );
         return;
     }
 
+#ifdef JP
+    strcpy(info, "あなたは");
+    in_name(you.equip[hand_used + 7], DESC_PLAIN, str_pass);
+#else
     strcpy(info, "You remove ");
     in_name(you.equip[hand_used + 7], DESC_NOCAP_YOUR, str_pass);
+#endif
 
     strcat(info, str_pass);
+#ifdef JP
+    strcat(info, "を外した。");
+#else
     strcat(info, ".");
+#endif
     mpr(info);
 
     // I'll still use ring_wear_2 here.
@@ -2104,7 +2638,11 @@ void zap_wand(void)
         return;
     }
 
-    item_slot = prompt_invent_item( "Zap which item?", OBJ_WANDS );    
+#ifdef JP
+    item_slot = prompt_invent_item( "どのアイテムを振りますか？", OBJ_WANDS );
+#else
+    item_slot = prompt_invent_item( "Zap which item?", OBJ_WANDS );
+#endif
     if (item_slot == PROMPT_ABORT)
     {
         canned_msg( MSG_OK );
@@ -2115,6 +2653,7 @@ void zap_wand(void)
         || you.inv[item_slot].plus < 1)
     {
         canned_msg(MSG_NOTHING_HAPPENS);
+        set_ident_flags( you.inv[item_slot], ISFLAG_KNOW_PLUSES );
         you.turn_is_over = 1;
         return;
     }
@@ -2127,7 +2666,7 @@ void zap_wand(void)
         {
             targ_mode = TARG_FRIEND;
         }
-        else 
+        else
         {
             targ_mode = TARG_ENEMY;
         }
@@ -2183,10 +2722,10 @@ void zap_wand(void)
 
     if (beam.obviousEffect == 1 || you.inv[item_slot].sub_type == WAND_FIREBALL)
     {
-        if (get_ident_type( you.inv[item_slot].base_type, 
+        if (get_ident_type( you.inv[item_slot].base_type,
                             you.inv[item_slot].sub_type ) != ID_KNOWN_TYPE)
         {
-            set_ident_type( you.inv[item_slot].base_type, 
+            set_ident_type( you.inv[item_slot].base_type,
                             you.inv[item_slot].sub_type, ID_KNOWN_TYPE );
 
             in_name(item_slot, DESC_INVENTORY_EQUIP, str_pass);
@@ -2199,25 +2738,34 @@ void zap_wand(void)
     }
     else
     {
-        set_ident_type( you.inv[item_slot].base_type, 
+        set_ident_type( you.inv[item_slot].base_type,
                         you.inv[item_slot].sub_type, ID_TRIED_TYPE );
     }
 
     you.inv[item_slot].plus--;
 
-    if (get_ident_type( you.inv[item_slot].base_type, 
-                        you.inv[item_slot].sub_type ) == ID_KNOWN_TYPE  
+    if (get_ident_type( you.inv[item_slot].base_type,
+                        you.inv[item_slot].sub_type ) == ID_KNOWN_TYPE
         && (item_ident( you.inv[item_slot], ISFLAG_KNOW_PLUSES )
             || you.skills[SK_EVOCATIONS] > 5 + random2(15)))
     {
         if (item_not_ident( you.inv[item_slot], ISFLAG_KNOW_PLUSES ))
         {
+#ifdef JP
+            mpr("魔法のアイテムに関する技能から、この道具の残り使用回数が判明した。");
+#else
             mpr("Your skill with magical items lets you calculate the power of this device...");
+#endif
         }
 
+#ifdef JP
+        snprintf( info, INFO_SIZE, "このワンドの使用回数は残り%d回だ。",
+                 you.inv[item_slot].plus );
+#else
         snprintf( info, INFO_SIZE, "This wand has %d charge%s left.",
-                 you.inv[item_slot].plus, 
+                 you.inv[item_slot].plus,
                  (you.inv[item_slot].plus == 1) ? "" : "s" );
+#endif
 
         mpr(info);
         set_ident_flags( you.inv[item_slot], ISFLAG_KNOW_PLUSES );
@@ -2235,7 +2783,11 @@ void drink(void)
 
     if (you.is_undead == US_UNDEAD)
     {
+#ifdef JP
+        mpr("あなたは飲むことができない。");
+#else
         mpr("You can't drink.");
+#endif
         return;
     }
 
@@ -2258,7 +2810,11 @@ void drink(void)
         return;
     }
 
+#ifdef JP
+    item_slot = prompt_invent_item( "どのアイテムを飲みますか？", OBJ_POTIONS );
+#else
     item_slot = prompt_invent_item( "Drink which item?", OBJ_POTIONS );
+#endif
     if (item_slot == PROMPT_ABORT)
     {
         canned_msg( MSG_OK );
@@ -2267,7 +2823,11 @@ void drink(void)
 
     if (you.inv[item_slot].base_type != OBJ_POTIONS)
     {
+#ifdef JP
+        mpr("あなたはそのアイテムを飲むことはできない！");
+#else
         mpr("You can't drink that!");
+#endif
         return;
     }
 
@@ -2275,12 +2835,12 @@ void drink(void)
     {
         set_ident_flags( you.inv[item_slot], ISFLAG_IDENT_MASK );
 
-        set_ident_type( you.inv[item_slot].base_type, 
+        set_ident_type( you.inv[item_slot].base_type,
                         you.inv[item_slot].sub_type, ID_KNOWN_TYPE );
     }
     else
     {
-        set_ident_type( you.inv[item_slot].base_type, 
+        set_ident_type( you.inv[item_slot].base_type,
                         you.inv[item_slot].sub_type, ID_TRIED_TYPE );
     }
 
@@ -2299,17 +2859,33 @@ bool drink_fountain(void)
     switch (grd[you.x_pos][you.y_pos])
     {
     case DNGN_BLUE_FOUNTAIN:
+#ifdef JP
+        if (!yesno("泉から水を飲みますか？"))
+#else
         if (!yesno("Drink from the fountain?"))
+#endif
             return false;
 
+#ifdef JP
+        mpr("あなたは純粋な、透き通った水を口にした。");
+#else
         mpr("You drink the pure, clear water.");
+#endif
         break;
 
     case DNGN_SPARKLING_FOUNTAIN:
+#ifdef JP
+        if (!yesno("煌く泉から水を飲みますか？"))
+#else
         if (!yesno("Drink from the sparkling fountain?"))
+#endif
             return false;
 
+#ifdef JP
+        mpr("あなたは煌く水を口にした。");
+#else
         mpr("You drink the sparkling water.");
+#endif
         break;
     }
 
@@ -2368,7 +2944,11 @@ bool drink_fountain(void)
 
     if (gone_dry)
     {
+#ifdef JP
+        mpr("泉は干上がってしまった！");
+#else
         mpr("The fountain dries up!");
+#endif
         if (grd[you.x_pos][you.y_pos] == DNGN_BLUE_FOUNTAIN)
             grd[you.x_pos][you.y_pos] = DNGN_DRY_FOUNTAIN_I;
         else if (grd[you.x_pos][you.y_pos] == DNGN_SPARKLING_FOUNTAIN)
@@ -2389,23 +2969,40 @@ static bool affix_weapon_enchantment( void )
     if (wpn == -1 || !you.duration[ DUR_WEAPON_BRAND ])
         return (false);
 
+    mpr(info);
+    char str_pass[ ITEMNAME_SIZE ];
+    in_name( you.equip[EQ_WEAPON], DESC_CAP_YOUR, str_pass );
+    strcpy( info, str_pass );
+
     switch (get_weapon_brand( you.inv[wpn] ))
     {
     case SPWPN_VORPAL:
         if (damage_type( you.inv[wpn].base_type,
                          you.inv[wpn].sub_type ) != DVORP_CRUSHING)
         {
+#ifdef JP
+            strcat(info, "の鋭さは永続性を持ったようだ。");
+#else
             strcat(info, "'s sharpness seems more permanent.");
+#endif
         }
         else
         {
+#ifdef JP
+            strcat(info, "の重さはより確かなものとなったようだ。");
+#else
             strcat(info, "'s heaviness feels very stable.");
+#endif
         }
         mpr(info);
         break;
 
     case SPWPN_FLAMING:
+#ifdef JP
+        strcat(info,"は炎の爆発に包まれた！");
+#else
         strcat(info," is engulfed in an explosion of flames!");
+#endif
         mpr(info);
 
         beam.type = SYM_BURST;
@@ -2413,10 +3010,18 @@ static bool affix_weapon_enchantment( void )
         beam.flavour = 2;
         beam.target_x = you.x_pos;
         beam.target_y = you.y_pos;
+#ifdef JP
+        strcpy(beam.beam_name, "炎の爆発");
+#else
         strcpy(beam.beam_name, "fiery explosion");
+#endif
         beam.colour = RED;
         beam.thrower = KILL_YOU;
+#ifdef JP
+        beam.aux_source = "炎の爆発";
+#else
         beam.aux_source = "a fiery explosion";
+#endif
         beam.ex_size = 2;
         beam.isTracer = false;
 
@@ -2424,29 +3029,49 @@ static bool affix_weapon_enchantment( void )
         break;
 
     case SPWPN_FREEZING:
+#ifdef JP
+        strcat(info,"は一瞬、煌く青に輝いた。");
+#else
         strcat(info," glows brilliantly blue for a moment.");
+#endif
         mpr(info);
         cast_refrigeration(60);
         break;
 
     case SPWPN_DRAINING:
+#ifdef JP
+        strcat(info,"は定命の存在の生命を切望している！");
+#else
         strcat(info," thirsts for the lives of mortals!");
+#endif
         mpr(info);
         drain_exp();
         break;
 
     case SPWPN_VENOM:
+#ifdef JP
+        strcat(info, "は恒久的な毒素に侵されたようだ。");
+#else
         strcat(info, " seems more permanently poisoned.");
+#endif
         mpr(info);
         cast_toxic_radiance();
         break;
 
     case SPWPN_DISTORTION:
+#ifdef JP
+        strcat(info, "は危険なほど歪んだ。");
+#else
         strcat(info, " twongs alarmingly.");
+#endif
         mpr(info);
 
         // from unwield_item
+#ifdef JP
+        miscast_effect( SPTYP_TRANSLOCATION, 9, 90, 100, "歪曲の効果" );
+#else
         miscast_effect( SPTYP_TRANSLOCATION, 9, 90, 100, "a distortion effect" );
+#endif
         break;
 
     default:
@@ -2467,7 +3092,7 @@ static bool enchant_weapon( int which_stat, bool quiet )
     int enchant_level;
     char str_pass[ ITEMNAME_SIZE ];
 
-    if (wpn == -1 
+    if (wpn == -1
         || (you.inv[ wpn ].base_type != OBJ_WEAPONS
             && you.inv[ wpn ].base_type != OBJ_MISSILES))
     {
@@ -2511,7 +3136,11 @@ static bool enchant_weapon( int which_stat, bool quiet )
             {
                 in_name(you.equip[EQ_WEAPON], DESC_CAP_YOUR, str_pass);
                 strcpy(info, str_pass);
+#ifdef JP
+                strcat(info, "は一瞬、銀色に輝いた。");
+#else
                 strcat(info, " glows silver for a moment.");
+#endif
                 mpr(info);
             }
 
@@ -2542,7 +3171,11 @@ static bool enchant_weapon( int which_stat, bool quiet )
 
             if (!quiet)
             {
+#ifdef JP
+                strcat(info, "は一瞬、赤く輝いた。");
+#else
                 strcat(info, " glows red for a moment.");
+#endif
                 mpr(info);
             }
         }
@@ -2552,17 +3185,28 @@ static bool enchant_weapon( int which_stat, bool quiet )
 
             if (!quiet)
             {
+#ifdef JP
+                strcat(info, "は一瞬、緑色に輝いた。");
+#else
                 strcat(info, " glows green for a moment.");
+#endif
                 mpr(info);
             }
         }
     }
     else if (you.inv[ wpn ].base_type == OBJ_MISSILES)
     {
+#ifdef JP
+#else
         strcat( info, (you.inv[ wpn ].quantity > 1) ? " glow"
                                                     : " glows" );
+#endif
 
+#ifdef JP
+        strcat(info, "は一瞬、赤く輝いた。");
+#else
         strcat(info, " red for a moment.");
+#endif
 
         you.inv[ wpn ].plus++;
     }
@@ -2589,7 +3233,11 @@ static bool enchant_armour( void )
     {
         in_name( you.equip[EQ_BODY_ARMOUR], DESC_CAP_YOUR, str_pass );
         strcpy(info, str_pass);
+#ifdef JP
+        strcat(info, "は紫色に輝いて変化した！");
+#else
         strcat(info, " glows purple and changes!");
+#endif
         mpr(info);
 
         you.redraw_armour_class = 1;
@@ -2602,7 +3250,7 @@ static bool enchant_armour( void )
     int count = 0;
     int affected_slot = EQ_WEAPON;
 
-    for (int i = EQ_CLOAK; i <= EQ_BODY_ARMOUR; i++) 
+    for (int i = EQ_CLOAK; i <= EQ_BODY_ARMOUR; i++)
     {
         if (you.equip[i] != -1)
         {
@@ -2610,7 +3258,7 @@ static bool enchant_armour( void )
             if (one_chance_in( count ))
                 affected_slot = i;
         }
-    } 
+    }
 
     // no armour == no enchantment
     if (affected_slot == EQ_WEAPON)
@@ -2625,7 +3273,7 @@ static bool enchant_armour( void )
     if (is_random_artefact( item )
         || ((item.sub_type >= ARM_CLOAK && item.sub_type <= ARM_BOOTS)
             && item.plus >= 2)
-        || ((item.sub_type == ARM_SHIELD 
+        || ((item.sub_type == ARM_SHIELD
                 || item.sub_type == ARM_BUCKLER
                 || item.sub_type == ARM_LARGE_SHIELD)
             && item.plus >= 2)
@@ -2639,12 +3287,16 @@ static bool enchant_armour( void )
     {
         if (item_cursed( item ))
         {
-            in_name(you.equip[affected], DESC_CAP_YOUR, str_pass);
+            in_name(you.equip[ affected_slot ], DESC_CAP_YOUR, str_pass);
             strcpy(info, str_pass);
+#ifdef JP
+            strcat(info, "は一瞬、銀色に輝いた。");
+#else
             strcat(info, " glows silver for a moment.");
+#endif
             mpr(info);
 
-            do_uncurse_item( you.inv[you.equip[affected]] );
+            do_uncurse_item( you.inv[you.equip[ affected_slot ]] );
             return (true);
         }
         else
@@ -2657,7 +3309,11 @@ static bool enchant_armour( void )
     // vVvVv    This is *here* for a reason!
     item_name(item, DESC_CAP_YOUR, str_pass);
     strcpy(info, str_pass);
+#ifdef JP
+    strcat(info, "は一瞬、緑色に輝いた。");
+#else
     strcat(info, " glows green for a moment.");
+#endif
     mpr(info);
 
     item.plus++;
@@ -2675,7 +3331,11 @@ static void handle_read_book( int item_slot )
     {
         if (silenced(you.x_pos, you.y_pos))
         {
+#ifdef JP
+            mpr("声を出して読まなければ、この本は使うことができない！");
+#else
             mpr("This book does not work if you cannot read it aloud!");
+#endif
             return;
         }
 
@@ -2739,7 +3399,11 @@ void read_scroll(void)
         return;
     }
 
+#ifdef JP
+    int item_slot = prompt_invent_item( "どのアイテムを読みますか？", OBJ_SCROLLS );
+#else
     int item_slot = prompt_invent_item( "Read which item?", OBJ_SCROLLS );
+#endif
     if (item_slot == PROMPT_ABORT)
     {
         canned_msg( MSG_OK );
@@ -2749,7 +3413,11 @@ void read_scroll(void)
     if (you.inv[item_slot].base_type != OBJ_BOOKS
         && you.inv[item_slot].base_type != OBJ_SCROLLS)
     {
+#ifdef JP
+        mpr("そのアイテムは読めない！");
+#else
         mpr("You can't read that!");
+#endif
         return;
     }
 
@@ -2762,7 +3430,11 @@ void read_scroll(void)
 
     if (silenced(you.x_pos, you.y_pos))
     {
+#ifdef JP
+        mpr("声を出して読まなければ、魔法の巻き物を使うことはできない！");
+#else
         mpr("Magic scrolls do not work when you're silenced!");
+#endif
         return;
     }
 
@@ -2774,8 +3446,13 @@ void read_scroll(void)
         && random2(5) < you.mutation[MUT_BLURRY_VISION])
     {
         mpr((you.mutation[MUT_BLURRY_VISION] == 3 && one_chance_in(3))
+#ifdef JP
+                        ? "この巻き物は白紙のようだ。"
+                        : "文字がぼやけて読めない。");
+#else
                         ? "This scroll appears to be blank."
                         : "The writing blurs in front of your eyes.");
+#endif
         return;
     }
 
@@ -2783,7 +3460,11 @@ void read_scroll(void)
     const int scroll_type = you.inv[item_slot].sub_type;
     if (scroll_type != SCR_PAPER)
     {
+#ifdef JP
+        mpr("あなたが読み上げると、巻き物は塵となって崩れた。");
+#else
         mpr("As you read the scroll, it crumbles to dust.");
+#endif
         // Actual removal of scroll done afterwards. -- bwr
     }
 
@@ -2800,6 +3481,12 @@ void read_scroll(void)
             exercise(SK_SPELLCASTING, (coinflip()? 2 : 1));
     }
 
+    // destroy the scroll
+    if (scroll_type != SCR_PAPER)
+    {
+        dec_inv_item_quantity( item_slot, 1 );
+    }
+
     bool id_the_scroll = true;  // to prevent unnecessary repetition
 
     // it is the exception, not the rule, that
@@ -2808,7 +3495,11 @@ void read_scroll(void)
     {
     case SCR_PAPER:
         // remember paper scrolls handled as special case above, too:
+#ifdef JP
+        mpr("この巻き物は白紙のようだ。");
+#else
         mpr("This scroll appears to be blank.");
+#endif
         break;
 
     case SCR_RANDOM_USELESSNESS:
@@ -2844,7 +3535,11 @@ void read_scroll(void)
         break;
 
     case SCR_NOISE:
+#ifdef JP
+        mpr("あなたは重金属の触れ合うやかましい騒音を耳にした。");
+#else
         mpr("You hear a loud clanging noise!");
+#endif
         noisy( 25, you.x_pos, you.y_pos );
         break;
 
@@ -2852,12 +3547,20 @@ void read_scroll(void)
         if (create_monster( MONS_ABOMINATION_SMALL, ENCH_ABJ_VI, BEH_FRIENDLY,
                             you.x_pos, you.y_pos, you.pet_target, 250 ) != -1)
         {
+#ifdef JP
+            mpr("おぞましい存在が出現した！");
+#else
             mpr("A horrible Thing appears!");
+#endif
         }
         break;
 
     case SCR_FORGETFULNESS:
+#ifdef JP
+        mpr("あなたは一時的な見当識喪失に陥った。");
+#else
         mpr("You feel momentarily disoriented.");
+#endif
         if (!wearing_amulet(AMU_CLARITY))
             forget_map(50 + random2(50));
         break;
@@ -2866,12 +3569,20 @@ void read_scroll(void)
         if (you.level_type == LEVEL_LABYRINTH
             || you.level_type == LEVEL_ABYSS)
         {
+#ifdef JP
+            mpr("あなたは一時的な見当識喪失に陥った。");
+#else
             mpr("You feel momentarily disoriented.");
+#endif
             id_the_scroll = false;
         }
         else
         {
+#ifdef JP
+            mpr("あなたは周囲の地形を感知した。");
+#else
             mpr("You feel aware of your surroundings.");
+#endif
             magic_mapping(50, 90 + random2(11));
         }
         break;
@@ -2887,7 +3598,11 @@ void read_scroll(void)
         break;
 
     case SCR_IMMOLATION:
+#ifdef JP
+        mpr("巻き物はあなたの手の中で爆発した！");
+#else
         mpr("The scroll explodes in your hands!");
+#endif
 
         beam.type = SYM_BURST;
         beam.damage = dice_def( 3, 10 );
@@ -2895,11 +3610,19 @@ void read_scroll(void)
         beam.flavour = BEAM_FIRE;
         beam.target_x = you.x_pos;
         beam.target_y = you.y_pos;
+#ifdef JP
+        strcpy(beam.beam_name, "炎の爆発");
+#else
         strcpy(beam.beam_name, "fiery explosion");
+#endif
         beam.colour = RED;
         // your explosion, (not someone else's explosion)
         beam.thrower = KILL_YOU;
+#ifdef JP
+        beam.aux_source = "焼き討ちの巻物の爆発";
+#else
         beam.aux_source = "reading a scroll of immolation";
+#endif
         beam.ex_size = 2;
 
         explosion(beam);
@@ -2929,7 +3652,11 @@ void read_scroll(void)
         {
             in_name( nthing, DESC_CAP_YOUR, str_pass );
             strcpy(info, str_pass);
+#ifdef JP
+            strcat(info, "は一瞬、黒く輝いた。");
+#else
             strcat(info, " glows black for a moment.");
+#endif
             mpr(info);
 
             do_curse_item( you.inv[nthing] );
@@ -2947,13 +3674,17 @@ void read_scroll(void)
         break;
 
     case SCR_ENCHANT_WEAPON_III:
-        if (you.equip[ EQ_WEAPON ] != -1) 
+        if (you.equip[ EQ_WEAPON ] != -1)
         {
             if (!affix_weapon_enchantment())
             {
                 in_name( you.equip[EQ_WEAPON], DESC_CAP_YOUR, str_pass );
                 strcpy( info, str_pass );
+#ifdef JP
+                strcat( info, "はしばしの間、黄金色に輝いた。" );
+#else
                 strcat( info, " glows bright yellow for a while." );
+#endif
                 mpr( info );
 
                 enchant_weapon( ENCHANT_TO_HIT, true );
@@ -2992,14 +3723,22 @@ void read_scroll(void)
         in_name(nthing, DESC_CAP_YOUR, str_pass);
 
         strcpy(info, str_pass);
+#ifdef JP
+        strcat(info, "は明るい閃光を放った！");
+#else
         strcat(info, " emits a brilliant flash of light!");
+#endif
         mpr(info);
 
         alert_nearby_monsters();
 
         if (get_weapon_brand( you.inv[nthing] ) != SPWPN_NORMAL)
         {
+#ifdef JP
+            mpr("あなたは奇妙な挫折感を覚えた。");
+#else
             mpr("You feel strangely frustrated.");
+#endif
             break;
         }
 
@@ -3056,24 +3795,27 @@ void read_scroll(void)
         do_curse_item( you.inv[you.equip[affected]] );
 
         strcpy(info, str_pass);
+#ifdef JP
+        strcat(info, "は一瞬、黒く輝いた。");
+#else
         strcat(info, " glows black for a moment.");
+#endif
         mpr(info);
         break;
     }                           // end switch
 
-    // finally, destroy and identify the scroll
-    if (scroll_type != SCR_PAPER)
-    {
-        dec_inv_item_quantity( item_slot, 1 );
-    }
-
-    set_ident_type( OBJ_SCROLLS, scroll_type, 
+    // finally, identify the scroll
+    set_ident_type( OBJ_SCROLLS, scroll_type,
                     (id_the_scroll) ? ID_KNOWN_TYPE : ID_TRIED_TYPE );
 }                               // end read_scroll()
 
 void original_name(void)
 {
+#ifdef JP
+    int item_slot = prompt_invent_item( "どのアイテムを調べますか？([*][?]で一覧)", -1 );
+#else
     int item_slot = prompt_invent_item( "Examine which item?", -1 );
+#endif
     if (item_slot == PROMPT_ABORT)
     {
         canned_msg( MSG_OK );

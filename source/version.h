@@ -38,8 +38,19 @@
 /* ***********************************************************************
  * called from: chardump - command - newgame
  * *********************************************************************** */
-#define VERSION "4.0.0 beta 26"
-
+#ifdef JP
+#ifdef USE_TILE
+#define VERSION "“ú–{Œê”Å 400b26j070t"
+#else
+#define VERSION "“ú–{Œê”Å 400b26j070"
+#endif //USE_TILE
+#else
+#ifdef USE_TILE
+#define VERSION "400b26e070t"
+#else
+#define VERSION "400b26e070"
+#endif //USE_TILE
+#endif //JP
 
 // last updated 20feb2001 {GDL}
 /* ***********************************************************************

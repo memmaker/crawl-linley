@@ -50,13 +50,21 @@ void cast_selective_amnesia(bool force)
     unsigned char keyin = 0;
 
     if (you.spell_no == 0)
+#ifdef JP
+        mpr("あなたは呪文を一つも知らない。");      // re: sif muna {dlb}
+#else
         mpr("You don't know any spells.");      // re: sif muna {dlb}
+#endif
     else
     {
         // query - conditional ordering is important {dlb}:
         for (;;)
         {
+#ifdef JP
+            mpr( "どの呪文を忘れますか？([*][?]一覧 [ESC]キャンセル)? ", MSGCH_PROMPT );
+#else
             mpr( "Forget which spell ([?*] list [ESC] exit)? ", MSGCH_PROMPT );
+#endif
 
             keyin = (unsigned char) get_ch();
 
@@ -82,7 +90,11 @@ void cast_selective_amnesia(bool force)
         const int slot  = get_spell_slot_by_letter( keyin );
 
         if (spell == SPELL_NO_SPELL)
+#ifdef JP
+            mpr( "あなたはその呪文を知らない。" );
+#else
             mpr( "You don't know that spell." );
+#endif
         else
         {
             if (!force
@@ -90,7 +102,11 @@ void cast_selective_amnesia(bool force)
                      && random2(you.skills[SK_SPELLCASTING])
                          < random2(spell_difficulty( spell ))))
             {
+#ifdef JP
+                mpr("おっと！確かにこの呪文は役立たずだ。");
+#else
                 mpr("Oops! This spell sure is a blunt instrument.");
+#endif
                 forget_map(20 + random2(50));
             }
             else
@@ -101,8 +117,13 @@ void cast_selective_amnesia(bool force)
                 if (ep_gain > 0)
                 {
                     inc_mp(ep_gain, false);
+#ifdef JP
+                    mpr( "呪文が解放され、占有されていたあなたのエネルギーが"
+                         "戻ってきた。" );
+#else
                     mpr( "The spell releases its latent energy back to you as "
                          "it unravels." );
+#endif
                 }
             }
         }
@@ -144,7 +165,11 @@ bool remove_curse(bool suppress_msg)
     if (!suppress_msg)
     {
         if (success)
+#ifdef JP
+            mpr("あなたは何か偉大な存在から助けを受けたような気がした。");
+#else
             mpr("You feel as if something is helping you.");
+#endif
         else
             canned_msg(MSG_NOTHING_HAPPENS);
     }
@@ -175,7 +200,11 @@ bool detect_curse(bool suppress_msg)
     if (!suppress_msg)
     {
         if (success)
+#ifdef JP
+            mpr("あなたは所持品の中の呪われた品について探知した。");
+#else
             mpr("You sense the presence of curses on your possessions.");
+#endif
         else
             canned_msg(MSG_NOTHING_HAPPENS);
     }
@@ -189,7 +218,11 @@ bool cast_smiting(int power)
     struct dist beam;
     struct monsters *monster = 0;       // NULL {dlb}
 
+#ifdef JP
+    mpr("どのモンスターを撃ちますか？", MSGCH_PROMPT);
+#else
     mpr("Smite whom?", MSGCH_PROMPT);
+#endif
 
     direction( beam, DIR_TARGET, TARG_ENEMY );
 
@@ -203,9 +236,17 @@ bool cast_smiting(int power)
     {
         monster = &menv[mgrd[beam.tx][beam.ty]];
 
+#ifdef JP
+        strcpy(info, "あなたは");
+#else
         strcpy(info, "You smite ");
+#endif
         strcat(info, ptr_monam( monster, DESC_NOCAP_THE ));
+#ifdef JP
+        strcat(info, "に一撃を食らわせた！");
+#else
         strcat(info, "!");
+#endif
         mpr(info);
 
         hurt_monster(monster, random2(8) + (random2(power) / 3));
@@ -228,7 +269,11 @@ bool airstrike(int power)
     struct monsters *monster = 0;       // NULL {dlb}
     int hurted = 0;
 
+#ifdef JP
+    mpr("どれを撃ちますか？", MSGCH_PROMPT);
+#else
     mpr("Strike whom?", MSGCH_PROMPT);
+#endif
 
     direction( beam, DIR_TARGET, TARG_ENEMY );
 
@@ -242,9 +287,17 @@ bool airstrike(int power)
     {
         monster = &menv[mgrd[beam.tx][beam.ty]];
 
+#ifdef JP
+        strcpy(info, "ぐるぐるとうねる大気が");
+#else
         strcpy(info, "The air twists around and strikes ");
+#endif
         strcat(info, ptr_monam( monster, DESC_NOCAP_THE ));
+#ifdef JP
+        strcat(info, "を直撃した！");
+#else
         strcat(info, "!");
+#endif
         mpr(info);
 
         hurted = random2( random2(12) + (random2(power) / 6)
@@ -281,7 +334,11 @@ bool cast_bone_shards(int power)
         canned_msg(MSG_SPELL_FIZZLES);
     }
     else if (you.inv[you.equip[EQ_WEAPON]].sub_type != CORPSE_SKELETON)
+#ifdef JP
+        mpr("死体はグズグズの肉に崩壊してしまった。");
+#else
         mpr("The corpse collapses into a mass of pulpy flesh.");
+#endif
     else if (spell_direction(spelld, beam) != -1)
     {
         // practical max of 100 * 15 + 3000 = 4500
@@ -289,7 +346,11 @@ bool cast_bone_shards(int power)
         power *= 15;
         power += mons_weight( you.inv[you.equip[EQ_WEAPON]].plus );
 
+#ifdef JP
+        mpr("骸骨が爆発し、鋭い骨の破片を撒き散らした！");
+#else
         mpr("The skeleton explodes into sharp fragments of bone!");
+#endif
 
         dec_inv_item_quantity( you.equip[EQ_WEAPON], 1 );
         zapping(ZAP_BONE_SHARDS, power, beam);
@@ -310,16 +371,28 @@ void sublimation(int power)
     {
         if (you.deaths_door)
         {
+#ifdef JP
+            mpr( "相容れない魔法が呪文の効果を阻害した。" );
+#else
             mpr( "A conflicting enchantment prevents the spell from "
                  "coming into effect." );
+#endif
         }
         else if (!enough_hp( 2, true ))
         {
+#ifdef JP
+             mpr("あなたの血肉から魔力を引き出す試みは失敗した。");
+#else
              mpr("Your attempt to draw power from your own body fails.");
+#endif
         }
         else
         {
+#ifdef JP
+            mpr("あなたは自らの血肉から魔力を引き出した！");
+#else
             mpr("You draw magical energy from your own body!");
+#endif
 
             while (you.magic_points < you.max_magic_points && you.hp > 1)
             {
@@ -339,8 +412,13 @@ void sublimation(int power)
     }
     else
     {
+#ifdef JP
+        mpr("あなたが手に持った肉片は、塵となって崩壊した。");
+        mpr("魔法エネルギーの奔流が、あなたの精神に流れ込んだ！");
+#else
         mpr("The chunk of flesh you are holding crumbles to dust.");
         mpr("A flood of magical energy pours into your mind!");
+#endif
 
         inc_mp( 7 + random2(7), false );
 
@@ -353,7 +431,7 @@ void sublimation(int power)
 // Simulacrum
 //
 // This spell extends creating undead to Ice mages, as such it's high
-// level, requires wielding of the material component, and the undead 
+// level, requires wielding of the material component, and the undead
 // aren't overly powerful (they're also vulnerable to fire).  I've put
 // back the abjuration level in order to keep down the army sizes again.
 //
@@ -401,18 +479,33 @@ void simulacrum(int power)
 
         if (summoned)
         {
+#ifdef JP
+            strcpy( info, (summoned == 1) ? "氷の像が"
+                                          : "いくつかの氷の像が" );
+            strcat( info, "、あなたの前に形を成した。" );
+#else
             strcpy( info, (summoned == 1) ? "An icy figure forms "
                                           : "Some icy figures form " );
             strcat( info, "before you!" );
+#endif
             mpr( info );
         }
         else
+#ifdef JP
+            mpr( "あなたは一瞬、寒気を覚えた。" );
+#else
             mpr( "You feel cold for a second." );
+#endif
     }
     else
     {
+#ifdef JP
+        mpr( "この呪文の効果を利用するには、あなたは一片の肉を"
+             "手にしている必要がある！" );
+#else
         mpr( "You need to wield a piece of raw flesh for this spell "
              "to be effective!" );
+#endif
     }
 }                               // end sublimation()
 
@@ -446,9 +539,9 @@ void dancing_weapon(int pow, bool force_hostile)
 
     // cursed weapons become hostile
     if (item_cursed( you.inv[wpn] ) || force_hostile)
-        behavi = BEH_HOSTILE; 
+        behavi = BEH_HOSTILE;
 
-    summs = create_monster( MONS_DANCING_WEAPON, numsc, behavi, 
+    summs = create_monster( MONS_DANCING_WEAPON, numsc, behavi,
                             you.x_pos, you.y_pos, you.pet_target, 1 );
 
     if (summs < 0)
@@ -471,7 +564,11 @@ void dancing_weapon(int pow, bool force_hostile)
 
     in_name( wpn, DESC_CAP_YOUR, str_pass );
     strcpy( info, str_pass );
+#ifdef JP
+    strcat( info, "は宙に踊った！" );
+#else
     strcat( info, " dances into the air!" );
+#endif
     mpr( info );
 
     you.inv[ wpn ].quantity = 0;
@@ -480,10 +577,21 @@ void dancing_weapon(int pow, bool force_hostile)
     menv[summs].inv[MSLOT_WEAPON] = i;
     menv[summs].number = mitm[i].colour;
 
+    burden_change();
+
+#ifdef USE_TILE
+    if (Options.use_tile)
+        TilePlayerRefresh();
+#endif
+
     return;
 
 failed_spell:
+#ifdef JP
+    mpr("あなたの武器は1秒ほど、狂ったように振動した。");
+#else
     mpr("Your weapon vibrates crazily for a second.");
+#endif
 }                               // end dancing_weapon()
 
 static bool monster_on_level(int monster)
@@ -513,7 +621,7 @@ bool allow_control_teleport( bool silent )
         {
         case BRANCH_TOMB:
             // The tomb is a laid out maze, it'd be a shame if the player
-            // just teleports through any of it... so we only allow 
+            // just teleports through any of it... so we only allow
             // teleport once they have the rune.
             ret = false;
             for (int i = 0; i < ENDOFPACK; i++)
@@ -541,9 +649,9 @@ bool allow_control_teleport( bool silent )
             if (you.branch_stairs[STAIRS_ELVEN_HALLS] +
                     branch_depth(STAIRS_ELVEN_HALLS) == you.your_level)
             {
-                for (int x = 5; x < GXM - 5; x++) 
+                for (int x = 5; x < GXM - 5; x++)
                 {
-                    for (int y = 5; y < GYM - 5; y++) 
+                    for (int y = 5; y < GYM - 5; y++)
                     {
                         if (grd[x][y] == DNGN_SPARKLING_FOUNTAIN)
                             ret = false;
@@ -566,7 +674,11 @@ bool allow_control_teleport( bool silent )
 
     // Tell the player why if they have teleport control.
     if (!ret && you.attribute[ATTR_CONTROL_TELEPORT] && !silent)
+#ifdef JP
+        mpr("強力な魔法が、あなたのテレポートの制御を妨害した。");
+#else
         mpr("A powerful magic prevents control of your teleportation.");
+#endif
 
     return ret;
 }                               // end allow_control_teleport()
@@ -574,21 +686,37 @@ bool allow_control_teleport( bool silent )
 void you_teleport(void)
 {
     if (scan_randarts(RAP_PREVENT_TELEPORTATION))
+#ifdef JP
+        mpr("あなたは奇妙な停滞感を覚えた。");
+#else
         mpr("You feel a weird sense of stasis.");
+#endif
     else if (you.duration[DUR_TELEPORT])
     {
+#ifdef JP
+        mpr("あなたは奇妙な安定感を覚えた。");
+#else
         mpr("You feel strangely stable.");
+#endif
         you.duration[DUR_TELEPORT] = 0;
     }
     else
     {
+#ifdef JP
+        mpr("あなたは奇妙な不安定感を覚えた。");
+#else
         mpr("You feel strangely unstable.");
+#endif
 
         you.duration[DUR_TELEPORT] = 3 + random2(3);
 
         if (you.level_type == LEVEL_ABYSS && !one_chance_in(5))
         {
+#ifdef JP
+            mpr("あなたが転位を発動するまでに幾らか時間を要しそうだ……。");
+#else
             mpr("You have a feeling this translocation may take a while to kick in...");
+#endif
             you.duration[DUR_TELEPORT] += 5 + random2(10);
         }
     }
@@ -604,7 +732,11 @@ void you_teleport2( bool allow_control, bool new_abyss_area )
 
     if (scan_randarts(RAP_PREVENT_TELEPORTATION))
     {
+#ifdef JP
+        mpr("あなたは奇妙な停滞感を覚えた。");
+#else
         mpr("You feel a strange sense of stasis.");
+#endif
         return;
     }
 
@@ -633,8 +765,13 @@ void you_teleport2( bool allow_control, bool new_abyss_area )
 
     if (is_controlled)
     {
+#ifdef JP
+        mpr("あなたは目標とする場所を指定できます。([.]もしくは[DEL]で決定)");
+        mpr("ただし幾らかのずれが予想されます。");
+#else
         mpr("You may choose your destination (press '.' or delete to select).");
         mpr("Expect minor deviation.");
+#endif
         more();
 
         show_map(plox);
@@ -642,7 +779,11 @@ void you_teleport2( bool allow_control, bool new_abyss_area )
         redraw_screen();
 
 #if DEBUG_DIAGNOSTICS
+#ifdef JP
         snprintf( info, INFO_SIZE, "Target square (%d,%d)", plox[0], plox[1] );
+#else
+        snprintf( info, INFO_SIZE, "Target square (%d,%d)", plox[0], plox[1] );
+#endif
         mpr( info, MSGCH_DIAGNOSTICS );
 #endif
 
@@ -658,12 +799,20 @@ void you_teleport2( bool allow_control, bool new_abyss_area )
         if (plox[0] < 6 || plox[1] < 6 || plox[0] > (GXM - 5)
                 || plox[1] > (GYM - 5))
         {
+#ifdef JP
+            mpr("付近の個体物があなたの再物質化を阻害した！");
+#else
             mpr("Nearby solid objects disrupt your rematerialisation!");
+#endif
             is_controlled = false;
         }
 
 #if DEBUG_DIAGNOSTICS
+#ifdef JP
         snprintf( info, INFO_SIZE, "Scattered target square (%d,%d)", plox[0], plox[1] );
+#else
+        snprintf( info, INFO_SIZE, "Scattered target square (%d,%d)", plox[0], plox[1] );
+#endif
         mpr( info, MSGCH_DIAGNOSTICS );
 #endif
 
@@ -689,13 +838,19 @@ void you_teleport2( bool allow_control, bool new_abyss_area )
 
     if (!is_controlled)
     {
+#ifdef JP
+        mpr("あなたの周辺の様子が突然に変化した。");
+#else
         mpr("Your surroundings suddenly seem different.");
+#endif
 
         do
         {
             you.x_pos = 5 + random2( GXM - 10 );
             you.y_pos = 5 + random2( GYM - 10 );
         }
+//!!!!
+        //階データの紛失したセーブデータを使用している場合、ここでフリーズする。
         while ((grd[you.x_pos][you.y_pos] != DNGN_FLOOR
                    && grd[you.x_pos][you.y_pos] != DNGN_SHALLOW_WATER)
                || mgrd[you.x_pos][you.y_pos] != NON_MONSTER
@@ -804,9 +959,15 @@ bool entomb(void)
     }
 
     if (number_built > 0)
+#ifdef JP
+        mpr("床から壁がせりあがってきた！");
+#else
         mpr("Walls emerge from the floor!");
+#endif
     else
         canned_msg(MSG_NOTHING_HAPPENS);
+
+    viewwindow(1, false);
 
     return (number_built > 0);
 }                               // end entomb()
@@ -830,8 +991,13 @@ void cast_poison_ammo(void)
     {
         in_name(ammo, DESC_CAP_YOUR, str_pass);
         strcpy(info, str_pass);
+#ifdef JP
+        strcat(info, (you.inv[ammo].quantity == 1) ? "は" : "は");
+        strcat(info, "毒の薄膜に覆われた。");
+#else
         strcat(info, (you.inv[ammo].quantity == 1) ? " is" : " are");
         strcat(info, " covered in a thin film of poison.");
+#endif
         mpr(info);
 
         you.wield_change = true;
@@ -850,21 +1016,29 @@ bool project_noise(void)
     plox[0] = 1;
     plox[1] = 0;
 
+#ifdef JP
+    mpr( "騒音の発生地点を選択してください([.]もしくは[DEL]で決定)" );
+#else
     mpr( "Choose the noise's source (press '.' or delete to select)." );
+#endif
     more();
     show_map(plox);
 
     redraw_screen();
 
 #if DEBUG_DIAGNOSTICS
+#ifdef JP
     snprintf( info, INFO_SIZE, "Target square (%d,%d)", plox[0], plox[1] );
+#else
+    snprintf( info, INFO_SIZE, "Target square (%d,%d)", plox[0], plox[1] );
+#endif
     mpr( info, MSGCH_DIAGNOSTICS );
 #endif
 
     if (!silenced( plox[0], plox[1] ))
     {
         // player can use this spell to "sound out" the dungeon -- bwr
-        if (plox[0] > 1 && plox[0] < (GXM - 2) 
+        if (plox[0] > 1 && plox[0] < (GXM - 2)
             && plox[1] > 1 && plox[1] < (GYM - 2)
             && grd[ plox[0] ][ plox[1] ] > DNGN_LAST_SOLID_TILE)
         {
@@ -875,11 +1049,20 @@ bool project_noise(void)
         if (!silenced( you.x_pos, you.y_pos ))
         {
             if (!success)
+#ifdef JP
+                mpr("あなたは鈍い物音を耳にした。");
+#else
                 mpr("You hear a dull thud.");
+#endif
             else
             {
+#ifdef JP
+                snprintf( info, INFO_SIZE, "あなたは%sあなたの名を呼ぶ声を耳にした。",
+                          (see_grid( plox[0], plox[1] ) ? "遠くに" : "") );
+#else
                 snprintf( info, INFO_SIZE, "You hear a %svoice call your name.",
                           (see_grid( plox[0], plox[1] ) ? "distant " : "") );
+#endif
                 mpr( info );
             }
         }
@@ -955,7 +1138,11 @@ bool recall(char type_recalled)
             mgrd[monster->x][monster->y] = monster_index(monster);
 
             // only informed if monsters recalled are visible {dlb}:
+#ifdef JP
+            if (simple_monster_message(monster, "は招き寄せられた。"))
+#else
             if (simple_monster_message(monster, " is recalled."))
+#endif
                 success = true;
         }
         else
@@ -965,7 +1152,11 @@ bool recall(char type_recalled)
     }
 
     if (!success)
+#ifdef JP
+        mpr("あなたの呼び声に応える者はいなかった。");
+#else
         mpr("Nothing appears to have answered your call.");
+#endif
 
     return (success);
 }                               // end recall()
@@ -979,16 +1170,28 @@ void portal(void)
 
     if (!player_in_branch( BRANCH_MAIN_DUNGEON ))
     {
+#ifdef JP
+        mpr("この呪文はここでは働かない。");
+#else
         mpr("This spell doesn't work here.");
+#endif
     }
     else if (grd[you.x_pos][you.y_pos] != DNGN_FLOOR)
     {
+#ifdef JP
+        mpr("この呪文は何もない空間を対象としなければならない。");
+#else
         mpr("You must find a clear area in which to cast this spell.");
+#endif
     }
     else
     {
         // the first query {dlb}:
+#ifdef JP
+        mpr("どの地点に？( <:上へ  >:下へ  x:キャンセル)", MSGCH_PROMPT);
+#else
         mpr("Which direction ('<' for up, '>' for down, 'x' to quit)?", MSGCH_PROMPT);
+#endif
 
         for (;;)
         {
@@ -997,7 +1200,11 @@ void portal(void)
             if (keyi == '<')
             {
                 if (you.your_level == 0)
+#ifdef JP
+                    mpr("あなたはこの呪文でこれより上に行くことはできない。");
+#else
                     mpr("You can't go any further upwards with this spell.");
+#endif
                 else
                 {
                     dir_sign = -1;
@@ -1008,7 +1215,11 @@ void portal(void)
             if (keyi == '>')
             {
                 if (you.your_level == 35)
+#ifdef JP
+                    mpr("あなたはこれより下を指定することはできない。");
+#else
                     mpr("You can't go any further downwards with this spell.");
+#endif
                 else
                 {
                     dir_sign = 1;
@@ -1024,7 +1235,11 @@ void portal(void)
         }
 
         // the second query {dlb}:
-        mpr("How many levels (1 - 9, 'x' to quit)?", MSGCH_PROMPT);
+#ifdef JP
+        mpr("階数は？(1 - 9, 'x'でキャンセル)", MSGCH_PROMPT);
+#else
+        mpr("(1 - 9, 'x' to quit)?", MSGCH_PROMPT);
+#endif
 
         for (;;)
         {
@@ -1052,8 +1267,13 @@ void portal(void)
                 target_level = 26;
         }
 
+#ifdef JP
+        mpr( "あなたは神秘的な魔法の門を潜り抜けて、階段の手前で"
+             "実体化した。" );
+#else
         mpr( "You fall through a mystic portal, and materialise at the "
              "foot of a staircase." );
+#endif
         more();
 
         you.your_level = target_level - 1;
@@ -1072,7 +1292,11 @@ bool cast_death_channel(int power)
 
     if (you.duration[DUR_DEATH_CHANNEL] < 30)
     {
+#ifdef JP
+        mpr("邪悪な力があなたの存在を満たし、解き放たれるのを待っている。");
+#else
         mpr("Malign forces permeate your being, awaiting release.");
+#endif
 
         you.duration[DUR_DEATH_CHANNEL] += 15 + random2(1 + (power / 3));
 

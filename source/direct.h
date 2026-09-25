@@ -15,8 +15,11 @@
 #include "externs.h"
 #include "enum.h"
 
+#ifdef JP
+#define STD_DIRECTION_PROMPT    "Ç«Ç±Çë_Ç¢Ç‹Ç∑Ç©ÅH([*][+][-]Ç≈è∆èÄ) "
+#else
 #define STD_DIRECTION_PROMPT    "Which direction ([*+-] to target)? "
-
+#endif
 // last updated 12may2000 {dlb}
 /* ***********************************************************************
  * called from: acr - debug - effects - it_use3 - item_use - spells1 -

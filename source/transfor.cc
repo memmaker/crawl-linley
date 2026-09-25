@@ -47,7 +47,11 @@ bool remove_equipment(FixedVector < char, 8 > &remove_stuff)
     {
         unwield_item(you.equip[EQ_WEAPON]);
         you.equip[EQ_WEAPON] = -1;
+#ifdef JP
+        mpr("あなたは手を空にした。");
+#else
         mpr("You are empty-handed.");
+#endif
         you.wield_change = true;
     }
 
@@ -58,7 +62,11 @@ bool remove_equipment(FixedVector < char, 8 > &remove_stuff)
 
         in_name( you.equip[i], DESC_CAP_YOUR, str_pass );
 
+#ifdef JP
+        snprintf( info, INFO_SIZE, "%sは脱げ落ちた。", str_pass );
+#else
         snprintf( info, INFO_SIZE, "%s falls away.", str_pass );
+#endif
         mpr(info);
 
         unwear_armour( you.equip[i] );
@@ -79,8 +87,13 @@ static bool check_for_cursed_equipment( FixedVector < char, 8 > &remove_stuff )
 
         if (item_cursed( you.inv[ you.equip[i] ] ))
         {
+#ifdef JP
+            mpr( "あなたは呪われた装備が邪魔になって変身することが"
+                 "できなかった。" );
+#else
             mpr( "Your cursed equipment won't allow you to complete the "
                  "transformation." );
+#endif
 
             return (true);
         }
@@ -100,7 +113,11 @@ bool transform(int pow, char which_trans)
         // form is completely over-riding any other... goes well with
         // the forced transform when entering water)... but merfolk can
         // transform into dragons, because dragons fly. -- bwr
+#ifdef JP
+        mpr("あなたは水中では本体の形態以外に変身することができない。");
+#else
         mpr("You cannot transform out of your normal form while in water.");
+#endif
         return (false);
     }
 
@@ -109,7 +126,11 @@ bool transform(int pow, char which_trans)
     {
         if (you.duration[DUR_TRANSFORMATION] < 100)
         {
+#ifdef JP
+            mpr( "あなたは変身の残り時間を引き延ばした。" );
+#else
             mpr( "You extend your transformation's duration." );
+#endif
             you.duration[DUR_TRANSFORMATION] += random2(pow);
 
             if (you.duration[DUR_TRANSFORMATION] > 100)
@@ -119,7 +140,11 @@ bool transform(int pow, char which_trans)
         }
         else
         {
+#ifdef JP
+            mpr( "変身時間を今以上に引き伸ばすことはできない！" );
+#else
             mpr( "You cannot extend your transformation any further!" );
+#endif
             return (false);
         }
     }
@@ -129,7 +154,11 @@ bool transform(int pow, char which_trans)
 
     if (you.is_undead)
     {
+#ifdef JP
+        mpr("あなたの死せる肉体はこの方法では変身できない。");
+#else
         mpr("Your unliving flesh cannot be transformed in this way.");
+#endif
         return (false);
     }
 
@@ -152,7 +181,11 @@ bool transform(int pow, char which_trans)
         if (check_for_cursed_equipment( rem_stuff ))
             return (false);
 
+#ifdef JP
+        mpr("あなたは毒を持つ蜘蛛の怪物になった。");
+#else
         mpr("You turn into a venomous arachnid creature.");
+#endif
         remove_equipment( rem_stuff );
 
         you.attribute[ATTR_TRANSFORMATION] = TRAN_SPIDER;
@@ -167,10 +200,14 @@ bool transform(int pow, char which_trans)
         your_colour = BROWN;
         return (true);
 
-    case TRAN_ICE_BEAST:  // also AC +3, cold +3, fire -1, pois +1 
+    case TRAN_ICE_BEAST:  // also AC +3, cold +3, fire -1, pois +1
+#ifdef JP
+        mpr( "あなたは透き通った氷の獣になった。" );
+#else
         mpr( "You turn into a creature of crystalline ice." );
+#endif
 
-        rem_stuff[ EQ_CLOAK ] = 0;       
+        rem_stuff[ EQ_CLOAK ] = 0;
 
         remove_equipment( rem_stuff );
 
@@ -183,7 +220,11 @@ bool transform(int pow, char which_trans)
         extra_hp(12);   // must occur after attribute set
 
         if (you.duration[DUR_ICY_ARMOUR])
+#ifdef JP
+            mpr( "あなたの体は氷の鎧を取り込んだ。" );
+#else
             mpr( "Your new body merges with your icy armour." );
+#endif
 
         your_sign = 'I';
         your_colour = WHITE;
@@ -198,11 +239,20 @@ bool transform(int pow, char which_trans)
         if (check_for_cursed_equipment( rem_stuff ))
             return (false);
 
+#ifdef JP
+        mpr("あなたの手は鋭利な鎌状の刃に変化した。");
+#else
         mpr("Your hands turn into razor-sharp scythe blades.");
+#endif
         remove_equipment( rem_stuff );
 
         you.attribute[ATTR_TRANSFORMATION] = TRAN_BLADE_HANDS;
         you.duration[DUR_TRANSFORMATION] = 10 + random2(pow);
+
+#ifdef USE_TILE
+        if (Options.use_tile)
+            TilePlayerRefresh();
+#endif
 
         if (you.duration[ DUR_TRANSFORMATION ] > 100)
             you.duration[ DUR_TRANSFORMATION ] = 100;
@@ -210,16 +260,28 @@ bool transform(int pow, char which_trans)
 
     case TRAN_STATUE: // also AC +20, ev -5, elec +1, pois +1, neg +1, slow
         if (you.species == SP_GNOME && coinflip())
+#ifdef JP
+            mpr( "まるで庭園にあるノーム像のようだ。 凄く可愛い！" );
+#else
             mpr( "Look, a garden gnome.  How cute!" );
+#endif
         else if (player_genus(GENPC_DWARVEN) && one_chance_in(10))
+#ifdef JP
+            mpr( "あなたは心の中で、庭園によくある小人像との類似を恐れた。" );
+#else
             mpr( "You inwardly fear your resemblance to a lawn ornament." );
+#endif
         else
+#ifdef JP
+            mpr( "あなたは荒削りな生きた石像に姿を変えた。" );
+#else
             mpr( "You turn into a living statue of rough stone." );
+#endif
 
         rem_stuff[ EQ_WEAPON ] = 0;       /* can still hold a weapon */
-        rem_stuff[ EQ_CLOAK ] = 0;       
-        rem_stuff[ EQ_HELMET ] = 0;       
-        rem_stuff[ EQ_BOOTS ] = 0;       
+        rem_stuff[ EQ_CLOAK ] = 0;
+        rem_stuff[ EQ_HELMET ] = 0;
+        rem_stuff[ EQ_BOOTS ] = 0;
         // too stiff to make use of shields, gloves, or armour -- bwr
 
         remove_equipment( rem_stuff );
@@ -235,7 +297,11 @@ bool transform(int pow, char which_trans)
         extra_hp(15);   // must occur after attribute set
 
         if (you.duration[DUR_STONEMAIL] || you.duration[DUR_STONESKIN])
+#ifdef JP
+            mpr( "あなたの体は石の鎧を取り込んだ。" );
+#else
             mpr( "Your new body merges with your stone armour." );
+#endif
 
         your_sign = '8';
         your_colour = LIGHTGREY;
@@ -243,9 +309,17 @@ bool transform(int pow, char which_trans)
 
     case TRAN_DRAGON:  // also AC +10, ev -3, cold -1, fire +2, pois +1, flight
         if (you.species == SP_MERFOLK && player_is_swimming())
+#ifdef JP
+            mpr("あなたは恐ろしいドラゴンに姿を変えて、水中から飛びたった！");
+#else
             mpr("You fly out of the water as you turn into a fearsome dragon!");
+#endif
         else
+#ifdef JP
+            mpr("あなたは恐ろしいドラゴンに姿を変えた！");
+#else
             mpr("You turn into a fearsome dragon!");
+#endif
 
         remove_equipment(rem_stuff);
 
@@ -267,18 +341,31 @@ bool transform(int pow, char which_trans)
         // spec_death +1, and drain attack (if empty-handed)
         if (you.deaths_door)
         {
+#ifdef JP
+            mpr( "その変身は現在効果を及ぼしている魔法と相容れない。"
+                 "already in effect." );
+#else
             mpr( "The transformation conflicts with an enchantment "
                  "already in effect." );
+#endif
 
             return (false);
         }
 
+#ifdef JP
+        mpr("あなたの肉体は負のエネルギーで覆われた！");
+#else
         mpr("Your body is suffused with negative energy!");
+#endif
 
         // undead cannot regenerate -- bwr
         if (you.duration[DUR_REGENERATION])
         {
+#ifdef JP
+            mpr( "あなたの再生は止まった。", MSGCH_DURATION );
+#else
             mpr( "You stop regenerating.", MSGCH_DURATION );
+#endif
             you.duration[DUR_REGENERATION] = 0;
         }
 
@@ -301,9 +388,13 @@ bool transform(int pow, char which_trans)
         return (true);
 
     case TRAN_AIR:
-        // also AC 20, ev +20, regen/2, no hunger, fire -2, cold -2, air +2, 
+        // also AC 20, ev +20, regen/2, no hunger, fire -2, cold -2, air +2,
         // pois +1, spec_earth -1
+#ifdef JP
+        mpr( "あなたは肉体が気化していくのを感じた……。" );
+#else
         mpr( "You feel diffuse..." );
+#endif
 
         remove_equipment(rem_stuff);
 
@@ -322,7 +413,11 @@ bool transform(int pow, char which_trans)
 
     case TRAN_SERPENT_OF_HELL:
         // also AC +10, ev -5, fire +2, pois +1, life +2, slow
+#ifdef JP
+        mpr( "あなたは巨大で悪魔的なサーペントに姿を変えた！" );
+#else
         mpr( "You transform into a huge demonic serpent!" );
+#endif
 
         remove_equipment(rem_stuff);
 
@@ -365,21 +460,33 @@ void untransform(void)
     switch (old_form)
     {
     case TRAN_SPIDER:
+#ifdef JP
+        mpr("あなたは変身が解けた。", MSGCH_DURATION);
+#else
         mpr("Your transformation has ended.", MSGCH_DURATION);
+#endif
         modify_stat( STAT_DEXTERITY, -5, true );
         break;
 
     case TRAN_BLADE_HANDS:
+#ifdef JP
+        mpr( "あなたの両手は普通の手に戻った。", MSGCH_DURATION );
+#else
         mpr( "Your hands revert to their normal proportions.", MSGCH_DURATION );
+#endif
         you.wield_change = true;
         break;
 
     case TRAN_STATUE:
+#ifdef JP
+        mpr( "あなたは本来の肉の体に戻った。", MSGCH_DURATION );
+#else
         mpr( "You revert to your normal fleshy form.", MSGCH_DURATION );
+#endif
         modify_stat( STAT_DEXTERITY, 2, true );
         modify_stat( STAT_STRENGTH, -2, true );
 
-        // Note: if the core goes down, the combined effect soon disappears, 
+        // Note: if the core goes down, the combined effect soon disappears,
         // but the reverse isn't true. -- bwr
         if (you.duration[DUR_STONEMAIL])
             you.duration[DUR_STONEMAIL] = 1;
@@ -389,16 +496,24 @@ void untransform(void)
         break;
 
     case TRAN_ICE_BEAST:
+#ifdef JP
+        mpr( "あなたは再び暖かい肉体に戻った。", MSGCH_DURATION );
+#else
         mpr( "You warm up again.", MSGCH_DURATION );
+#endif
 
-        // Note: if the core goes down, the combined effect soon disappears, 
+        // Note: if the core goes down, the combined effect soon disappears,
         // but the reverse isn't true. -- bwr
         if (you.duration[DUR_ICY_ARMOUR])
             you.duration[DUR_ICY_ARMOUR] = 1;
         break;
 
     case TRAN_DRAGON:
+#ifdef JP
+        mpr( "あなたは変身が解けた。", MSGCH_DURATION );
+#else
         mpr( "Your transformation has ended.", MSGCH_DURATION );
+#endif
         modify_stat(STAT_STRENGTH, -10, true);
 
         if (!player_is_levitating()
@@ -406,10 +521,14 @@ void untransform(void)
                 || grd[you.x_pos][you.y_pos] == DNGN_DEEP_WATER
                 || grd[you.x_pos][you.y_pos] == DNGN_SHALLOW_WATER))
         {
-            if (you.species == SP_MERFOLK 
+            if (you.species == SP_MERFOLK
                 && grd[you.x_pos][you.y_pos] != DNGN_LAVA)
             {
+#ifdef JP
+                mpr("あなたは水中に飛び込んで、本来の形態に変化した。");
+#else
                 mpr("You dive into the water and return to your normal form.");
+#endif
                 merfolk_start_swimming();
             }
 
@@ -419,18 +538,30 @@ void untransform(void)
         break;
 
     case TRAN_LICH:
+#ifdef JP
+        mpr( "あなたは生ある者に戻った。", MSGCH_DURATION );
+#else
         mpr( "You feel yourself come back to life.", MSGCH_DURATION );
+#endif
         modify_stat(STAT_STRENGTH, -3, true);
         you.is_undead = US_ALIVE;
         break;
 
     case TRAN_AIR:
+#ifdef JP
+        mpr( "あなたの体は固体に戻った。", MSGCH_DURATION );
+#else
         mpr( "Your body solidifies.", MSGCH_DURATION );
+#endif
         modify_stat(STAT_DEXTERITY, -8, true);
         break;
 
     case TRAN_SERPENT_OF_HELL:
+#ifdef JP
+        mpr( "あなたは変身が解けた。", MSGCH_DURATION );
+#else
         mpr( "Your transformation has ended.", MSGCH_DURATION );
+#endif
         modify_stat(STAT_STRENGTH, -13, true);
         break;
     }
@@ -438,15 +569,20 @@ void untransform(void)
     // If nagas wear boots while transformed, they fall off again afterwards:
     // I don't believe this is currently possible, and if it is we
     // probably need something better to cover all possibilities.  -bwr
-    if ((you.species == SP_NAGA || you.species == SP_CENTAUR)
-            && you.equip[ EQ_BOOTS ] != -1
-            && you.inv[ you.equip[EQ_BOOTS] ].plus2 != TBOOT_NAGA_BARDING)
+    if ( (you.equip[ EQ_BOOTS ] != -1)
+       &&( (you.species == SP_NAGA && you.inv[ you.equip[EQ_BOOTS] ].plus2 != TBOOT_NAGA_BARDING)
+         ||(you.species == SP_CENTAUR && you.inv[ you.equip[EQ_BOOTS] ].plus2 != TBOOT_CENTAUR_BARDING) ) )
     {
         rem_stuff[EQ_BOOTS] = 1;
         remove_equipment(rem_stuff);
     }
 
     calc_hp();
+
+#ifdef USE_TILE
+    if (Options.use_tile)
+        TilePlayerRefresh();
+#endif
 }                               // end untransform()
 
 // XXX: This whole system is a mess as it still relies on special
@@ -505,8 +641,8 @@ bool can_equip( char use_which )
                 && use_which != EQ_SHIELD);
 
     case TRAN_STATUE:
-        return (use_which == EQ_WEAPON 
-                || use_which == EQ_CLOAK 
+        return (use_which == EQ_WEAPON
+                || use_which == EQ_CLOAK
                 || use_which == EQ_HELMET);
 
     case TRAN_ICE_BEAST:
@@ -536,7 +672,11 @@ void drop_everything(void)
     if (inv_count() < 1)
         return;
 
+#ifdef JP
+    mpr( "あなたは持ち物を運べなくなってしまったことに気付いた！" );
+#else
     mpr( "You find yourself unable to carry your possessions!" );
+#endif
 
     for (i = 0; i < ENDOFPACK; i++)
     {

@@ -75,7 +75,7 @@
 // ... was 5, 12, 21
 // how these are used will be replaced by a function in a second ... :P {dlb}
 
-static int weapon_type_modify( int weap, char noise[80], char noise2[80], 
+static int weapon_type_modify( int weap, char noise[80], char noise2[80],
                                int damage );
 
 static void stab_message(struct monsters *defender, int stab_bonus);
@@ -126,6 +126,280 @@ int effective_stat_bonus( int wepType )
 #endif
 }
 
+
+static int Rcap(int a, int b)
+{
+    if (a >= b) return 1000;
+    if (b==0) return 1000;
+    return a*1000/b;
+}
+
+
+int barehand_prob()
+{
+    const bool bearing_shield = (you.equip[EQ_SHIELD] != -1);
+    int Ps0 = 1000;
+    int Pa0 = 1000;
+    int Ps1 = 0;
+    int Pa1 = 0;
+    int Ss = you.skills[SK_SHIELDS];
+    int Sa = you.skills[SK_ARMOUR];
+    int prob;
+
+    // heavy armour modifiers for shield borne
+    if (bearing_shield)
+    {
+        switch (you.inv[you.equip[EQ_SHIELD]].sub_type)
+        {
+        case ARM_SHIELD:
+        Ps0 = Rcap(Ss+1, 7);
+        Ps1 = 1000 - Ps0;
+            break;
+        case ARM_LARGE_SHIELD:
+            if ((you.species >= SP_OGRE && you.species <= SP_OGRE_MAGE)
+                || player_genus(GENPC_DRACONIAN))
+            {
+                Ps0 = Rcap(Ss+1, 13);
+                Ps1 = 1000 - Ps0;
+            }
+            else
+            {
+        int C0 = Rcap(Ss+1, 13) + (1000-Rcap(Ss+1, 13))/3;
+                int C1 = (1000-Rcap(Ss+1, 13))/3;
+                Ps0 = C0*C0*C0/1000000;
+                Ps1 = 3*C0*C0*C1/1000000;
+            }
+            break;
+        default:
+            break;
+        }
+    }
+
+    // heavy armour modifiers for PARM_EVASION
+    if (you.equip[EQ_BODY_ARMOUR] != -1)
+    {
+        int Ev = property( you.inv[you.equip[EQ_BODY_ARMOUR]],
+                                     PARM_EVASION );
+        if (Ev<0)
+    {
+        Ev = -Ev;
+            Pa0 = 1000-Rcap(Ev, Sa) + Rcap(Ev, Sa)/Ev;
+            if (Ev > 1) Pa1 = Rcap(Ev,Sa)/Ev;
+        }
+    }
+
+    //printf("%d %d %d %d\n",Ps0,Ps1, Pa0,Pa1);
+    prob = Ps0*Pa0/1000 + (Ps0*Pa1 + Ps1*Pa0)/(2*1000*3)
+                   + (Ps0*Pa1 + Ps1*Pa0)/(2*1000*4);
+
+    return prob/10;
+}
+
+
+int check_weapon_speed(void)
+{
+    const int weapon = you.equip[EQ_WEAPON];
+    const bool ur_armed = (weapon != -1);   // compacts code a bit {dlb}
+    const bool bearing_shield = (you.equip[EQ_SHIELD] != -1);
+    const bool unarmed_attacks = true;
+
+    const int melee_brand = player_damage_brand();
+
+    int heavy_armour = 0;
+    int heavy_armour2 = 0;
+
+    int weapon_speed2 = 10;
+    int min_speed = 3;
+
+    // heavy armour modifiers for shield borne
+    if (bearing_shield)
+    {
+        switch (you.inv[you.equip[EQ_SHIELD]].sub_type)
+        {
+        case ARM_SHIELD:
+            //if (you.skills[SK_SHIELDS] < random2(7))
+            //    heavy_armour++;
+            if (you.skills[SK_SHIELDS] < 6)
+                heavy_armour += 100 * (6 - you.skills[SK_SHIELDS]) / 7;
+            break;
+        case ARM_LARGE_SHIELD:
+            if ((you.species >= SP_OGRE && you.species <= SP_OGRE_MAGE)
+                || player_genus(GENPC_DRACONIAN))
+            {
+                //if (you.skills[SK_SHIELDS] < random2(13))
+                //    heavy_armour++;     // was potentially "+= 3" {dlb}
+                if (you.skills[SK_SHIELDS] < 12)
+                    heavy_armour += 100 * (12 - you.skills[SK_SHIELDS]) / 13;
+            }
+            else
+            {
+                for (int i = 0; i < 3; i++)
+                {
+                    //if (you.skills[SK_SHIELDS] < random2(13))
+                    //    heavy_armour += random2(3);
+                        if (you.skills[SK_SHIELDS] < 12)
+                            heavy_armour += 100 * (12 - you.skills[SK_SHIELDS]) / 13;
+                }
+            }
+            break;
+        default:
+            break;
+        }
+    }
+
+    // heavy armour modifiers for PARM_EVASION
+    if (you.equip[EQ_BODY_ARMOUR] != -1)
+    {
+        const int ev_pen = property( you.inv[you.equip[EQ_BODY_ARMOUR]],
+                                     PARM_EVASION );
+
+        //if (ev_pen < 0 && random2(you.skills[SK_ARMOUR]) < abs( ev_pen ))
+        //    heavy_armour += random2( abs(ev_pen) );
+        if (ev_pen < 0)
+        {
+
+            if ( you.skills[SK_ARMOUR] > abs( ev_pen ) )
+            {
+                heavy_armour += 100 * ( abs(ev_pen) - 1 ) / 2
+                                * ( abs(ev_pen) ) / you.skills[SK_ARMOUR];
+            }
+            else
+            {
+                heavy_armour += 100 * ( abs(ev_pen) - 1 ) / 2;
+            }
+        }
+    }
+
+    // ??? what is the reasoning behind this ??? {dlb}
+    // My guess is that its supposed to encourage monk-style play -- bwr
+    if (!ur_armed)
+        //heavy_armour *= (coinflip() ? 3 : 2);
+        heavy_armour = heavy_armour * (3 + 2) / 2;
+
+    heavy_armour = heavy_armour / 100;
+
+    // Calculate the following two flags in advance
+    // to know what player does this combat turn:
+    bool can_do_unarmed_combat = false;
+    int  calc_can_do = 100;
+
+    //if (you.burden_state == BS_UNENCUMBERED
+    //    && random2(20) < you.skills[SK_UNARMED_COMBAT]
+    //    && random2(1 + heavy_armour) < 2)
+    if (you.skills[SK_UNARMED_COMBAT] < 20)
+        calc_can_do = calc_can_do * you.skills[SK_UNARMED_COMBAT] / 20;
+    if (heavy_armour > 1)
+        calc_can_do = calc_can_do * 2 / (1 + heavy_armour);
+    if (you.burden_state == BS_UNENCUMBERED
+        && calc_can_do > 50)
+    {
+        can_do_unarmed_combat = true;
+    }
+
+    // if we're not getting potential unarmed attacks, and not wearing a
+    // shield, and have a suitable uncursed weapon we get the bonus.
+    bool use_hand_and_a_half_bonus = false;
+
+    int wpn_skill = SK_UNARMED_COMBAT;
+    int hands_reqd = HANDS_ONE_HANDED;
+
+    if (weapon != -1)
+    {
+        wpn_skill = weapon_skill( you.inv[weapon].base_type,
+                                  you.inv[weapon].sub_type );
+
+        hands_reqd = hands_reqd_for_weapon( you.inv[weapon].base_type,
+                                            you.inv[weapon].sub_type );
+    }
+
+    if (unarmed_attacks
+        && !can_do_unarmed_combat
+        && !bearing_shield && ur_armed
+        && item_uncursed( you.inv[ weapon ] )
+        && hands_reqd == HANDS_ONE_OR_TWO_HANDED)
+    {
+        // currently: +1 dam, +1 hit, -1 spd (loosly)
+        use_hand_and_a_half_bonus = true;
+    }
+
+    if (ur_armed)
+    {
+        if (you.inv[ weapon ].base_type == OBJ_WEAPONS
+            || item_is_staff( you.inv[ weapon ] ))
+        {
+            weapon_speed2 = property( you.inv[ weapon ], PWPN_SPEED );
+            weapon_speed2 -= you.skills[ wpn_skill ] / 2;
+
+            min_speed = property( you.inv[ weapon ], PWPN_SPEED ) / 2;
+
+            // Short blades can get up to at least unarmed speed.
+            if (wpn_skill == SK_SHORT_BLADES && min_speed > 5)
+                min_speed = 5;
+
+            // Using both hands can get a weapon up to speed 7
+            if ((hands_reqd == HANDS_TWO_HANDED || use_hand_and_a_half_bonus)
+                && min_speed > 7)
+            {
+                min_speed = 7;
+            }
+
+            // never go faster than speed 3 (ie 3 attacks per round)
+            if (min_speed < 3)
+                min_speed = 3;
+
+            // Hand and a half bonus only helps speed up to a point, any more
+            // than speed 10 must come from skill and the weapon
+            if (use_hand_and_a_half_bonus && weapon_speed2 > 10)
+                weapon_speed2--;
+
+            // apply minimum to weapon skill modification
+            if (weapon_speed2 < min_speed)
+                weapon_speed2 = min_speed;
+
+            if (you.inv[weapon].base_type == OBJ_WEAPONS
+                && melee_brand == SPWPN_SPEED)
+            {
+                weapon_speed2 = (weapon_speed2 + 1) / 2;
+            }
+        }
+    }
+    else
+    {
+        // Unarmed speed
+        if (you.burden_state == BS_UNENCUMBERED)
+        {
+            weapon_speed2  = 10 - you.skills[SK_UNARMED_COMBAT] / 3;
+
+            if (weapon_speed2 < 4)
+                        weapon_speed2 = 4;
+
+            weapon_speed2 = ( weapon_speed2 * barehand_prob()
+                             + 10 * (100 - barehand_prob() ) ) / 100;
+        }
+    }
+
+    if (bearing_shield)
+    {
+        switch (you.inv[you.equip[EQ_SHIELD]].sub_type)
+        {
+        case ARM_SHIELD:
+            weapon_speed2++;
+            break;
+        case ARM_LARGE_SHIELD:
+            weapon_speed2 += 2;
+            break;
+        }
+    }
+
+    // Never allow anything faster than 3 to get through... three attacks
+    // per round is enough... 5 or 10 is just silly. -- bwr
+    if (weapon_speed2 < 3)
+        weapon_speed2 = 3;
+
+    return weapon_speed2;
+}
+
+
 void you_attack(int monster_attacked, bool unarmed_attacks)
 {
     struct monsters *defender = &menv[monster_attacked];
@@ -158,7 +432,7 @@ void you_attack(int monster_attacked, bool unarmed_attacks)
     if (ur_armed && you.inv[weapon].base_type == OBJ_WEAPONS
                  && is_random_artefact( you.inv[weapon] ))
     {
-        randart_wpn_properties( you.inv[weapon], art_proprt );    
+        randart_wpn_properties( you.inv[weapon], art_proprt );
     }
     else
     {
@@ -233,7 +507,7 @@ void you_attack(int monster_attacked, bool unarmed_attacks)
 
     if (weapon != -1)
     {
-        wpn_skill = weapon_skill( you.inv[weapon].base_type, 
+        wpn_skill = weapon_skill( you.inv[weapon].base_type,
                                   you.inv[weapon].sub_type );
 
         hands_reqd = hands_reqd_for_weapon( you.inv[weapon].base_type,
@@ -263,7 +537,7 @@ void you_attack(int monster_attacked, bool unarmed_attacks)
     if (mons_friendly(defender))
         naughty(NAUGHTY_ATTACK_FRIEND, 5);
 
-    if (you.pet_target == MHITNOT) 
+    if (you.pet_target == MHITNOT)
         you.pet_target = monster_attacked;
 
     // fumbling in shallow water <early return>:
@@ -271,7 +545,11 @@ void you_attack(int monster_attacked, bool unarmed_attacks)
     {
         if (random2(you.dex) < 4 || one_chance_in(5))
         {
+#ifdef JP
+            mpr("足場が悪いために、あなたは攻撃を失敗した。");
+#else
             mpr("Unstable footing causes you to fumble your attack.");
+#endif
             return;
         }
     }
@@ -344,8 +622,12 @@ void you_attack(int monster_attacked, bool unarmed_attacks)
     case SPWLD_WUCAD_MU:
         if (one_chance_in(9))
         {
-            miscast_effect( SPTYP_DIVINATION, random2(9), random2(70), 100, 
+            miscast_effect( SPTYP_DIVINATION, random2(9), random2(70), 100,
+#ifdef JP
+                            "ウカド・ムーの杖" );
+#else
                             "the Staff of Wucad Mu" );
+#endif
         }
         break;
     default:
@@ -376,7 +658,7 @@ void you_attack(int monster_attacked, bool unarmed_attacks)
         }
         else if (item_is_staff( you.inv[ weapon ] ))
         {
-            /* magical staff */ 
+            /* magical staff */
             your_to_hit += property( you.inv[ weapon ], PWPN_HIT );
         }
     }
@@ -397,7 +679,11 @@ void you_attack(int monster_attacked, bool unarmed_attacks)
     your_to_hit = random2(your_to_hit);
 
 #if DEBUG_DIAGNOSTICS
+#ifdef JP
     snprintf( info, INFO_SIZE, "to hit die: %d; rolled value: %d",
+#else
+    snprintf( info, INFO_SIZE, "to hit die: %d; rolled value: %d",
+#endif
               roll_hit, your_to_hit );
 
     mpr( info, MSGCH_DIAGNOSTICS );
@@ -577,9 +863,13 @@ void you_attack(int monster_attacked, bool unarmed_attacks)
         you.time_taken = 1;
 
 #if DEBUG_DIAGNOSTICS
-    snprintf( info, INFO_SIZE, "Weapon speed: %d; min: %d; speed: %d; attack time: %d", 
+#ifdef JP
+    snprintf( info, INFO_SIZE, "Weapon speed: %d; min: %d; speed: %d; attack time: %d; h_a: %d",
+              weapon_speed2, min_speed, weapon_speed2, you.time_taken, heavy_armour );
+#else
+    snprintf( info, INFO_SIZE, "Weapon speed: %d; min: %d; speed: %d; attack time: %d",
               weapon_speed2, min_speed, weapon_speed2, you.time_taken );
-
+#endif
     mpr( info, MSGCH_DIAGNOSTICS );
 #endif
 
@@ -598,7 +888,7 @@ void you_attack(int monster_attacked, bool unarmed_attacks)
     }
 
     // confused (but not perma-confused)
-    if (mons_has_ench(defender, ENCH_CONFUSION) 
+    if (mons_has_ench(defender, ENCH_CONFUSION)
         && !mons_flag(defender->type, M_CONFUSED))
     {
         stabAttempt = true;
@@ -636,7 +926,11 @@ void you_attack(int monster_attacked, bool unarmed_attacks)
     }
 
 #if DEBUG_DIAGNOSTICS
-    snprintf( info, INFO_SIZE, "your to-hit: %d; defender EV: %d", 
+#ifdef JP
+    snprintf( info, INFO_SIZE, "your to-hit: %d; defender EV: %d",
+#else
+    snprintf( info, INFO_SIZE, "your to-hit: %d; defender EV: %d",
+#endif
               your_to_hit, defender->evasion );
 
     mpr( info, MSGCH_DIAGNOSTICS );
@@ -684,8 +978,12 @@ void you_attack(int monster_attacked, bool unarmed_attacks)
 #if DEBUG_DIAGNOSTICS
         const int slay_damage = damage;
 
-        snprintf( info, INFO_SIZE, 
-                  "melee base: %d; str: %d; water: %d; to-dam: %d", 
+        snprintf( info, INFO_SIZE,
+#ifdef JP
+                  "melee base: %d; str: %d; water: %d; to-dam: %d",
+#else
+                  "melee base: %d; str: %d; water: %d; to-dam: %d",
+#endif
                   base_damage, str_damage, water_damage, slay_damage );
 
         mpr( info, MSGCH_DIAGNOSTICS );
@@ -763,10 +1061,16 @@ void you_attack(int monster_attacked, bool unarmed_attacks)
                 && random2(100) < you.skills[ wpn_skill ])
             {
                 set_ident_flags( you.inv[ weapon ], ISFLAG_KNOW_PLUSES );
-                strcpy(info, "You are wielding ");
                 in_name( weapon , DESC_NOCAP_A, str_pass );
+#ifdef JP
+                strcpy(info, "あなたが使っている武器は");
+                strcat(info, str_pass);
+                strcat(info, "だ。");
+#else
+                strcpy(info, "You are wielding ");
                 strcat(info, str_pass);
                 strcat(info, ".");
+#endif
                 mpr(info);
                 more();
                 you.wield_change = true;
@@ -865,21 +1169,29 @@ void you_attack(int monster_attacked, bool unarmed_attacks)
         }
 
 #if DEBUG_DIAGNOSTICS
-        snprintf( info, INFO_SIZE, 
+        snprintf( info, INFO_SIZE,
+#ifdef JP
                   "melee roll: %d; skill: %d; fight: %d; pre wpn plus: %d",
+#else
+                  "melee roll: %d; skill: %d; fight: %d; pre wpn plus: %d",
+#endif
                   roll_damage, skill_damage, fight_damage, preplus_damage );
 
         mpr( info, MSGCH_DIAGNOSTICS );
 
-        snprintf( info, INFO_SIZE, 
+        snprintf( info, INFO_SIZE,
+#ifdef JP
                   "melee plus: %d; bonus: %d; stab: %d; post AC: %d",
+#else
+                  "melee plus: %d; bonus: %d; stab: %d; post AC: %d",
+#endif
                   plus_damage, bonus_damage, stab_damage, damage_done );
 
         mpr( info, MSGCH_DIAGNOSTICS );
 #endif
 
         // This doesn't actually modify damage -- bwr
-        damage_done = weapon_type_modify( weapon, damage_noise, damage_noise2, 
+        damage_done = weapon_type_modify( weapon, damage_noise, damage_noise2,
                                           damage_done );
 
         if (damage_done < 0)
@@ -912,7 +1224,11 @@ void you_attack(int monster_attacked, bool unarmed_attacks)
         {
 #if DEBUG_DIAGNOSTICS
             /* note: doesn't take account of special weapons etc */
+#ifdef JP
             snprintf( info, INFO_SIZE, "Hit for %d.", damage_done );
+#else
+            snprintf( info, INFO_SIZE, "Hit for %d.", damage_done );
+#endif
             mpr( info, MSGCH_DIAGNOSTICS );
 #endif
             if (ur_armed && melee_brand == SPWPN_VAMPIRICISM)
@@ -921,7 +1237,11 @@ void you_attack(int monster_attacked, bool unarmed_attacks)
                     && damage_done > 0 && you.hp < you.hp_max
                     && !one_chance_in(5))
                 {
+#ifdef JP
+                    mpr("あなたは気分が良くなった。");
+#else
                     mpr("You feel better.");
+#endif
 
                     // more than if not killed
                     inc_hp(1 + random2(damage_done), false);
@@ -937,12 +1257,20 @@ void you_attack(int monster_attacked, bool unarmed_attacks)
 
             if (defender->type == MONS_GIANT_SPORE)
             {
+#ifdef JP
+                snprintf( info, INFO_SIZE, "あなたは巨大胞子を%s。", damage_noise);
+#else
                 snprintf( info, INFO_SIZE, "You %s the giant spore.", damage_noise);
+#endif
                 mpr(info);
             }
             else if (defender->type == MONS_BALL_LIGHTNING)
             {
+#ifdef JP
+                snprintf( info, INFO_SIZE, "あなたは球雷を%s。", damage_noise);
+#else
                 snprintf( info, INFO_SIZE, "You %s the ball lightning.", damage_noise);
+#endif
                 mpr(info);
             }
             return;
@@ -952,10 +1280,29 @@ void you_attack(int monster_attacked, bool unarmed_attacks)
         {
             hit = true;
 
+#ifdef JP
+            snprintf( info, INFO_SIZE, "あなたは%sを%s。",
+            ptr_monam(defender, DESC_PLAIN), damage_noise);
+#else
             snprintf( info, INFO_SIZE, "You %s ", damage_noise);
             strcat(info, ptr_monam(defender, DESC_NOCAP_THE));
+#endif
+#ifdef JP
+            if ( (80 - strlen(info) ) > 32)
+            {
+                strcat(info, "しかし損傷を与えられなかった。");
+                mpr(info);
+            }
+            else
+            {
+                mpr(info);
+                strcpy(info, "しかし損傷を与えられなかった。");
+                mpr(info);
+            }
+#else
             strcat(info, ", but do no damage.");
             mpr(info);
+#endif
         }
     }
     else
@@ -967,38 +1314,78 @@ void you_attack(int monster_attacked, bool unarmed_attacks)
             behaviour_event( defender, ME_WHACK, MHITYOU );
 
         if ((your_to_hit + heavy_armour / 2) >= defender->evasion)
+#ifdef JP
+            strcpy(info, "あなたは防具の重さに攻撃を失敗した。");
+#else
             strcpy(info, "Your armour prevents you from hitting ");
+#endif
         else
+#ifdef JP
+            strcpy(info, "あなたは");
+            strcat(info, ptr_monam(defender, DESC_PLAIN));
+            strcat(info, "への攻撃を外した。");
+#else
             strcpy(info, "You miss ");
-
-        strcat(info, ptr_monam(defender, DESC_NOCAP_THE));
-        strcat(info, ".");
+            strcat(info, ptr_monam(defender, DESC_NOCAP_THE));
+            strcat(info, ".");
+#endif
         mpr(info);
     }
 
     if (hit && damage_done > 0
         || (hit && damage_done < 1 && mons_has_ench(defender,ENCH_INVIS)))
     {
+
+#ifdef JP
+        strcpy(info, "あなたは");
+        strcat(info, ptr_monam(defender, DESC_PLAIN));
+        strcat(info, "を");
+        strcat(info, damage_noise);
+
+#else
         strcpy(info, "You ");
         strcat(info, damage_noise);
         strcat(info, " ");
         strcat(info, ptr_monam(defender, DESC_NOCAP_THE));
+        strcat(info, " ");
+#endif
         strcat(info, damage_noise2);
 
 #if DEBUG_DIAGNOSTICS
+#ifdef JP
         strcat( info, " for " );
+#else
+        strcat( info, " for " );
+#endif
         /* note: doesn't take account of special weapons etc */
         itoa( damage_done, st_prn, 10 );
         strcat( info, st_prn );
 #endif
+
         if (damage_done < HIT_WEAK)
+#ifdef JP
+            strcat(info, "。");
+#else
             strcat(info, ".");
+#endif
         else if (damage_done < HIT_MED)
+#ifdef JP
+            strcat(info, "！");
+#else
             strcat(info, "!");
+#endif
         else if (damage_done < HIT_STRONG)
+#ifdef JP
+            strcat(info, "！！");
+#else
             strcat(info, "!!");
+#endif
         else
+#ifdef JP
+            strcat(info, "！！！");
+#else
             strcat(info, "!!!");
+#endif
 
         mpr(info);
 
@@ -1031,7 +1418,7 @@ void you_attack(int monster_attacked, bool unarmed_attacks)
     {
         int specdam = 0;
 
-        if (ur_armed 
+        if (ur_armed
             && you.inv[ weapon ].base_type == OBJ_WEAPONS
             && is_demonic( you.inv[ weapon ].sub_type ))
         {
@@ -1053,29 +1440,53 @@ void you_attack(int monster_attacked, bool unarmed_attacks)
                 defender->number--;
 
                 temp_rand = random2(4);
+#ifdef JP
+                const char *const verb = (temp_rand == 0) ? "斬った" :
+                                         (temp_rand == 1) ? "刈り取った" :
+                                         (temp_rand == 2) ? "叩き切った" : "ぶった切った";
+#else
                 const char *const verb = (temp_rand == 0) ? "slice" :
                                          (temp_rand == 1) ? "lop" :
                                          (temp_rand == 2) ? "chop" : "hack";
+#endif
 
                 if (defender->number < 1)
                 {
+#ifdef JP
+                    snprintf( info, INFO_SIZE, "あなたは%sの最後の首を%s！",
+                              ptr_monam(defender, DESC_PLAIN), verb );
+                    mpr( info );
+#else
                     snprintf( info, INFO_SIZE, "You %s %s's last head off!",
                               verb, ptr_monam(defender, DESC_NOCAP_THE) );
                     mpr( info );
-                              
-                    defender->hit_points = -1; 
+#endif
+                    defender->hit_points = -1;
                 }
                 else
                 {
+#ifdef JP
+                    snprintf( info, INFO_SIZE, "あなたは%sの首の一つを%s！",
+                              ptr_monam(defender, DESC_PLAIN), verb );
+#else
                     snprintf( info, INFO_SIZE, "You %s one of %s's heads off!",
                               verb, ptr_monam(defender, DESC_NOCAP_THE) );
+#endif
                     mpr( info );
 
-                    if (wpn_brand == SPWPN_FLAMING) 
+                    if (wpn_brand == SPWPN_FLAMING)
+#ifdef JP
+                        mpr( "炎が傷口を焼灼する！" );
+#else
                         mpr( "The flame cauterises the wound!" );
+#endif
                     else if (defender->number < 19)
                     {
+#ifdef JP
+                        simple_monster_message( defender, "の首が２本生えてきた！" );
+#else
                         simple_monster_message( defender, " grows two more!" );
+#endif
                         defender->number += 2;
                         heal_monster( defender, 8 + random2(8), true );
                     }
@@ -1084,7 +1495,7 @@ void you_attack(int monster_attacked, bool unarmed_attacks)
                 // if the hydra looses a head:
                 // - it's dead if it has none remaining (HP set to -1)
                 // - flame used to cauterise doesn't do extra damage
-                // - ego weapons do their additional damage to the 
+                // - ego weapons do their additional damage to the
                 //   hydra's decapitated head, so it's ignored.
                 //
                 // ... and so we skip the special damage.
@@ -1100,11 +1511,11 @@ void you_attack(int monster_attacked, bool unarmed_attacks)
         // This is similar to the previous, in both value and distribution, except
         // that instead of just SKILL, its now averaged with Evocations. -- bwr
 #define STAFF_DAMAGE(SKILL) (roll_dice( 3, 1 + (you.skills[(SKILL)] + you.skills[SK_EVOCATIONS]) / 12 ))
-                                    
+
 #define STAFF_COST 2
 
         // magic staves have their own special damage
-        if (ur_armed && item_is_staff( you.inv[weapon] )) 
+        if (ur_armed && item_is_staff( you.inv[weapon] ))
         {
             specdam = 0;
 
@@ -1123,8 +1534,13 @@ void you_attack(int monster_attacked, bool unarmed_attacks)
 
                         if (specdam)
                         {
+#ifdef JP
+                            snprintf( info, INFO_SIZE, "%sは電気ショックを浴びた！",
+                                      ptr_monam(defender, DESC_PLAIN) );
+#else
                             snprintf( info, INFO_SIZE, "%s is jolted!",
                                       ptr_monam(defender, DESC_CAP_THE) );
+#endif
                             mpr(info);
                         }
                     }
@@ -1142,8 +1558,13 @@ void you_attack(int monster_attacked, bool unarmed_attacks)
                     if (specdam)
                     {
 
+#ifdef JP
+                        snprintf( info, INFO_SIZE, "%sは凍りついた！",
+                                  ptr_monam(defender, DESC_PLAIN) );
+#else
                         snprintf( info, INFO_SIZE, "You freeze %s!",
                                   ptr_monam(defender, DESC_NOCAP_THE) );
+#endif
                         mpr(info);
                     }
                     break;
@@ -1154,9 +1575,13 @@ void you_attack(int monster_attacked, bool unarmed_attacks)
 
                     specdam = STAFF_DAMAGE(SK_EARTH_MAGIC);
 
-                    if (specdam) 
+                    if (specdam)
                     {
+#ifdef JP
+                        snprintf( info, INFO_SIZE, "あなたは%sを押し潰した！",
+#else
                         snprintf( info, INFO_SIZE, "You crush %s!",
+#endif
                                   ptr_monam(defender, DESC_NOCAP_THE) );
                         mpr(info);
                     }
@@ -1173,7 +1598,11 @@ void you_attack(int monster_attacked, bool unarmed_attacks)
 
                     if (specdam)
                     {
+#ifdef JP
+                        snprintf( info, INFO_SIZE, "あなたは%sを燃やした！",
+#else
                         snprintf( info, INFO_SIZE, "You burn %s!",
+#endif
                                   ptr_monam(defender, DESC_NOCAP_THE) );
                         mpr(info);
                     }
@@ -1200,7 +1629,11 @@ void you_attack(int monster_attacked, bool unarmed_attacks)
 
                         if (specdam)
                         {
+#ifdef JP
+                            snprintf( info, INFO_SIZE, "%sは苦痛に身を震わせた！",
+#else
                             snprintf( info, INFO_SIZE, "%s convulses in agony!",
+#endif
                                       ptr_monam(defender, DESC_CAP_THE) );
                             mpr(info);
 
@@ -1219,7 +1652,11 @@ void you_attack(int monster_attacked, bool unarmed_attacks)
                     break;
 
                 default:
+#ifdef JP
+                    mpr("あなたは私が聞いたこともないような杖を手にしている！ (fight.cc)");
+#else
                     mpr("You're wielding some staff I've never heard of! (fight.cc)");
+#endif
                     break;
                 } // end switch
             }
@@ -1231,10 +1668,18 @@ void you_attack(int monster_attacked, bool unarmed_attacks)
                 if (item_not_ident( you.inv[weapon], ISFLAG_KNOW_TYPE ))
                 {
                     set_ident_flags( you.inv[weapon], ISFLAG_KNOW_TYPE );
+#ifdef JP
+                    in_name( weapon, DESC_NOCAP_A, str_pass);
+                    strcat(info, str_pass);
+                    strcpy(info, "あなたは");
+                    strcat(info, str_pass );
+                    strcat(info, "を手にしている。");
+#else
                     strcpy(info, "You are wielding ");
                     in_name( weapon, DESC_NOCAP_A, str_pass);
                     strcat(info, str_pass);
                     strcat(info, ".");
+#endif
                     mpr(info);
                     more();
                     you.wield_change = true;
@@ -1243,7 +1688,7 @@ void you_attack(int monster_attacked, bool unarmed_attacks)
 #undef STAFF_DAMAGE
 #undef STAFF_COST
 // END STAFF HACK
-        } 
+        }
         else
         {
             // handle special brand damage (unarmed or armed non-staff ego):
@@ -1273,15 +1718,33 @@ void you_attack(int monster_attacked, bool unarmed_attacks)
 
                 if (specdam)
                 {
+#ifdef JP
+                    strcpy(info, "あなたは");
+                    strcat(info, ptr_monam(defender, DESC_NOCAP_THE));
+                    strcat(info, "を燃やした");
+#else
                     strcpy(info, "You burn ");
                     strcat(info, ptr_monam(defender, DESC_NOCAP_THE));
+#endif
 
                     if (specdam < 3)
+#ifdef JP
+                        strcat(info, "。");
+#else
                         strcat(info, ".");
+#endif
                     else if (specdam < 7)
+#ifdef JP
+                        strcat(info, "！");
+#else
                         strcat(info, "!");
+#endif
                     else
+#ifdef JP
+                        strcat(info, "！！");
+#else
                         strcat(info, "!!");
+#endif
 
                     mpr(info);
                 }
@@ -1298,15 +1761,33 @@ void you_attack(int monster_attacked, bool unarmed_attacks)
 
                 if (specdam)
                 {
+#ifdef JP
+                    strcpy(info, "あなたは");
+                    strcat(info, ptr_monam(defender, DESC_PLAIN));
+                    strcat(info, "を凍らせた");
+#else
                     strcpy(info, "You freeze ");
                     strcat(info, ptr_monam(defender, DESC_NOCAP_THE));
+#endif
 
                     if (specdam < 3)
+#ifdef JP
+                        strcat(info, "。");
+#else
                         strcat(info, ".");
+#endif
                     else if (specdam < 7)
+#ifdef JP
+                        strcat(info, "！");
+#else
                         strcat(info, "!");
+#endif
                     else
+#ifdef JP
+                        strcat(info, "！！");
+#else
                         strcat(info, "!!");
+#endif
 
                     mpr(info);
                 }
@@ -1338,7 +1819,11 @@ void you_attack(int monster_attacked, bool unarmed_attacks)
                     break;
                 else if (one_chance_in(3))
                 {
+#ifdef JP
+                    mpr("突如として電光が炸裂した。");
+#else
                     mpr("There is a sudden explosion of sparks!");
+#endif
                     specdam = random2avg(28, 3);
                 }
                 break;
@@ -1357,9 +1842,20 @@ void you_attack(int monster_attacked, bool unarmed_attacks)
                 if (mons_res_negative_energy(defender) > 0 || one_chance_in(3))
                     break;
 
+#ifdef JP
+                strcpy(info, "あなたは");
+                strcat(info, ptr_monam(defender, DESC_NOCAP_THE));
+                strcat(info, "を衰弱させた");
+#else
                 strcpy(info, "You drain ");
                 strcat(info, ptr_monam(defender, DESC_NOCAP_THE));
+#endif
+
+#ifdef JP
+                strcat(info, "！");
+#else
                 strcat(info, "!");
+#endif
                 mpr(info);
 
                 if (one_chance_in(5))
@@ -1396,11 +1892,15 @@ void you_attack(int monster_attacked, bool unarmed_attacks)
                 else if (you.hp == you.hp_max || one_chance_in(5))
                     break;
 
+#ifdef JP
+                mpr("あなたは体力を吸収した。");
+#else
                 mpr("You feel better.");
+#endif
 
                 // thus is probably more valuable on larger weapons?
-                if (ur_armed 
-                    && is_fixed_artefact( you.inv[weapon] ) 
+                if (ur_armed
+                    && is_fixed_artefact( you.inv[weapon] )
                     && you.inv[weapon].special == SPWPN_VAMPIRES_TOOTH)
                 {
                     inc_hp(damage_done, false);
@@ -1418,7 +1918,11 @@ void you_attack(int monster_attacked, bool unarmed_attacks)
                 specdam = 0;
                 if (mons_holiness(defender->type) == MH_UNDEAD && !one_chance_in(3))
                 {
+#ifdef JP
+                    simple_monster_message(defender, "は激しく振動した。");
+#else
                     simple_monster_message(defender, " shudders.");
+#endif
                     specdam += random2avg((1 + (damage_done * 3)), 3);
                 }
                 break;
@@ -1428,7 +1932,11 @@ void you_attack(int monster_attacked, bool unarmed_attacks)
                 if (mons_res_negative_energy(defender) <= 0
                     && random2(8) <= you.skills[SK_NECROMANCY])
                 {
+#ifdef JP
+                    simple_monster_message(defender, "は苦痛に身を震わせた。");
+#else
                     simple_monster_message(defender, " convulses in agony.");
+#endif
                     specdam += random2( 1 + you.skills[SK_NECROMANCY] );
                 }
                 naughty(NAUGHTY_NECROMANCY, 4);
@@ -1443,7 +1951,11 @@ void you_attack(int monster_attacked, bool unarmed_attacks)
                     if (one_chance_in(5))
                     {
                         simple_monster_message( defender,
+#ifdef JP
+                            "は位置変化のエネルギーに包まれた。" );
+#else
                             " basks in the translocular energy." );
+#endif
                         heal_monster(defender, 1 + random2avg(7, 2), true); // heh heh
                     }
                     break;
@@ -1451,9 +1963,19 @@ void you_attack(int monster_attacked, bool unarmed_attacks)
 
                 if (one_chance_in(3))
                 {
+#ifdef JP
+                    strcpy(info, ptr_monam(defender, DESC_NOCAP_THE));
+                    strcat(info, "の周りの空間が歪んだ");
+#else
                     strcpy(info, "Space bends around ");
                     strcat(info, ptr_monam(defender, DESC_NOCAP_THE));
+#endif
+
+#ifdef JP
+                    strcat(info, "。");
+#else
                     strcat(info, ".");
+#endif
                     mpr(info);
                     specdam += 1 + random2avg(7, 2);
                     break;
@@ -1461,9 +1983,19 @@ void you_attack(int monster_attacked, bool unarmed_attacks)
 
                 if (one_chance_in(3))
                 {
+#ifdef JP
+                    strcpy(info, ptr_monam(defender, DESC_NOCAP_THE));
+                    strcat(info, "の周りの空間が激しく歪んだ");
+#else
                     strcpy(info, "Space warps horribly around ");
                     strcat(info, ptr_monam(defender, DESC_NOCAP_THE));
+#endif
+
+#ifdef JP
+                    strcat(info, "！");
+#else
                     strcat(info, "!");
+#endif
                     mpr(info);
                     specdam += 3 + random2avg(24, 2);
                     break;
@@ -1507,7 +2039,11 @@ void you_attack(int monster_attacked, bool unarmed_attacks)
 
         /* remember, the hydra function sometimes skips straight to mons_dies */
 #if DEBUG_DIAGNOSTICS
-        snprintf( info, INFO_SIZE, "brand: %d; melee special damage: %d", 
+#ifdef JP
+        snprintf( info, INFO_SIZE, "brand: %d; melee special damage: %d",
+#else
+        snprintf( info, INFO_SIZE, "brand: %d; melee special damage: %d",
+#endif
                   melee_brand, specdam );
         mpr( info, MSGCH_DIAGNOSTICS );
 #endif
@@ -1532,7 +2068,7 @@ void you_attack(int monster_attacked, bool unarmed_attacks)
 
         if (can_do_unarmed_combat)
         {
-            if (you.species == SP_NAGA) 
+            if (you.species == SP_NAGA)
                 unarmed_attack = UNAT_HEADBUTT;
             else
                 unarmed_attack = (coinflip() ? UNAT_HEADBUTT : UNAT_KICK);
@@ -1574,7 +2110,11 @@ void you_attack(int monster_attacked, bool unarmed_attacks)
                     continue;
                 }
 
+#ifdef JP
+                strcpy(attack_name, "蹴り");
+#else
                 strcpy(attack_name, "kick");
+#endif
                 sc_dam = ((you.mutation[MUT_HOOVES]
                             || you.species == SP_CENTAUR) ? 10 : 5);
                 break;
@@ -1599,8 +2139,13 @@ void you_attack(int monster_attacked, bool unarmed_attacks)
                     continue;
                 }
 
+#ifdef JP
+                strcpy(attack_name, (you.species == SP_KENKU) ? "嘴の突き"
+                                                              : "頭突き");
+#else
                 strcpy(attack_name, (you.species == SP_KENKU) ? "peck"
                                                               : "headbutt");
+#endif
 
                 sc_dam = 5 + you.mutation[MUT_HORNS] * 3;
 
@@ -1641,7 +2186,11 @@ void you_attack(int monster_attacked, bool unarmed_attacks)
                     continue;
                 }
 
+#ifdef JP
+                strcpy(attack_name, "尻尾の一撃");
+#else
                 strcpy(attack_name, "tail-slap");
+#endif
                 sc_dam = 6;
 
                 if (you.mutation[ MUT_STINGER ] > 0)
@@ -1654,7 +2203,7 @@ void you_attack(int monster_attacked, bool unarmed_attacks)
                 // maybe add this to player messaging {dlb}
                 //
                 // STINGER mutation doesn't give extra damage here... that
-                // would probably be a bit much, we'll still get the 
+                // would probably be a bit much, we'll still get the
                 // poison bonus so it's still somewhat good.
                 if (you.species == SP_GREY_DRACONIAN && you.experience_level >= 7)
                 {
@@ -1676,19 +2225,29 @@ void you_attack(int monster_attacked, bool unarmed_attacks)
 
                 /* no punching with a shield or 2-handed wpn, except staves */
                 if (bearing_shield || coinflip()
-                    || (ur_armed && hands_reqd == HANDS_TWO_HANDED))
+                    || (ur_armed && hands_reqd == HANDS_TWO_HANDED
+                        && you.inv[weapon].base_type != OBJ_STAVES
+                        && you.inv[weapon].sub_type  != WPN_QUARTERSTAFF) )
                 {
                     continue;
                 }
 
+#ifdef JP
+                strcpy(attack_name, "殴打");
+#else
                 strcpy(attack_name, "punch");
+#endif
 
                 /* applied twice */
                 sc_dam = 5 + you.skills[SK_UNARMED_COMBAT] / 3;
 
                 if (you.attribute[ATTR_TRANSFORMATION] == TRAN_BLADE_HANDS)
                 {
+#ifdef JP
+                    strcpy(attack_name, "切り払い");
+#else
                     strcpy(attack_name, "slash");
+#endif
                     sc_dam += 6;
                 }
                 break;
@@ -1766,25 +2325,53 @@ void you_attack(int monster_attacked, bool unarmed_attacks)
                     if (!helpless || you.skills[SK_UNARMED_COMBAT] < 2)
                         exercise(SK_UNARMED_COMBAT, 1);
 
+#ifdef JP
+                    strcpy(info, "あなたは");
+                    strcat(info, ptr_monam(defender, DESC_NOCAP_THE));
+                    strcat(info, "に");
+                    strcat(info, attack_name);
+                    strcat(info, "を加えた");
+#else
                     strcpy(info, "You ");
                     strcat(info, attack_name);
                     strcat(info, " ");
                     strcat(info, ptr_monam(defender, DESC_NOCAP_THE));
+#endif
 
 #if DEBUG_DIAGNOSTICS
+#ifdef JP
                     strcat(info, " for ");
+#else
+                    strcat(info, " for ");
+#endif
                     itoa(damage_done, st_prn, 10);
                     strcat(info, st_prn);
 #endif
 
                     if (damage_done < HIT_WEAK)
+#ifdef JP
+                        strcat(info, "。");
+#else
                         strcat(info, ".");
+#endif
                     else if (damage_done < HIT_MED)
+#ifdef JP
+                        strcat(info, "！");
+#else
                         strcat(info, "!");
+#endif
                     else if (damage_done < HIT_STRONG)
+#ifdef JP
+                        strcat(info, "！！");
+#else
                         strcat(info, "!!");
+#endif
                     else
+#ifdef JP
+                        strcat(info, "！！！");
+#else
                         strcat(info, "!!!");
+#endif
 
                     mpr(info);
 
@@ -1798,15 +2385,41 @@ void you_attack(int monster_attacked, bool unarmed_attacks)
                 }
                 else // no damage was done
                 {
+#ifdef JP
+                    strcpy(info, "あなたは");
+                    strcat(info, ptr_monam(defender, DESC_NOCAP_THE));
+                    strcat(info, "に");
+                    strcat(info, attack_name);
+                    strcat(info, "を加えた。");
+#else
                     strcpy(info, "You ");
                     strcat(info, attack_name);
                     strcat(info, " ");
                     strcat(info, ptr_monam(defender, DESC_NOCAP_THE));
+#endif
 
                     if (player_monster_visible( defender ))
+#ifdef JP
+                    {
+                        if ( (80 - strlen(info) ) > 32)
+                        {
+                            strcat(info, "しかし損傷を与えられなかった。");
+                        }
+                        else
+                        {
+                            mpr(info);
+                            strcpy(info, "しかし損傷を与えられなかった。");
+                        }
+                    }
+#else
                         strcat(info, ", but do no damage.");
-                    else 
+#endif
+                    else
+#ifdef JP
+                        strcat(info, "");
+#else
                         strcat(info, ".");
+#endif
 
                     mpr(info);
                     hit = true;
@@ -1819,16 +2432,28 @@ void you_attack(int monster_attacked, bool unarmed_attacks)
 
                     if (defender->type == MONS_GIANT_SPORE)
                     {
+#ifdef JP
+                        strcpy(info, "あなたは巨大胞子に");
+                        strcat(info, attack_name);
+                        strcat(info, "を加えた。");
+#else
                         strcpy(info, "You ");
                         strcat(info, attack_name);
                         strcat(info, "the giant spore.");
+#endif
                         mpr(info);
                     }
                     else if (defender->type == MONS_BALL_LIGHTNING)
                     {
+#ifdef JP
+                        strcpy(info, "あなたは球雷に");
+                        strcat(info, attack_name);
+                        strcat(info, "を加えた。");
+#else
                         strcpy(info, "You ");
                         strcat(info, attack_name);
                         strcat(info, "the ball lightning.");
+#endif
                         mpr(info);
                     }
                     return;
@@ -1836,11 +2461,23 @@ void you_attack(int monster_attacked, bool unarmed_attacks)
             }
             else
             {
+#ifdef JP
+                strcpy(info, "あなたの");
+#else
                 strcpy(info, "Your ");
+#endif
                 strcat(info, attack_name);
+#ifdef JP
+                strcat(info, "は");
+#else
                 strcat(info, " misses ");
+#endif
                 strcat(info, ptr_monam(defender, DESC_NOCAP_THE));
+#ifdef JP
+                strcat(info, "にかわされてしまった。");
+#else
                 strcat(info, ".");
+#endif
                 mpr(info);
             }
         }
@@ -1884,7 +2521,7 @@ void monster_attack(int monster_attacking)
     if (mons_friendly(attacker))
         return;
 
-    // This should happen after the mons_friendly check so we're 
+    // This should happen after the mons_friendly check so we're
     // only disturbed by hostiles. -- bwr
     if (you_are_delayed())
         stop_delay();
@@ -1903,12 +2540,16 @@ void monster_attack(int monster_attacking)
     if (mons_has_ench( attacker, ENCH_SUBMERGED ))
         return;
 
-    if (you.duration[DUR_REPEL_UNDEAD] 
+    if (you.duration[DUR_REPEL_UNDEAD]
         && mons_holiness( attacker->type ) == MH_UNDEAD
         && !check_mons_resist_magic( attacker, you.piety ))
     {
         simple_monster_message(attacker,
+#ifdef JP
+                   "はあなたに攻撃を試みたが、神聖なオーラに撥ねつけられた。");
+#else
                    " tries to attack you, but is repelled by your holy aura.");
+#endif
         return;
     }
 
@@ -1922,7 +2563,11 @@ void monster_attack(int monster_attacking)
             if (coinflip())
             {
                 simple_monster_message(attacker,
+#ifdef JP
+                                   "はあなたに攻撃を試みたが、恐怖にたじろいでしまった。");
+#else
                                    " tries to attack you, but flinches away.");
+#endif
                 return;
             }
         }
@@ -1931,20 +2576,28 @@ void monster_attack(int monster_attacking)
     if (grd[attacker->x][attacker->y] == DNGN_SHALLOW_WATER
         && !mons_flies( attacker )
         && !mons_flag( attacker->type, M_AMPHIBIOUS )
-        && monster_habitat( attacker->type ) == DNGN_FLOOR 
+        && monster_habitat( attacker->type ) == DNGN_FLOOR
         && one_chance_in(4))
     {
+#ifdef JP
+        simple_monster_message(attacker, "は水を跳ねかけた。");
+#else
         simple_monster_message(attacker, " splashes around in the water.");
+#endif
         return;
     }
 
-    if (player_in_water() 
+    if (player_in_water()
         && !player_is_swimming()
         && monster_habitat( attacker->type ) == DNGN_DEEP_WATER)
     {
         water_attack = true;
         simple_monster_message(attacker,
+#ifdef JP
+                               "は水辺の地形を強みとしている。");
+#else
                                " uses the watery terrain to its advantage.");
+#endif
     }
 
     char runthru;
@@ -1988,7 +2641,7 @@ void monster_attack(int monster_attacking)
         if (mdam == 0)
             break;
 
-        if ((attacker->type == MONS_TWO_HEADED_OGRE 
+        if ((attacker->type == MONS_TWO_HEADED_OGRE
                 || attacker->type == MONS_ETTIN)
             && runthru == 1)
         {
@@ -2019,15 +2672,20 @@ void monster_attack(int monster_attacking)
         // Factors for blocking
         const int pro_block = player_shield_class() + (random2(you.dex) / 5);
 
-        if (!you.paralysis && !you_are_delayed() && !you.conf 
+        if (!you.paralysis && !you_are_delayed() && !you.conf
             && player_monster_visible( attacker )
             && player_shield_class() > 0
             && random2(con_block) <= random2(pro_block))
         {
             you.shield_blocks++;
 
-            snprintf( info, INFO_SIZE, "You block %s's attack.", 
+#ifdef JP
+            snprintf( info, INFO_SIZE, "あなたは%sの攻撃を防いだ。",
+                      ptr_monam( attacker, DESC_PLAIN ) );
+#else
+            snprintf( info, INFO_SIZE, "You block %s's attack.",
                       ptr_monam( attacker, DESC_NOCAP_THE ) );
+#endif
 
             mpr(info);
 
@@ -2099,7 +2757,7 @@ void monster_attack(int monster_attacking)
 
                 if (!player_light_armour())
                 {
-                    const int body_arm_ac = property( you.inv[you.equip[EQ_BODY_ARMOUR]], 
+                    const int body_arm_ac = property( you.inv[you.equip[EQ_BODY_ARMOUR]],
                                                       PARM_AC );
 
                     int percent = 2 * (you.skills[SK_ARMOUR] + body_arm_ac);
@@ -2126,13 +2784,21 @@ void monster_attack(int monster_attacking)
         else if (!blocked)
         {
             hit = false;
+#ifdef JP
+            simple_monster_message(attacker, "はあなたへの攻撃を外した。");
+#else
             simple_monster_message(attacker, " misses you.");
+#endif
         }
 
         if (damage_taken < 1 && hit && !blocked)
         {
             simple_monster_message(attacker,
+#ifdef JP
+                                    "の攻撃が当たったが、あなたに損傷はなかった。");
+#else
                                     " hits you but doesn't do any damage.");
+#endif
         }
 
         if (damage_taken > 0)
@@ -2141,11 +2807,32 @@ void monster_attack(int monster_attacking)
 
             mmov_x = attacker->inv[hand_used];
 
+#ifdef JP
+            strcpy(info, ptr_monam(attacker, DESC_PLAIN));
+            strcat(info, "は");
+
+            //モンスターの使っている武器
+            if (attacker->type != MONS_DANCING_WEAPON && mmov_x != NON_ITEM
+                && mitm[mmov_x].base_type == OBJ_WEAPONS
+                && !launches_things( mitm[mmov_x].sub_type ))
+            {
+                it_name(mmov_x, DESC_NOCAP_A, str_pass);   // was 7
+                strcat(info, str_pass);
+                strcat(info, "での");
+            }
+
+            strcat(info, "攻撃をあなたに当てた");
+#else
             strcpy(info, ptr_monam(attacker, DESC_CAP_THE));
             strcat(info, " hits you");
+#endif
 
 #if DEBUG_DIAGNOSTICS
+#ifdef JP
             strcat(info, " for ");
+#else
+            strcat(info, " for ");
+#endif
             // note: doesn't take account of special weapons etc
             itoa( damage_taken, st_prn, 10 );
             strcat( info, st_prn );
@@ -2155,12 +2842,19 @@ void monster_attack(int monster_attacking)
                 && mitm[mmov_x].base_type == OBJ_WEAPONS
                 && !launches_things( mitm[mmov_x].sub_type ))
             {
+#ifdef JP
+#else
                 strcat(info, " with ");
                 it_name(mmov_x, DESC_NOCAP_A, str_pass);   // was 7
                 strcat(info, str_pass);
+#endif
             }
 
+#ifdef JP
+            strcat(info, "！");
+#else
             strcat(info, "!");
+#endif
 
             mpr( info, MSGCH_PLAIN );
 
@@ -2220,8 +2914,12 @@ void monster_attack(int monster_attacking)
                 if (one_chance_in(20)
                     || (damage_taken > 3 && one_chance_in(4)))
                 {
-                    simple_monster_message( attacker, 
+                    simple_monster_message( attacker,
+#ifdef JP
+                                            "の牙は毒を持っていた！" );
+#else
                                             "'s bite was poisonous!" );
+#endif
 
                     if (attacker->type == MONS_REDBACK)
                         poison_player( random2avg(9, 2) + 3 );
@@ -2237,7 +2935,11 @@ void monster_attack(int monster_attacking)
                         || (damage_taken > 2 && one_chance_in(3))))
 
                 {
+#ifdef JP
+                    simple_monster_message( attacker, "はあなたを刺した！" );
+#else
                     simple_monster_message( attacker, " stings you!" );
+#endif
 
                     if (attacker->type == MONS_BUMBLEBEE)
                         poison_player( random2(3) );
@@ -2278,7 +2980,11 @@ void monster_attack(int monster_attacking)
             case MONS_FIRE_ELEMENTAL:
             case MONS_BALRUG:
             case MONS_SUN_DEMON:
+#ifdef JP
+                strcpy(info, "あなたは炎の中に飲み込まれた");
+#else
                 strcpy(info, "You are engulfed in flames");
+#endif
 
                 resistValue = player_res_fire();
                 extraDamage = 15 + random2(15);
@@ -2292,15 +2998,25 @@ void monster_attack(int monster_attacking)
                         extraDamage += 8 + random2(8);
                 }
 
+#ifdef JP
+                strcat(info, (extraDamage < 10) ? "。" :
+                             (extraDamage < 25) ? "！" :
+                             "!!");
+#else
                 strcat(info, (extraDamage < 10) ? "." :
                              (extraDamage < 25) ? "!" :
                              "!!");
+#endif
 
                 mpr(info);
 
                 if (you.duration[DUR_CONDENSATION_SHIELD] > 0)
                 {
+#ifdef JP
+                    mpr("あなたの氷の盾は砕け散ってしまった！", MSGCH_DURATION);
+#else
                     mpr("Your icy shield dissipates!", MSGCH_DURATION);
+#endif
                     you.duration[DUR_CONDENSATION_SHIELD] = 0;
                     you.redraw_armour_class = 1;
                 }
@@ -2332,7 +3048,11 @@ void monster_attack(int monster_attacking)
                 if (!player_res_poison())
                 {
                     strcpy(info, ptr_monam(attacker, DESC_CAP_THE));
+#ifdef JP
+                    strcat(info, "はあなたを刺した！");
+#else
                     strcat(info, " stings you!");
+#endif
                     mpr(info);
 
                     poison_player(2);
@@ -2350,7 +3070,11 @@ void monster_attack(int monster_attacking)
                         // ^^^yep, this should be a function^^^ {dlb}
                 {
                     strcpy(info, ptr_monam(attacker, DESC_CAP_THE));
+#ifdef JP
+                    strcat(info, "はあなたを毒に冒した！");
+#else
                     strcat(info, " poisons you!");
+#endif
                     mpr(info);
 
                     poison_player(1);
@@ -2388,7 +3112,11 @@ void monster_attack(int monster_attacking)
                 // intentional fall-through {dlb}
             case MONS_YELLOW_WASP:
                 strcpy(info, ptr_monam(attacker, DESC_CAP_THE));
+#ifdef JP
+                strcat(info, "はあなたを刺した。");
+#else
                 strcat(info, " stings you.");
+#endif
                 mpr(info);
 
                 if (!player_res_poison()
@@ -2397,9 +3125,17 @@ void monster_attack(int monster_attacking)
                         // maybe I should flip back the other way? {dlb}
                 {
                     if (you.paralysis > 0)
+#ifdef JP
+                        mpr("あなたは麻痺したままだ！", MSGCH_WARN);
+#else
                         mpr("You still can't move!", MSGCH_WARN);
+#endif
                     else
+#ifdef JP
+                        mpr("あなたは突然、身動きができなくなった！", MSGCH_WARN);
+#else
                         mpr("You suddenly lose the ability to move!", MSGCH_WARN);
+#endif
 
                     you.paralysis += 1 + random2(3);
                 }
@@ -2409,7 +3145,11 @@ void monster_attack(int monster_attacking)
                 if (!player_res_poison())
                 {
                     strcpy(info, ptr_monam(attacker, DESC_CAP_THE));
+#ifdef JP
+                    strcat(info, "はあなたを刺した！");
+#else
                     strcat(info, " stings you!");
+#endif
                     mpr(info);
 
                     poison_player( 2 + random2(4) );
@@ -2419,7 +3159,11 @@ void monster_attack(int monster_attacking)
             case MONS_ACID_BLOB:
             case MONS_ROYAL_JELLY:
             case MONS_JELLY:
+#ifdef JP
+                mpr("あなたは酸を浴びせられた！");
+#else
                 mpr("You are splashed with acid!");
+#endif
                 splash_with_acid(3);
                 break;
 
@@ -2433,15 +3177,24 @@ void monster_attack(int monster_attacking)
                 else if (resistValue == 0)
                 {
                     extraDamage += roll_dice( 1, 4 );
+#ifdef JP
+                    strcat(info, "はあなたを凍えさせた。");
+#else
                     strcat(info, " chills you.");
+#endif
+                    mpr(info);
                 }
                 else if (resistValue < 0)
                 {
                     extraDamage = roll_dice( 2, 4 );
+#ifdef JP
+                    strcat(info, "はあなたを凍りつかせた。");
+#else
                     strcat(info, " freezes you.");
+#endif
+                    mpr(info);
                 }
-                
-                mpr(info);
+
                 damage_taken += extraDamage;
                 scrolls_burn( 1, OBJ_POTIONS );
                 break;
@@ -2471,11 +3224,23 @@ void monster_attack(int monster_attacking)
                 {
                     strcpy(info, ptr_monam(attacker, DESC_CAP_THE));
                     if (extraDamage < 10)
+#ifdef JP
+                        strcat(info, "はあなたを凍えさせた。");
+#else
                         strcat(info, " chills you.");
+#endif
                     else
+#ifdef JP
+                        strcat(info, "はあなたを凍りつかせた！");
+#else
                         strcat(info, " freezes you!");
+#endif
                     if (extraDamage > 19)
+#ifdef JP
+                        strcat(info, "！");
+#else
                         strcat(info, "!");
+#endif
                     mpr(info);
                 }
 
@@ -2491,7 +3256,11 @@ void monster_attack(int monster_attacking)
                                             + random2(attacker->hit_dice * 2);
 
                     strcpy(info, ptr_monam(attacker, DESC_CAP_THE));
+#ifdef JP
+                    strcat(info, "はあなたに電撃を加えた！");
+#else
                     strcat(info, " shocks you!");
+#endif
                     mpr(info);
                 }
                 break;
@@ -2511,9 +3280,13 @@ void monster_attack(int monster_attacking)
 ****************************************************************** */
 
                 // heh heh {dlb}
-                // oh, this is mean!  {gdl} 
+                // oh, this is mean!  {gdl}
                 if (heal_monster(attacker, random2(damage_taken), true))
+#ifdef JP
+                    simple_monster_message(attacker, "あなたの傷から生命力を吸い取った！");
+#else
                     simple_monster_message(attacker, " draws strength from your injuries!");
+#endif
 
                 break;
 
@@ -2543,7 +3316,11 @@ void monster_attack(int monster_attacking)
             case MONS_MIDGE:
                 if (one_chance_in(3))
                 {
+#ifdef JP
+                    simple_monster_message(attacker, "は消え去った。");
+#else
                     simple_monster_message(attacker, " blinks.");
+#endif
                     monster_blink(attacker);
                 }
                 break;
@@ -2561,7 +3338,11 @@ void monster_attack(int monster_attacking)
                 }
 
                 strcpy(info, ptr_monam(attacker, DESC_CAP_THE));
+#ifdef JP
+                strcat(info, "はあなたを刺した！");
+#else
                 strcat(info, " stings you!");
+#endif
                 mpr(info);
 
                 poison_player(1);
@@ -2629,7 +3410,11 @@ void monster_attack(int monster_attacking)
 
                 if (specdam)
                 {
+#ifdef JP
+                    simple_monster_message(attacker, "はあなたを燃やした。");
+#else
                     simple_monster_message(attacker, " burns you.");
+#endif
 /* **********************
 
 commented out for now
@@ -2645,7 +3430,11 @@ commented out for now
 
                 if (you.duration[DUR_CONDENSATION_SHIELD] > 0)
                 {
+#ifdef JP
+                    mpr("あなたの氷の盾は砕け散ってしまった！", MSGCH_DURATION);
+#else
                     mpr("Your icy shield dissipates!", MSGCH_DURATION);
+#endif
                     you.duration[DUR_CONDENSATION_SHIELD] = 0;
                     you.redraw_armour_class = 1;
                 }
@@ -2669,7 +3458,11 @@ commented out for now
 
                 if (specdam)
                 {
+#ifdef JP
+                    simple_monster_message(attacker, "はあなたを凍りつかせた。");
+#else
                     simple_monster_message(attacker, " freezes you.");
+#endif
 
 /* **********************
 
@@ -2696,14 +3489,30 @@ commented out for now
 
                     if (specdam)
                     {
+#ifdef JP
+                        strcpy(info, "この傷はとてつもなく痛い");
+#else
                         strcpy(info, "The wound is extremely painful");
+#endif
 
                         if (specdam < 3)
+#ifdef JP
+                            strcat(info, "。");
+#else
                             strcat(info, ".");
+#endif
                         else if (specdam < 7)
+#ifdef JP
+                            strcat(info, "！");
+#else
                             strcat(info, "!");
+#endif
                         else
+#ifdef JP
+                            strcat(info, "！！");
+#else
                             strcat(info, "!!");
+#endif
 
                         mpr(info);
                     }
@@ -2736,7 +3545,11 @@ commented out for now
 
                 if (one_chance_in(3))
                 {
+#ifdef JP
+                    mpr("あなたは感電させられた！");
+#else
                     mpr("You are electrocuted!");
+#endif
                     specdam += 10 + random2(15);
                 }
                 break;
@@ -2748,14 +3561,30 @@ commented out for now
 
                     if (specdam)
                     {
+#ifdef JP
+                        strcpy(info, "この傷はとてつもなく痛い");
+#else
                         strcpy(info, "The wound is extremely painful");
+#endif
 
                         if (specdam < 3)
+#ifdef JP
+                            strcat(info, "。");
+#else
                             strcat(info, ".");
+#endif
                         else if (specdam < 7)
+#ifdef JP
+                            strcat(info, "！");
+#else
                             strcat(info, "!");
+#endif
                         else
+#ifdef JP
+                            strcat(info, "！！");
+#else
                             strcat(info, "!!");
+#endif
 
                         mpr(info);
                     }
@@ -2768,7 +3597,11 @@ commented out for now
                 {
                     simple_monster_message(attacker,
                             (attacker->type == MONS_DANCING_WEAPON)
+#ifdef JP
+                            ? " is poisoned!" : "の武器は毒を塗られていた！");
+#else
                             ? " is poisoned!" : "'s weapon is poisoned!");
+#endif
 
                     poison_player(2);
                 }
@@ -2802,7 +3635,11 @@ commented out for now
 
                 // heh heh {dlb}
                 if (heal_monster(attacker, 1 + random2(damage_taken), true))
+#ifdef JP
+                    simple_monster_message(attacker, "あなたの傷から生命力を吸い取った！");
+#else
                     simple_monster_message(attacker, " draws strength from your injuries!");
+#endif
                 break;
 
             case SPWPN_DISRUPTION:
@@ -2816,14 +3653,30 @@ commented out for now
 
                     if (specdam)
                     {
+#ifdef JP
+                        strcpy(info, "あなたは神聖なエネルギーで焼き焦がされた");
+#else
                         strcpy(info, "You are blasted by holy energy");
+#endif
 
                         if (specdam < 7)
+#ifdef JP
+                            strcat(info, "。");
+#else
                             strcat(info, ".");
+#endif
                         else if (specdam < 15)
+#ifdef JP
+                            strcat(info, "！");
+#else
                             strcat(info, "!");
+#endif
                         else
+#ifdef JP
+                            strcat(info, "！！");
+#else
                             strcat(info, "!!");
+#endif
 
                         mpr(info);
                     }
@@ -2836,14 +3689,22 @@ commented out for now
 
                 if (one_chance_in(3))
                 {
+#ifdef JP
+                    mpr("あなたの肉体は痛々しく捻られた。");
+#else
                     mpr("Your body is twisted painfully.");
+#endif
                     specdam += 1 + random2avg(7, 2);
                     break;
                 }
 
                 if (one_chance_in(3))
                 {
+#ifdef JP
+                    mpr("あなたの肉体はひどく捻られた！");
+#else
                     mpr("Your body is terribly warped!");
+#endif
                     specdam += 3 + random2avg(24, 2);
                     break;
                 }
@@ -2930,7 +3791,7 @@ bool monsters_fight(int monster_attacking, int monster_attacked)
         return false;
     }
 
-    if (mons_has_ench( attacker, ENCH_SUBMERGED ) 
+    if (mons_has_ench( attacker, ENCH_SUBMERGED )
         && habitat != DNGN_FLOOR
         && habitat != monster_habitat( defender->type ))
     {
@@ -2940,10 +3801,14 @@ bool monsters_fight(int monster_attacking, int monster_attacked)
     if (grd[attacker->x][attacker->y] == DNGN_SHALLOW_WATER
         && !mons_flies( attacker )
         && !mons_flag( attacker->type, M_AMPHIBIOUS )
-        && habitat == DNGN_FLOOR 
+        && habitat == DNGN_FLOOR
         && one_chance_in(4))
     {
+#ifdef JP
+        mpr("あなたは水の跳ねる音を耳にした。");
+#else
         mpr("You hear a splashing noise.");
+#endif
         return true;
     }
 
@@ -2992,7 +3857,7 @@ bool monsters_fight(int monster_attacking, int monster_attacked)
         if (mdam == 0)
             break;
 
-        if ((attacker->type == MONS_TWO_HEADED_OGRE 
+        if ((attacker->type == MONS_TWO_HEADED_OGRE
                     || attacker->type == MONS_ETTIN)
             && runthru == 1 && attacker->inv[MSLOT_MISSILE] != NON_ITEM)
         {
@@ -3074,9 +3939,19 @@ bool monsters_fight(int monster_attacking, int monster_attacked)
             if (sees)
             {
                 strcpy(info, ptr_monam(attacker, DESC_CAP_THE));
+#ifdef JP
+                strcat(info, "は");
+                strcat(info, ptr_monam(defender, DESC_NOCAP_THE));
+                strcat(info, "への攻撃を外した");
+#else
                 strcat(info, " misses ");
                 strcat(info, ptr_monam(defender, DESC_NOCAP_THE));
+#endif
+#ifdef JP
+                strcat(info, "。");
+#else
                 strcat(info, ".");
+#endif
                 mpr(info);
             }
         }
@@ -3086,16 +3961,30 @@ bool monsters_fight(int monster_attacking, int monster_attacked)
             if (sees)
             {
                 strcpy(info, ptr_monam(attacker, DESC_CAP_THE));
+#ifdef JP
+                strcat(info, "は");
+                strcat(info, ptr_monam(defender, DESC_NOCAP_THE));
+                strcat(info, "に攻撃を当てた");
+#else
                 strcat(info, " hits ");
                 strcat(info, ptr_monam(defender, DESC_NOCAP_THE));
+#endif
 
 #if DEBUG_DIAGNOSTICS
+#ifdef JP
                 strcat(info, " for ");
+#else
+                strcat(info, " for ");
+#endif
                 // note: doesn't take account of special weapons etc
                 itoa(damage_taken, st_prn, 10);
                 strcat(info, st_prn);
 #endif
+#ifdef JP
+                strcat(info, "。");      // but doesn't do any you.damage.");
+#else
                 strcat(info, ".");      // but doesn't do any you.damage.");
+#endif
                 mpr(info);
             }
         }
@@ -3107,6 +3996,25 @@ bool monsters_fight(int monster_attacking, int monster_attacked)
             if (sees)
             {
                 strcpy(info, ptr_monam(attacker, DESC_CAP_THE));
+#ifdef JP
+                strcat(info, "は");
+                strcat(info, ptr_monam(defender, DESC_NOCAP_THE));
+                strcat(info, "に");
+
+                if (attacker->type != MONS_DANCING_WEAPON
+                    && attacker->inv[hand_used] != NON_ITEM
+                    && mitm[attacker->inv[hand_used]].base_type == OBJ_WEAPONS
+                    && !launches_things( mitm[attacker->inv[hand_used]].sub_type ))
+                    {
+                    it_name(mmov_x, DESC_NOCAP_A, str_pass);       // 武器名
+                    strcat(info, str_pass);
+                    strcat(info, "での");
+                    }
+                    strcat(info, "攻撃を当てた");
+#endif
+
+#ifdef JP
+#else
                 strcat(info, " hits ");
                 strcat(info, ptr_monam(defender, DESC_NOCAP_THE));
 
@@ -3119,8 +4027,13 @@ bool monsters_fight(int monster_attacking, int monster_attacked)
                     it_name(mmov_x, DESC_NOCAP_A, str_pass);       // was 7
                     strcat(info, str_pass);
                 }
+#endif
 
+#ifdef JP
+                strcat(info, "！");
+#else
                 strcat(info, "! ");
+#endif
                 mpr(info);
             }
 
@@ -3145,9 +4058,19 @@ bool monsters_fight(int monster_attacking, int monster_attacked)
                     if (sees)
                     {
                         strcpy(info, ptr_monam(attacker, DESC_CAP_THE));
+#ifdef JP
+                        strcat(info, "は");
+                        strcat(info, ptr_monam(defender, DESC_NOCAP_THE));
+                        strcat(info, "を刺した");
+#else
                         strcat(info, " stings ");
                         strcat(info, ptr_monam(defender, DESC_NOCAP_THE));
+#endif
+#ifdef JP
+                        strcat(info, "。");
+#else
                         strcat(info, ".");
+#endif
                         mpr(info);
                     }
                     poison_monster(defender, false);
@@ -3162,9 +4085,19 @@ bool monsters_fight(int monster_attacking, int monster_attacked)
                     if (sees)
                     {
                         strcpy(info, ptr_monam(attacker, DESC_CAP_THE));
+#ifdef JP
+                        strcat(info, "は");
+                        strcpy(info, ptr_monam(defender, DESC_NOCAP_THE));
+                        strcat(info, "を刺した");
+#else
                         strcat(info, " stings ");
                         strcpy(info, ptr_monam(defender, DESC_NOCAP_THE));
+#endif
+#ifdef JP
+                        strcat(info, "。");
+#else
                         strcat(info, ".");
+#endif
                         mpr(info);
                     }
                     poison_monster(defender, false);
@@ -3201,7 +4134,11 @@ bool monsters_fight(int monster_attacking, int monster_attacked)
                     specdam = 20 + random2(25);
 
                 if (specdam)
+#ifdef JP
+                    simple_monster_message(defender, "は炎に包まれた！");
+#else
                     simple_monster_message(defender, " is engulfed in flame!");
+#endif
 
                 damage_taken += specdam;
                 break;
@@ -3215,9 +4152,19 @@ bool monsters_fight(int monster_attacking, int monster_attacked)
                 if (sees)
                 {
                     strcpy(info, ptr_monam(attacker, DESC_CAP_THE));
-                    strcat(info, " stings ");
-                    strcat(info, ptr_monam(defender, DESC_NOCAP_THE));
+#ifdef JP
+                        strcat(info, "は");
+                        strcpy(info, ptr_monam(defender, DESC_NOCAP_THE));
+                        strcat(info, "を刺した");
+#else
+                        strcat(info, " stings ");
+                        strcpy(info, ptr_monam(defender, DESC_NOCAP_THE));
+#endif
+#ifdef JP
+                    strcat(info, "。");
+#else
                     strcat(info, ".");
+#endif
                     mpr(info);
                 }
                 poison_monster(defender, false);
@@ -3257,7 +4204,11 @@ bool monsters_fight(int monster_attacking, int monster_attacked)
 
                 if (one_chance_in(30) || (damage_taken > 5 && coinflip()))
                 {
+#ifdef JP
+                    simple_monster_message(defender, "は衰弱させられた。");
+#else
                     simple_monster_message(defender, " is drained.");
+#endif
 
                     if (one_chance_in(5))
                         defender->hit_dice--;
@@ -3292,9 +4243,19 @@ bool monsters_fight(int monster_attacking, int monster_attacked)
                 if (specdam && sees)
                 {
                     strcpy(info, ptr_monam(attacker, DESC_CAP_THE));
+#ifdef JP
+                    strcat(info, "は");
+                    strcat(info, ptr_monam(defender, DESC_NOCAP_THE));
+                    strcat(info, "を凍りつかせた");
+#else
                     strcat(info, " freezes ");
                     strcat(info, ptr_monam(defender, DESC_NOCAP_THE));
+#endif
+#ifdef JP
+                    strcat(info, "。");
+#else
                     strcat(info, ".");
+#endif
                     mpr(info);
                 }
 
@@ -3321,9 +4282,19 @@ bool monsters_fight(int monster_attacking, int monster_attacked)
                 if (specdam && sees)
                 {
                     strcpy(info, ptr_monam(attacker, DESC_CAP_THE));
+#ifdef JP
+                    strcat(info, "は");
+                    strcat(info, ptr_monam(defender, DESC_NOCAP_THE));
+                    strcat(info, "を凍りつかせた");
+#else
                     strcat(info, " freezes ");
                     strcat(info, ptr_monam(defender, DESC_NOCAP_THE));
+#endif
+#ifdef JP
+                    strcat(info, "。");
+#else
                     strcat(info, ".");
+#endif
                     mpr(info);
                 }
                 damage_taken += specdam;
@@ -3338,9 +4309,19 @@ bool monsters_fight(int monster_attacking, int monster_attacked)
                 if (specdam && sees)
                 {
                     strcpy(info, ptr_monam(attacker, DESC_CAP_THE));
+#ifdef JP
+                    strcat(info, "は");
+                    strcat(info, ptr_monam(defender, DESC_NOCAP_THE));
+                    strcat(info, "に電撃を加えた");
+#else
                     strcat(info, " shocks ");
                     strcat(info, ptr_monam(defender, DESC_NOCAP_THE));
+#endif
+#ifdef JP
+                    strcat(info, "。");
+#else
                     strcat(info, ".");
+#endif
                     mpr(info);
                 }
                 damage_taken += specdam;
@@ -3354,7 +4335,11 @@ bool monsters_fight(int monster_attacking, int monster_attacked)
 
                 // heh heh {dlb}
                 if (heal_monster(attacker, random2(damage_taken), true))
+#ifdef JP
+                    simple_monster_message(attacker, "の体力が回復した。");
+#else
                     simple_monster_message(attacker, " is healed.");
+#endif
                 break;
             }
         }
@@ -3391,7 +4376,7 @@ bool monsters_fight(int monster_attacking, int monster_attacked)
                 case SPWPN_FLAMING:
                     specdam = 0;
 
-                    if (itdam == SPWPN_SWORD_OF_CEREBOV 
+                    if (itdam == SPWPN_SWORD_OF_CEREBOV
                         || mons_res_fire(defender) <= 0)
                     {
                         specdam = 1 + random2(damage_taken);
@@ -3402,15 +4387,33 @@ bool monsters_fight(int monster_attacking, int monster_attacked)
                         if (sees)
                         {
                             strcpy(info, ptr_monam(attacker, DESC_CAP_THE));
+#ifdef JP
+                            strcat(info, "は");
+                            strcat(info, ptr_monam(defender, DESC_NOCAP_THE ));
+                            strcat(info, "を燃やした。");
+#else
                             strcat(info, " burns ");
                             strcat(info, ptr_monam(defender, DESC_NOCAP_THE ));
+#endif
 
                             if (specdam < 3)
+#ifdef JP
+                                strcat(info, "。");
+#else
                                 strcat(info, ".");
+#endif
                             else if (specdam < 7)
+#ifdef JP
+                                strcat(info, "！");
+#else
                                 strcat(info, "!");
+#endif
                             else
+#ifdef JP
+                                strcat(info, "！！");
+#else
                                 strcat(info, "!!");
+#endif
 
                             mpr(info);
                         }
@@ -3430,15 +4433,33 @@ bool monsters_fight(int monster_attacking, int monster_attacked)
                             mmov_x = attacker->inv[hand_used];
 
                             strcpy(info, ptr_monam(attacker, DESC_CAP_THE));
+#ifdef JP
+                            strcat(info, "は");
+                            strcat(info, ptr_monam(defender, DESC_NOCAP_THE));
+                            strcat(info, "を凍りつかせた");
+#else
                             strcat(info, " freezes ");
                             strcat(info, ptr_monam(defender, DESC_NOCAP_THE));
+#endif
 
                             if (specdam < 3)
+#ifdef JP
+                                strcat(info, "。");
+#else
                                 strcat(info, ".");
+#endif
                             else if (specdam < 7)
+#ifdef JP
+                                strcat(info, "！");
+#else
                                 strcat(info, "!");
+#endif
                             else
+#ifdef JP
+                                strcat(info, "！！");
+#else
                                 strcat(info, "!!");
+#endif
 
                             mpr(info);
                         }
@@ -3486,7 +4507,11 @@ bool monsters_fight(int monster_attacking, int monster_attacked)
                     if (one_chance_in(3))
                     {
                         if (sees)
+#ifdef JP
+                            mpr("突如として電光の爆発が巻き起こった！");
+#else
                             mpr("There is a sudden explosion of sparks!");
+#endif
 
                         specdam += 10 + random2(15);
                         //mitm[attacker->inv[hand_used]].plus2 --;
@@ -3511,7 +4536,11 @@ bool monsters_fight(int monster_attacking, int monster_attacked)
                         && (one_chance_in(30)
                             || (damage_taken > 5 && coinflip())))
                     {
+#ifdef JP
+                        simple_monster_message(defender, "は衰弱させられた。");
+#else
                         simple_monster_message(defender, " is drained");
+#endif
 
                         if (one_chance_in(5))
                             defender->hit_dice--;
@@ -3552,7 +4581,11 @@ bool monsters_fight(int monster_attacking, int monster_attacked)
 
                     // heh heh {dlb}
                     if (heal_monster(attacker, 1 + random2(damage_taken), true))
+#ifdef JP
+                        simple_monster_message(attacker, "は体力を吸収した。");
+#else
                         simple_monster_message(attacker, " is healed.");
+#endif
                     break;
 
                 case SPWPN_DISRUPTION:
@@ -3564,7 +4597,11 @@ bool monsters_fight(int monster_attacking, int monster_attacked)
                     if (mons_holiness(defender->type) == MH_UNDEAD
                         && !one_chance_in(3))
                     {
+#ifdef JP
+                        simple_monster_message(defender, "激しく振動した。");
+#else
                         simple_monster_message(defender, " shudders.");
+#endif
                         specdam += random2avg(1 + (3 * damage_taken), 3);
                     }
                     break;
@@ -3573,12 +4610,21 @@ bool monsters_fight(int monster_attacking, int monster_attacked)
                 case SPWPN_DISTORTION:
                     if (one_chance_in(3))
                     {
-                        if (mons_near(defender) 
+                        if (mons_near(defender)
                             && player_monster_visible(defender))
                         {
+#ifdef JP
+                            strcat(info, ptr_monam(defender, DESC_NOCAP_THE));
+                            strcpy(info, "の周りの空間が歪んだ");
+#else
                             strcpy(info, "Space bends around ");
                             strcat(info, ptr_monam(defender, DESC_NOCAP_THE));
+#endif
+#ifdef JP
+                            strcat(info, "。");
+#else
                             strcat(info, ".");
+#endif
                             mpr(info);
                         }
 
@@ -3590,9 +4636,18 @@ bool monsters_fight(int monster_attacking, int monster_attacked)
                         if (mons_near(defender)
                             && player_monster_visible(defender))
                         {
+#ifdef JP
+                            strcat(info, ptr_monam(defender, DESC_NOCAP_THE));
+                            strcpy(info, "の周りの空間が激しく歪んだ");
+#else
                             strcpy(info, "Space warps horribly around ");
                             strcat(info, ptr_monam(defender, DESC_NOCAP_THE));
+#endif
+#ifdef JP
+                            strcat(info, "！");
+#else
                             strcat(info, "!");
+#endif
                             mpr(info);
                         }
 
@@ -3615,7 +4670,7 @@ bool monsters_fight(int monster_attacking, int monster_attacked)
                     if (coinflip())
                     {
                         monster_die(defender, KILL_RESET, monster_attacking);
-                        break;
+                        return true;
                     }
                     break;
                 }
@@ -3665,7 +4720,7 @@ bool monsters_fight(int monster_attacking, int monster_attacked)
 static int weapon_type_modify( int weapnum, char noise[80], char noise2[80],
                                int damage )
 {
-    int weap_type = WPN_UNKNOWN;  
+    int weap_type = WPN_UNKNOWN;
 
     if (weapnum == -1)
         weap_type = WPN_UNARMED;
@@ -3676,55 +4731,109 @@ static int weapon_type_modify( int weapnum, char noise[80], char noise2[80],
 
     noise2[0] = '\0';
 
-    // All weak hits look the same, except for when the player 
+    // All weak hits look the same, except for when the player
     // has a non-weapon in hand.  -- bwr
     if (damage < HIT_WEAK)
     {
         if (weap_type != WPN_UNKNOWN)
+#ifdef JP
+            strcpy( noise, "攻撃した" );
+#else
             strcpy( noise, "hit" );
+#endif
         else
-            strcpy( noise, "clumsily bash" ); 
+#ifdef JP
+            strcpy( noise, "ぎこちなく攻撃した" );
+#else
+            strcpy( noise, "clumsily bash" );
+#endif
 
         return (damage);
     }
 
     // take transformations into account, if no weapon is weilded
-    if (weap_type == WPN_UNARMED 
+    if (weap_type == WPN_UNARMED
         && you.attribute[ATTR_TRANSFORMATION] != TRAN_NONE)
     {
         switch (you.attribute[ATTR_TRANSFORMATION])
         {
             case TRAN_SPIDER:
                 if (damage < HIT_STRONG)
+#ifdef JP
+                    strcpy( noise, "噛んだ" );
+#else
                     strcpy( noise, "bite" );
+#endif
                 else
+#ifdef JP
+                    strcpy( noise, "打ち身を負わせた" );
+#else
                     strcpy( noise, "maul" );
+#endif
                 break;
             case TRAN_BLADE_HANDS:
                 if (damage < HIT_MED)
+#ifdef JP
+                    strcpy( noise, "切りつけた" );
+#else
                     strcpy( noise, "slash" );
+#endif
                 else if (damage < HIT_STRONG)
+#ifdef JP
+                    strcpy( noise, "切り裂いた" );
+#else
                     strcpy( noise, "slice" );
+#endif
+                else
+#ifdef JP
+                    strcpy( noise, "細切れにした" );
+#else
+                    strcpy( noise, "shred" );
+#endif
                 break;
             case TRAN_ICE_BEAST:
             case TRAN_STATUE:
             case TRAN_LICH:
                 if (damage < HIT_MED)
+#ifdef JP
+                    strcpy( noise, "殴りつけた" );
+#else
                     strcpy( noise, "punch" );
+#endif
                 else
+#ifdef JP
+                    strcpy( noise, "続けざまに殴りつけた" );
+#else
                     strcpy( noise, "pummel" );
+#endif
                 break;
             case TRAN_DRAGON:
             case TRAN_SERPENT_OF_HELL:
                 if (damage < HIT_MED)
+#ifdef JP
+                    strcpy( noise, "爪でかきむしった" );
+#else
                     strcpy( noise, "claw" );
+#endif
                 else if (damage < HIT_STRONG)
+#ifdef JP
+                    strcpy( noise, "噛みついた" );
+#else
                     strcpy( noise, "bite" );
+#endif
                 else
+#ifdef JP
+                    strcpy( noise, "打ちつぶした" );
+#else
                     strcpy( noise, "maul" );
+#endif
                 break;
             case TRAN_AIR:
+#ifdef JP
+                strcpy( noise, "打ちのめした" );
+#else
                 strcpy( noise, "buffet" );
+#endif
                 break;
         } // transformations
 
@@ -3740,13 +4849,26 @@ static int weapon_type_modify( int weapnum, char noise[80], char noise2[80],
     case WPN_DEMON_TRIDENT:
     case WPN_SPEAR:
         if (damage < HIT_MED)
+#ifdef JP
+            strcpy( noise, "突き刺した" );
+#else
             strcpy( noise, "puncture" );
+#endif
         else if (damage < HIT_STRONG)
+#ifdef JP
+            strcpy( noise, "貫いた" );
+#else
             strcpy( noise, "impale" );
+#endif
         else
         {
+#ifdef JP
+            strcpy( noise, "串刺しにした" );
+            //strcpy( noise2, " like a pig" );
+#else
             strcpy( noise, "spit" );
             strcpy( noise2, " like a pig" );
+#endif
         }
         return (damage);
 
@@ -3754,9 +4876,17 @@ static int weapon_type_modify( int weapnum, char noise[80], char noise2[80],
     case WPN_CROSSBOW:
     case WPN_HAND_CROSSBOW:
         if (damage < HIT_STRONG)
+#ifdef JP
+            strcpy( noise, "突き刺した" );
+#else
             strcpy( noise, "puncture" );
+#endif
         else
+#ifdef JP
+            strcpy( noise, "串刺しにした" );
+#else
             strcpy( noise, "skewer" );
+#endif
         return (damage);
 
     case WPN_LONG_SWORD:
@@ -3778,13 +4908,26 @@ static int weapon_type_modify( int weapnum, char noise[80], char noise2[80],
     case WPN_SABRE:
     case WPN_DEMON_BLADE:
         if (damage < HIT_MED)
+#ifdef JP
+            strcpy( noise, "切りつけた" );
+#else
             strcpy( noise, "slash" );
+#endif
         else if (damage < HIT_STRONG)
+#ifdef JP
+            strcpy( noise, "切り裂いた" );
+#else
             strcpy( noise, "slice" );
+#endif
         else
         {
+#ifdef JP
+            strcpy( noise, "やすやすと切り裂いた" );
+            //strcpy( noise2, " like a pillowcase" );
+#else
             strcpy( noise, "open" );
             strcpy( noise2, " like a pillowcase" );
+#endif
         }
         return (damage);
 
@@ -3803,46 +4946,91 @@ static int weapon_type_modify( int weapnum, char noise[80], char noise2[80],
     case WPN_EVENINGSTAR:
     case WPN_GIANT_SPIKED_CLUB:
         if (damage < HIT_MED)
+#ifdef JP
+            strcpy( noise, "打ち据えた" );
+#else
             strcpy( noise, "sock" );
+#endif
         else if (damage < HIT_STRONG)
+#ifdef JP
+            strcpy( noise, "打ちのめした" );
+#else
             strcpy( noise, "bludgeon" );
+#endif
         else
         {
+#ifdef JP
+            strcpy( noise, "ぺしゃんこにした" );
+            //strcpy( noise2, " like a grape" );
+#else
             strcpy( noise, "crush" );
             strcpy( noise2, " like a grape" );
+#endif
         }
         return (damage);
 
     case WPN_WHIP:
     case WPN_DEMON_WHIP:
         if (damage < HIT_MED)
+#ifdef JP
+            strcpy( noise, "ビシッと打った" );
+#else
             strcpy( noise, "whack" );
+#endif
         else
+#ifdef JP
+            strcpy( noise, "強く鞭打った" );
+#else
             strcpy( noise, "thrash" );
+#endif
         return (damage);
 
     case WPN_UNARMED:
         if (you.species == SP_TROLL || you.mutation[MUT_CLAWS])
         {
             if (damage < HIT_MED)
+#ifdef JP
+                strcpy( noise, "爪でかきむしった" );
+#else
                 strcpy( noise, "claw" );
+#endif
             else if (damage < HIT_STRONG)
+#ifdef JP
+                strcpy( noise, "ずたずたに切り裂いた" );
+#else
                 strcpy( noise, "mangle" );
+#endif
             else
+#ifdef JP
+                strcpy( noise, "内臓をくりぬいた" );
+#else
                 strcpy( noise, "eviscerate" );
+#endif
         }
         else
         {
             if (damage < HIT_MED)
+#ifdef JP
+                strcpy( noise, "殴りつけた" );
+#else
                 strcpy( noise, "punch" );
+#endif
             else
+#ifdef JP
+                strcpy( noise, "続けざまに殴りつけた" );
+#else
                 strcpy( noise, "pummel" );
+#endif
         }
         return (damage);
 
     case WPN_UNKNOWN:
     default:
+#ifdef JP
+        strcpy( noise, "攻撃した" );
+#else
         strcpy( noise, "hit" );
+#endif
         return (damage);
     }
 }                               // end weapon_type_modify()
@@ -3981,34 +5169,61 @@ static void stab_message( struct monsters *defender, int stab_bonus )
         case 3:     // big melee, monster surrounded/not paying attention
             if (r<3)
             {
+#ifdef JP
+                snprintf( info, INFO_SIZE, "あなたは%sに死角からの一撃を加えた！",
+                          ptr_monam(defender, DESC_PLAIN) );
+#else
                 snprintf( info, INFO_SIZE, "You strike %s from a blind spot!",
                           ptr_monam(defender, DESC_NOCAP_THE) );
+#endif
+
             }
             else
             {
+#ifdef JP
+                snprintf( info, INFO_SIZE, "あなたの一撃は%sが防御を開けた瞬間を捉えた。",
+                          ptr_monam(defender, DESC_PLAIN) );
+#else
                 snprintf( info, INFO_SIZE, "You catch %s momentarily off-guard.",
                           ptr_monam(defender, DESC_NOCAP_THE) );
+#endif
+
             }
             break;
         case 2:     // confused/fleeing
             if (r<4)
             {
+#ifdef JP
+                snprintf( info, INFO_SIZE, "あなたの一撃は%sが完全に無防備な瞬間を捉えた。",
+                           ptr_monam(defender, DESC_PLAIN) );
+#else
                 snprintf( info, INFO_SIZE, "You catch %s completely off-guard!",
                            ptr_monam(defender, DESC_NOCAP_THE) );
+#endif
             }
             else
             {
+#ifdef JP
+                snprintf( info, INFO_SIZE, "あなたは%sに背後からの一撃を加えた！",
+                           ptr_monam(defender, DESC_PLAIN) );
+#else
                 snprintf( info, INFO_SIZE, "You strike %s from behind!",
                           ptr_monam(defender, DESC_NOCAP_THE) );
+#endif
             }
             break;
         case 1:
-            snprintf( info, INFO_SIZE, "%s fails to defend %s.", 
-                      ptr_monam(defender, DESC_CAP_THE), 
+#ifdef JP
+            snprintf( info, INFO_SIZE, "%sは身を守ることもできずに攻撃を受けた。",
+                           ptr_monam(defender, DESC_PLAIN) );
+#else
+            snprintf( info, INFO_SIZE, "%s fails to defend %s.",
+                      ptr_monam(defender, DESC_CAP_THE),
                       mons_pronoun( defender->type, PRONOUN_REFLEXIVE ) );
+#endif
             break;
     } // end switch
 
     mpr(info);
 }
-            
+

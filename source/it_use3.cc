@@ -67,9 +67,47 @@ void special_wielded(void)
     case SPWLD_SING:
         if (makes_noise)
         {
+#ifdef JP 
+            strcpy(info, "『謳う剣』は");
+#else
             strcpy(info, "The Singing Sword ");
+#endif
             temp_rand = random2(32);
             strcat(info,
+#ifdef JP 
+                     (temp_rand ==  0) ? "短い曲をハミングした。" :
+                     (temp_rand ==  1) ? "壮麗な歌を歌い始めた。" :
+                     (temp_rand ==  2) ? "歌った。" :
+                     (temp_rand ==  3) ? "やかましく歌った。" :
+                     (temp_rand ==  4) ? "メロディを鳴らした。" :
+                     (temp_rand ==  5) ? "恐ろしい騒音を立てた。" :
+                     (temp_rand ==  6) ? "調子外れに歌った。" :
+                     (temp_rand ==  7) ? "『トゥラララ』と歌った。" :
+                     (temp_rand ==  8) ? "陽気にゴロゴロと鳴った。" :
+                     (temp_rand ==  9) ? "ゴロゴロと鳴った。" :
+                     (temp_rand == 10) ? "突然金切り声を上げた！" :
+                     (temp_rand == 11) ? "カラカラと笑い声を上げた。" :
+                     (temp_rand == 12) ? "さえずるように歌った。" :
+                     (temp_rand == 13) ? "美しい旋律を奏でた。" :
+                     (temp_rand == 14) ? "美しい音楽を奏でた。" :
+                     (temp_rand == 15) ? "やかましいオーケストラの和音を出した。" :
+                     (temp_rand == 16) ? "悲しげに泣き言を並べた。" :
+                     (temp_rand == 17) ? "チリンチリンと鳴った。" :
+                     (temp_rand == 18) ? "ベルのように鳴った。" :
+                     (temp_rand == 19) ? "悲しげに泣き叫んだ。" :
+                     (temp_rand == 20) ? "音階の練習をはじめた。" :
+                     (temp_rand == 21) ? "旋律豊かで軽快に歌った。" :
+                     (temp_rand == 22) ? "調子外れにハミングした。" :
+                     (temp_rand == 23) ? "溜め息をついた。" :
+                     (temp_rand == 24) ? "深く唸るような音楽を奏でた。" :
+                     (temp_rand == 25) ? "弾けるような音楽を奏でた。" :
+                     (temp_rand == 26) ? "突然に短く断続的な音符で歌った。" :
+                     (temp_rand == 27) ? "「やあ！わたしは『謳う剣』」と言った。" :
+                     (temp_rand == 28) ? "何かを囁いた。" :
+                     (temp_rand == 29) ? "たわ言を言った。" :
+                     (temp_rand == 30) ? "支離滅裂にわめき散した。"
+                                       : "何か気味の悪い言葉で叫んだ。");
+#else
                      (temp_rand ==  0) ? "hums a little tune." :
                      (temp_rand ==  1) ? "breaks into glorious song!" :
                      (temp_rand ==  2) ? "sings." :
@@ -102,6 +140,7 @@ void special_wielded(void)
                      (temp_rand == 29) ? "speaks gibberish." :
                      (temp_rand == 30) ? "raves incoherently."
                                        : "yells in some weird language.");
+#endif
             mpr(info);
         }
         break;
@@ -198,7 +237,11 @@ void special_wielded(void)
         {
             in_name(wpn, DESC_CAP_YOUR, str_pass);
             strcpy(info, str_pass);
+#ifdef JP 
+            strcat(info, "が気味の悪い唸りを漏らした。");
+#else
             strcat(info, " lets out a weird humming sound.");
+#endif
             mpr(info);
         }
         break;                  // to noisy() call at foot 2apr2000 {dlb}
@@ -208,19 +251,31 @@ void special_wielded(void)
         {
             in_name(wpn, DESC_CAP_YOUR, str_pass);
             strcpy(info, str_pass);
+#ifdef JP 
+            strcat(info, "が鐘のような美しい音を立てた。");
+#else
             strcat(info, " chimes like a gong.");
+#endif
             mpr(info);
         }
         break;
 
     case SPWLD_BECKON:
         if (makes_noise)
+#ifdef JP 
+            mpr("あなたの名前を呼ぶ声が聞こえた。");
+#else
             mpr("You hear a voice call your name.");
+#endif
         break;
 
     case SPWLD_SHOUT:
         if (makes_noise)
+#ifdef JP 
+            mpr("あなたは叫び声を耳にした。");
+#else
             mpr("You hear a shout.");
+#endif
         break;
 
     //case SPWLD_PRUNE:
@@ -248,7 +303,11 @@ static void reaching_weapon_attack(void)
     int x_middle, y_middle;
     int skill;
 
+#ifdef JP 
+    mpr("どれを攻撃しますか？", MSGCH_PROMPT);
+#else
     mpr("Attack whom?", MSGCH_PROMPT);
+#endif
 
     direction( beam, DIR_TARGET, TARG_ENEMY );
     if (!beam.isValid)
@@ -264,10 +323,18 @@ static void reaching_weapon_attack(void)
     y_distance = abs(beam.ty - you.y_pos);
 
     if (x_distance > 2 || y_distance > 2)
+#ifdef JP 
+        mpr("あなたの武器はそこまで遠くには伸びない！");
+#else
         mpr("Your weapon cannot reach that far!");
+#endif
     else if (mgrd[beam.tx][beam.ty] == NON_MONSTER)
     {
+#ifdef JP 
+        mpr("あなたは何もない空間を攻撃した。");
+#else
         mpr("You attack empty space.");
+#endif
     }
     else
     {
@@ -295,18 +362,30 @@ static void reaching_weapon_attack(void)
 
                 if ((5 + (3 * skill)) > random2(100))
                 {
+#ifdef JP 
+                    mpr("あなたの攻撃が届いた！");
+#else
                     mpr("You reach to attack!");
+#endif
                     you_attack(mgrd[beam.tx][beam.ty], false);
                 }
                 else
                 {
+#ifdef JP 
+                    mpr("あなたの攻撃はそこまで届かなかった。");
+#else
                     mpr("You could not reach far enough!");
+#endif
                     you_attack(mgrd[x_middle][y_middle], false);
                 }
             }
             else
             {
+#ifdef JP 
+                mpr("あなたの攻撃が届いた！");
+#else
                 mpr("You reach to attack!");
+#endif
                 you_attack(mgrd[beam.tx][beam.ty], false);
             }
         }
@@ -342,7 +421,11 @@ bool evoke_wielded( void )
     }
     else if (wield == -1)
     {
+#ifdef JP 
+        mpr("あなたは何も手にしていない！");
+#else
         mpr("You aren't wielding anything!");
+#endif
         return (false);
     }
 
@@ -370,7 +453,11 @@ bool evoke_wielded( void )
                     break;
                 }
 
+#ifdef JP 
+                mpr("杖があなたのエネルギーを消費した！");
+#else
                 mpr("You feel the staff feeding on your energy!");
+#endif
 
                 dec_hp( 5 + random2avg(19, 2), false );
                 dec_mp( 2 + random2avg(5, 2) );
@@ -408,9 +495,17 @@ bool evoke_wielded( void )
                     if (good_summon)
                     {
                         if (spell_casted == MONS_FIEND)
+#ifdef JP 
+                            mpr("『人間よ！汝の不敬に有罪を宣告する！』");
+#else
                             mpr("\"Your arrogance condemns you, mortal!\"");
+#endif
                         else
+#ifdef JP 
+                            mpr("王笏はしもべのひとつを召換した。");
+#else
                             mpr("The Sceptre summons one of its servants.");
+#endif
                     }
 
                     did_work = true;
@@ -460,7 +555,11 @@ bool evoke_wielded( void )
                     break;
                 }
 
+#ifdef JP 
+                mpr("魔法のエネルギーがあなたの精神を駆け巡る！");
+#else
                 mpr("Magical energy flows into your mind!");
+#endif
 
                 inc_mp( 3 + random2(5) + you.skills[SK_EVOCATIONS] / 3, false );
                 make_hungry( 50, false );
@@ -470,7 +569,11 @@ bool evoke_wielded( void )
                 if (one_chance_in(3))
                 {
                     miscast_effect( SPTYP_DIVINATION, random2(9), 
+#ifdef JP 
+                                    random2(70), 100, "ウカド・ムーの杖" );
+#else
                                     random2(70), 100, "the Staff of Wucad Mu" );
+#endif
                 }
                 break;
 
@@ -491,7 +594,11 @@ bool evoke_wielded( void )
             if (you.magic_points < you.max_magic_points 
                 && you.skills[SK_EVOCATIONS] >= random2(30)) 
             {
+#ifdef JP 
+                mpr("あなたは幾らかの魔力を取り込んだ。");
+#else
                 mpr("You channel some magical energy.");
+#endif
                 inc_mp( 1 + random2(3), false );
                 make_hungry( 50, false );
                 pract = (one_chance_in(5) ? 1 : 0);
@@ -503,10 +610,18 @@ bool evoke_wielded( void )
                     set_ident_flags( you.inv[you.equip[EQ_WEAPON]], 
                                      ISFLAG_KNOW_TYPE );
 
+#ifdef JP 
+                    strcpy( info, "あなたは" );
+#else
                     strcpy( info, "You are wielding " );
+#endif
                     in_name( you.equip[EQ_WEAPON], DESC_NOCAP_A, str_pass );
                     strcat( info, str_pass );
+#ifdef JP 
+                    strcat( info, "を手にしている。" );
+#else
                     strcat( info, "." );
+#endif
 
                     mpr( info );
                     more();
@@ -565,7 +680,11 @@ bool evoke_wielded( void )
             // Note: This assumes that the Vestibule has not been changed.
             if (player_in_branch( BRANCH_VESTIBULE_OF_HELL ))
             {
+#ifdef JP 
+                mpr("あなたは不気味かつ陰鬱な音色を吹き鳴らした。");
+#else
                 mpr("You produce a weird and mournful sound.");
+#endif
 
                 for (count_x = 0; count_x < GXM; count_x++)
                 {
@@ -597,13 +716,21 @@ bool evoke_wielded( void )
 
                 if (opened_gates)
                 {
+#ifdef JP 
+                    mpr("あなたの前に門が開かれた。");
+#else
                     mpr("Your way has been unbarred.");
+#endif
                     pract = 1;
                 }
             }
             else
             {
+#ifdef JP 
+                mpr("あなたは忌まわしくも凄まじい騒音を吹き鳴らした！");
+#else
                 mpr("You produce a hideous howling noise!");
+#endif
                 pract = (one_chance_in(3) ? 1 : 0);
                 create_monster( MONS_BEAST, ENCH_ABJ_IV, BEH_HOSTILE, 
                                 you.x_pos, you.y_pos, MHITYOU, 250 );
@@ -653,14 +780,26 @@ bool evoke_wielded( void )
         case MISC_PORTABLE_ALTAR_OF_NEMELEX:
             if (player_in_branch( BRANCH_ECUMENICAL_TEMPLE ))
             {
+#ifdef JP 
+                mpr( "既にこの階には十分な数の祭壇があると思わないか？" );
+#else
                 mpr( "Don't you think this level already has more than "
                      "enough altars?" );
+#endif
             }
             else if (grd[you.x_pos][you.y_pos] != DNGN_FLOOR)
+#ifdef JP 
+                mpr("このアイテムの設置には片付いた空間が必要だ。");
+#else
                 mpr("You need a clear area to place this item.");
+#endif
             else
             {
+#ifdef JP 
+                mpr("あなたは携帯式祭壇を展開して、床に設置した。");
+#else
                 mpr("You unfold the altar and place it on the floor.");
+#endif
                 grd[you.x_pos][you.y_pos] = DNGN_ALTAR_NEMELEX_XOBEH;
                 dec_inv_item_quantity( you.equip[EQ_WEAPON], 1 );
             }
@@ -691,17 +830,30 @@ static bool efreet_flask(void)
     const int behaviour = ((you.skills[SK_EVOCATIONS] > random2(20)) 
                                 ? BEH_FRIENDLY : BEH_HOSTILE);
 
+#ifdef JP 
+    mpr("あなたは瓶を開けた……。");
+#else
     mpr("You open the flask...");
+#endif
 
     dec_inv_item_quantity( you.equip[EQ_WEAPON], 1 );
 
     if (create_monster( MONS_EFREET, ENCH_ABJ_V, behaviour, 
                         you.x_pos, you.y_pos, MHITYOU, 250 ) != -1)
     {
+#ifdef JP 
+        mpr( "……すると巨大なイフリートが中から出てきた。" );
+#else
         mpr( "...and a huge efreet comes out." );
+#endif
 
+#ifdef JP 
+        mpr( (behaviour == BEH_FRIENDLY) ? "「俺を解放してくれてありがとうよ！」"
+                                         : "それは狂ったように喚いた！" );
+#else
         mpr( (behaviour == BEH_FRIENDLY) ? "\"Thank you for releasing me!\""
                                          : "It howls insanely!" );
+#endif
     }
     else
         canned_msg(MSG_NOTHING_HAPPENS);
@@ -714,7 +866,11 @@ static bool ball_of_seeing(void)
     int use = 0;
     bool ret = false;
 
+#ifdef JP 
+    mpr("あなたは水晶球にじっと見入った。");
+#else
     mpr("You gaze into the crystal ball.");
+#endif
 
     use = ((!you.conf) ? random2(you.skills[SK_EVOCATIONS] * 6) : random2(5));
 
@@ -724,7 +880,11 @@ static bool ball_of_seeing(void)
     }
     else if (use < 5 && enough_mp(1, true))
     {
+#ifdef JP 
+        mpr("あなたは魔力が吸い取られていくのを感じた！");
+#else
         mpr("You feel power drain from you!");
+#endif
         set_mp(0, false);
     }
     else if (use < 10)
@@ -735,11 +895,19 @@ static bool ball_of_seeing(void)
              || you.level_type == LEVEL_LABYRINTH
              || you.level_type == LEVEL_ABYSS || coinflip())
     {
+#ifdef JP 
+        mpr("あなたには何も見えなかった。");
+#else
         mpr("You see nothing.");
+#endif
     }
     else
     {
+#ifdef JP 
+        mpr("あなたは周辺の地図を霊視した！");
+#else
         mpr("You see a map of your surroundings!");
+#endif
         magic_mapping( 15, 50 + random2( you.skills[SK_EVOCATIONS] ) );
         ret = true;
     }
@@ -760,12 +928,24 @@ static bool disc_of_storms(void)
     if (player_res_electricity() || (random2(100) < fail_rate))
         canned_msg(MSG_NOTHING_HAPPENS);
     else if (random2(100) < fail_rate)
+#ifdef JP 
+        mpr("円盤は一瞬だけ輝いたが、すぐに光は消えた。");
+#else
         mpr("The disc glows for a moment, then fades.");
+#endif
     else if (random2(100) < fail_rate)
+#ifdef JP 
+        mpr("小さな電光が円盤の周りでバチバチと爆ぜた。");
+#else
         mpr("Little bolts of electricity crackle over the disc.");
+#endif
     else
     {
+#ifdef JP 
+        mpr("円盤は電気の爆発を放射した！");
+#else
         mpr("The disc erupts in an explosion of electricity!");
+#endif
 
         disc_count = roll_dice( 2, 1 + you.skills[SK_EVOCATIONS] / 7 );
 
@@ -803,17 +983,29 @@ void tome_of_power(char sc_read_2)
     int spell_casted = 0;
     struct bolt beam;
 
+#ifdef JP 
+    strcpy(info, "本は");
+#else
     strcpy(info, "The book opens to a page covered in ");
+#endif
 
     char wc[30];
     weird_writing( wc );
     strcat( info, wc );
+#ifdef JP 
+    strcat( info, "で書かれたページを開いた。" );
+#else
     strcat( info, "." );
+#endif
     mpr( info );
 
     you.turn_is_over = 1;
 
+#ifdef JP 
+    if (!yesno("読みますか？"))
+#else
     if (!yesno("Read it?"))
+#endif
         return;
 
     set_ident_flags( you.inv[sc_read_2], ISFLAG_IDENT_MASK );
@@ -821,11 +1013,19 @@ void tome_of_power(char sc_read_2)
     if (you.mutation[MUT_BLURRY_VISION] > 0
         && random2(4) < you.mutation[MUT_BLURRY_VISION])
     {
+#ifdef JP 
+        mpr("このページは文字がかすれていて読めない。");
+#else
         mpr("The page is too blurry for you to read.");
+#endif
         return;
     }
 
+#ifdef JP 
+    mpr("あなたは気がつくと魔法の言葉を詠唱していた！");
+#else
     mpr("You find yourself reciting the magical words!");
+#endif
     exercise( SK_EVOCATIONS, 1 ); 
 
     temp_rand = random2(50) + random2( you.skills[SK_EVOCATIONS] / 3 ); 
@@ -839,19 +1039,31 @@ void tome_of_power(char sc_read_2)
     case 7:
     case 8:
     case 9:
+#ifdef JP 
+        mpr("気味悪い煙の雲が本のページから立ち昇った！");
+#else
         mpr("A cloud of weird smoke pours from the book's pages!");
+#endif
         big_cloud( CLOUD_GREY_SMOKE + random2(3), you.x_pos, you.y_pos, 20,
                                                           10 + random2(8) );
         return;
     case 1:
     case 14:
+#ifdef JP 
+        mpr("窒息ガスだ！");
+#else
         mpr("A cloud of choking fumes pours from the book's pages!");
+#endif
         big_cloud(CLOUD_POISON, you.x_pos, you.y_pos, 20, 7 + random2(5));
         return;
 
     case 2:
     case 13:
+#ifdef JP 
+        mpr("凍結ガスだ！");
+#else
         mpr("A cloud of freezing gas pours from the book's pages!");
+#endif
         big_cloud(CLOUD_COLD, you.x_pos, you.y_pos, 20, 8 + random2(5));
         return;
 
@@ -860,7 +1072,11 @@ void tome_of_power(char sc_read_2)
     case 12:
         if (one_chance_in(5))
         {
+#ifdef JP 
+            mpr("本は強烈な爆発で消し飛んだ！");
+#else
             mpr("The book disappears in a mighty explosion!");
+#endif
             dec_inv_item_quantity( sc_read_2, 1 );
         }
 
@@ -870,12 +1086,20 @@ void tome_of_power(char sc_read_2)
         beam.flavour = BEAM_FIRE;
         beam.target_x = you.x_pos;
         beam.target_y = you.y_pos;
+#ifdef JP 
+        strcpy( beam.beam_name, "炎の爆発" );
+#else
         strcpy( beam.beam_name, "fiery explosion" );
+#endif
         beam.colour = RED;
         // your explosion, (not someone else's explosion)
         beam.beam_source = NON_MONSTER;
         beam.thrower = KILL_YOU;
+#ifdef JP 
+        beam.aux_source = "力の書の爆発";
+#else
         beam.aux_source = "an exploding Tome of Power";
+#endif
         beam.ex_size = 2;
         beam.isTracer = false;
 
@@ -887,8 +1111,13 @@ void tome_of_power(char sc_read_2)
         if (create_monster( MONS_ABOMINATION_SMALL, ENCH_ABJ_VI, BEH_HOSTILE,
                             you.x_pos, you.y_pos, MHITYOU, 250 ) != -1)
         {
+#ifdef JP 
+            mpr("おぞましい存在が現れた！");
+            mpr("それはとても友好的には見えない。");
+#else
             mpr("A horrible Thing appears!");
             mpr("It doesn't look too friendly.");
+#endif
         }
         return;
     }
@@ -928,31 +1157,57 @@ void skill_manual(char sc_read_2)
 
     strcpy(skname, skill_name(you.inv[sc_read_2].plus));
 
+#ifdef JP 
+    strcpy(info, "これは");
+#else
     strcpy(info, "This is a manual of ");
+#endif
     strcat(info, skname);
+#ifdef JP 
+    strcat(info, "の虎の巻だ！");
+#else
     strcat(info, "!");
+#endif
     mpr(info);
 
     you.turn_is_over = 1;
 
+#ifdef JP 
+    if (!yesno("読みますか？"))
+#else
     if (!yesno("Read it?"))
+#endif
         return;
 
+#ifdef JP 
+    strcpy(info, "あなたは");
+    strcat(info, skname);
+    strcat(info, "について読んだ。");
+#else
     strcpy(info, "You read about ");
     strcat(info, strlwr(skname));
     strcat(info, ".");
+#endif
     mpr(info);
 
     exercise( you.inv[sc_read_2].plus, 500 );
 
     if (one_chance_in(10))
     {
+#ifdef JP 
+        mpr("本は塵となって崩れてしまった。");
+#else
         mpr("The book crumbles into dust.");
+#endif
         dec_inv_item_quantity( sc_read_2, 1 );
     }
     else
     {
+#ifdef JP 
+        mpr("本は前よりも幾らか擦り切れたようだ。");
+#else
         mpr("The book looks somewhat more worn.");
+#endif
     }
 }                               // end skill_manual()
 
@@ -963,7 +1218,11 @@ static bool box_of_beasts(void)
 
     int ret = false;
 
+#ifdef JP 
+    mpr("あなたは蓋を開いた……。");
+#else
     mpr("You open the lid...");
+#endif
 
     if (random2(100) < 60 + you.skills[SK_EVOCATIONS])
     {
@@ -987,17 +1246,29 @@ static bool box_of_beasts(void)
         if (create_monster( beasty, ENCH_ABJ_II + random2(4), beh,
                             you.x_pos, you.y_pos, MHITYOU, 250 ) != -1)
         {
+#ifdef JP 
+            mpr("……すると何かが飛び出してきた！");
+#else
             mpr("...and something leaps out!");
+#endif
             ret = true;
         }
     }
     else
     {
         if (!one_chance_in(6))
+#ifdef JP 
+            mpr("……しかし何事も起こらなかった！");
+#else
             mpr("...but nothing happens.");
+#endif
         else
         {
+#ifdef JP 
+            mpr("……しかし匣の中は空のようだ。");
+#else
             mpr("...but the box appears empty.");
+#endif
             you.inv[you.equip[EQ_WEAPON]].sub_type = MISC_EMPTY_EBONY_CASKET;
         }
     }
@@ -1012,7 +1283,11 @@ static bool ball_of_energy(void)
 
     bool ret = false;
 
+#ifdef JP 
+    mpr("あなたは水晶球にじっと見入った。");
+#else
     mpr("You gaze into the crystal ball.");
+#endif
 
     use = ((!you.conf) ? random2(you.skills[SK_EVOCATIONS] * 6) : random2(6));
 
@@ -1023,7 +1298,11 @@ static bool ball_of_energy(void)
     else if ((use < 4 && enough_mp(1, true))
              || you.magic_points == you.max_magic_points)
     {
+#ifdef JP 
+        mpr( "あなたは魔力が吸い取られていくのを感じた！" );
+#else
         mpr( "You feel your power drain away!" );
+#endif
         set_mp( 0, false );
     }
     else if (use < 6)
@@ -1038,12 +1317,20 @@ static bool ball_of_energy(void)
         if (random2avg(77 - you.skills[SK_EVOCATIONS] * 2, 4) > proportional 
             || one_chance_in(25))
         {
+#ifdef JP 
+            mpr( "あなたは魔力が吸い取られていくのを感じた！" );
+#else
             mpr( "You feel your power drain away!" );
+#endif
             set_mp( 0, false );
         }
         else
         {
+#ifdef JP 
+            mpr( "あなたは魔力に満たされた！" );
+#else
             mpr( "You are suffused with power!" );
+#endif
             inc_mp( 6 + roll_dice( 2, you.skills[SK_EVOCATIONS] ), false );
 
             ret = true;
@@ -1055,8 +1342,13 @@ static bool ball_of_energy(void)
 
 static bool ball_of_fixation(void)
 {
+#ifdef JP 
+    mpr("あなたは水晶球にじっと見入った。");
+    mpr("あなたは煌く虹に幻惑されてしまった！");
+#else
     mpr("You gaze into the crystal ball.");
     mpr("You are mesmerised by a rainbow of scintillating colours!");
+#endif
 
     you.paralysis = 100;
     you.slow = 100;

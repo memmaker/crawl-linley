@@ -51,7 +51,7 @@ int corpse_rot(int power);
 /* ***********************************************************************
  * called from: it_use3 - spell
  * *********************************************************************** */
-int summon_elemental(int pow, unsigned char restricted_type, unsigned char unfriendly);
+int summon_elemental(int pow, int restricted_type, unsigned char unfriendly);
 
 
 // last updated 24may2000 {dlb}

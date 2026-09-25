@@ -10,20 +10,76 @@
 
 #include "AppHdr.h"
 #include <stdio.h>
+#include <string.h>
 #include <ctype.h>
+
+#ifdef USE_MULTIWIN
+#include "externs.h"
+#endif
+
+#ifdef WIN32CONSOLE
+#include <windows.h>
+#include <mmsystem.h>
+#endif
+
+void play_sound( const char *file )
+{
+#if defined(WIN32CONSOLE) || defined(WINDOWS)
+    // Check whether file exists, is readable, etc.?
+    if (file && *file)
+        sndPlaySound(file, SND_ASYNC | SND_NODEFAULT);
+#endif
+}
+
+// Determines whether the pattern specified by 'pattern' matches the given
+// text. A pattern is a simple glob, with the traditional * and ? wildcards.
+bool pattern_match( const char *pattern, const char *text )
+{
+    char p, t;
+    bool special;
+
+    for (;;)
+    {
+        p = *pattern++;
+        t = *text++;
+        special = true;
+
+        if (!p) return t == 0;
+        if (p == '\\' && *pattern)
+        {
+            p       = *pattern++;
+            special = false;
+        }
+
+        if (p == '*' && special)
+            // Try to match exactly at the current text position...
+            return !*pattern || pattern_match(pattern, text - 1)? true :
+                // Or skip one character in the text and try the wildcard
+                // match again. If this is the end of the text, the match has
+                // failed.
+                t? pattern_match(pattern - 1, text) : false;
+        else if (!t || (p != t && (p != '?' || !special)))
+            return false;
+    }
+}
 
 void get_input_line( char *const buff, int len )
 {
     buff[0] = '\0';         // just in case
 
-#if defined(LINUX)
+#ifdef USE_TILE
+    get_input_line_tile(buff, len ); // in libtile.cc
+#elif defined(WINDOWS)
+    get_input_line_from_win(buff, len ); // in libwin.cc
+#elif defined(LINUX)
     get_input_line_from_curses( buff, len ); // inplemented in liblinux.cc
-#elif defined(MAC) || defined(WIN32CONSOLE)
+#elif defined(MAC)
     getstr( buff, len );        // implemented in libmac.cc
+#elif defined(WIN32CONSOLE)
+    w32c_get_input_line( buff, len );        // implemented in libmac.cc
 #else
     fgets( buff, len, stdin );  // much safer than gets()
 #endif
-
     buff[ len - 1 ] = '\0';  // just in case 
 
     // Removing white space from the end in order to get rid of any

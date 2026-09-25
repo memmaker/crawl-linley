@@ -545,8 +545,43 @@ enum COMMANDS
     CMD_QUIT,
     CMD_WIZARD,
     CMD_DESTROY_ITEM,
-    CMD_OBSOLETE_INVOKE
+    CMD_OBSOLETE_INVOKE,
+
+    CMD_MARK_STASH,
+    CMD_FORGET_STASH,
+    CMD_EXPLORE,
+    CMD_INTERLEVEL_TRAVEL,
+    CMD_FIX_WAYPOINT,
+
+#ifdef USE_TILE
+    CMD_MOUSE_LCLICK =3000,
+    CMD_MOUSE_RCLICK,
+    CMD_MOUSE_RCLICK_SELF,
+    CMD_MOUSE_MCLICK,
+    CMD_MOUSE_MOVE,
+    CMD_MOUSE_WHEEL_UP,
+    CMD_MOUSE_WHEEL_DOWN,
+    CMD_DO_NOTHING,
+#endif
+
+    CMD_USE_ITEM,
+    CMD_USE_ITEM_END = CMD_USE_ITEM + 52,
+    CMD_VIEW_ITEM,
+    CMD_VIEW_ITEM_END = CMD_VIEW_ITEM + 52,
+
+
+    CMD_TRIGGER_F1 =5001,
+    // No machine has F35 Key
+    CMD_TRIGGER_MUHENKAN = 5040,
+    CMD_TRIGGER_HENKAN
 };
+
+#define KEYFLAG_ALT   0x0100000 /* =1048576 */
+#define KEYFLAG_SHIFT 0x0200000
+#define KEYFLAG_CTRL  0x0400000
+#define KEYFLAG_MASK  0x00fffff
+#define KEYFLAG_FMASK 0xff00000
+
 
 enum CONFIRM_LEVEL
 {
@@ -1116,6 +1151,8 @@ enum ITEM_STATUS_FLAGS      // per item flags: ie. ident status, cursed status
     ISFLAG_RANDART           = 0x00001000,  // special value is seed
     ISFLAG_UNRANDART         = 0x00002000,  // is an unrandart
     ISFLAG_ARTEFACT_MASK     = 0x00003000,  // randart or unrandart
+    ISFLAG_DROPPED           = 0x00004000,  // dropped item (no autopickup)
+    ISFLAG_THROWN            = 0x00008000,  // thrown missile weapon
 
     ISFLAG_NO_DESC           = 0x00000000,  // used for clearing these flags
     ISFLAG_GLOWING           = 0x00010000,  // weapons or armour

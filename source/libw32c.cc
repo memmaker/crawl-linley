@@ -23,7 +23,9 @@
 #define NOATOM            /* Atom management */
 #define NOLANGUAGE        /* Character test routines */
 #define NOLSTRING         /* lstr* string management routines */
+#ifndef JP
 #define NODBCS            /* Double-byte character set routines */
+#endif
 #define NOKEYBOARDINFO    /* Keyboard driver routines */
 #define NOCOLOR           /* COLOR_* color values */
 #define NODRAWTEXT        /* DrawText() and related definitions */
@@ -43,9 +45,13 @@
  * Exclude parts of WINDOWS.H that are not needed (Win32)
  */
 #define WIN32_LEAN_AND_MEAN
+#ifndef JP
 #define NONLS             /* All NLS defines and routines */
+#endif
 #define NOSERVICE         /* All Service Controller routines, SERVICE_ equates, etc. */
+#ifndef JP
 #define NOKANJI           /* Kanji support stuff. */
+#endif
 #define NOMCX             /* Modem Configuration Extensions */
 #define _X86_			  /* target architecture */
 
@@ -91,6 +97,9 @@ static const char *windowTitle = "Crawl " VERSION;
 
 // we can do straight translation of DOS color to win32 console color.
 #define WIN32COLOR(col) (WORD)(col)
+#ifdef JP
+static void writeWChar(unsigned char *ch);
+#endif
 static void writeChar(char c);
 static void bFlush(void);
 static void _setcursortype_internal(int curstype);
@@ -165,14 +174,22 @@ void print_timings(void)
     LARGE_INTEGER cps;
     QueryPerformanceFrequency(&cps);
 
+#ifdef JP 
     sprintf(s, "Avg (#/oob), CpS = %.1lf", cps.QuadPart);
+#else
+    sprintf(s, "Avg (#/oob), CpS = %.1lf", cps.QuadPart);
+#endif
     mpr(s);
     for(i=0; i<3; i++)
     {
         int dl = 0;
         if (ncalls[i] > 0)
             dl = dlen[i] / ncalls[i];
+#ifdef JP 
         sprintf(s, "%-40s %.1f us (%d/%d), avg dlen = %d", descrip[i],
+#else
+        sprintf(s, "%-40s %.1f us (%d/%d), avg dlen = %d", descrip[i],
+#endif
             (1000000.0 * runavg[i]) / cps.QuadPart, ncalls[i], oob[i], dl);
         mpr(s);
     }
@@ -187,6 +204,43 @@ void print_timings()
 { ; }
 
 #endif // TIMING INFO
+
+#ifdef JP
+void writeWChar(unsigned char *ch)
+{
+   //フローする文字列の切り捨て
+   if (cx >= 77) 
+   {
+       cx++;
+       return;
+   }
+   //PCHAR_INFO pci;
+   PCHAR_INFO pci1, pci2;
+
+   int tc = WIN32COLOR(current_color);
+   pci1 = &screen[SCREENINDEX(cx,cy)];
+   pci2 = &screen[SCREENINDEX(cx+1,cy)];
+
+      // write the info and update the dirty area
+      pci1->Char.AsciiChar = ch[0];
+      pci1->Attributes = tc;
+      pci2->Char.AsciiChar = ch[1];
+      pci2->Attributes = tc;
+
+      if (chy < 0)
+         chsx = cx;
+      chy = cy;
+      chex = cx+1;
+
+      // if we're not buffering, flush
+      if (!buffering)
+         bFlush();
+
+   // update x position
+   cx += 2;
+   if (cx >= 80) cx = 80;
+}
+#endif
 
 void writeChar(char c)
 {
@@ -208,7 +262,11 @@ void writeChar(char c)
 
       return;
    }
-
+#ifdef JP
+   //フローする文字列の切り捨て
+   //if ( (cx >= 78) && (c != ' ') ) return;
+   if ( (cx >= 78) ) return;
+#endif
    int tc = WIN32COLOR(current_color);
    pci = &screen[SCREENINDEX(cx,cy)];
 
@@ -271,7 +329,11 @@ void bFlush(void)
       xy.Y = cy;
       CLOCKIN
       if (SetConsoleCursorPosition(outbuf, xy) == 0)
+#ifdef JP 
          fputs("SetConsoleCursorPosition() failed!", stderr);
+#else
+         fputs("SetConsoleCursorPosition() failed!", stderr);
+#endif
       CLOCKOUT(2)
    }
 }
@@ -283,7 +345,11 @@ void setStringInput(bool value)
    if (value == TRUE)
    {
       inmodes = ENABLE_LINE_INPUT | ENABLE_ECHO_INPUT | ENABLE_PROCESSED_INPUT;
+#ifdef JP
+      outmodes = 0;
+#else
       outmodes = ENABLE_PROCESSED_OUTPUT;
+#endif
    }
    else
    {
@@ -292,12 +358,20 @@ void setStringInput(bool value)
    }
 
    if ( SetConsoleMode( inbuf,  inmodes ) == 0) {
+#ifdef JP 
       fputs("Error initialising console input mode.", stderr);
+#else
+      fputs("Error initialising console input mode.", stderr);
+#endif
       exit(0);
    }
 
    if ( SetConsoleMode( outbuf,  outmodes ) == 0) {
+#ifdef JP 
       fputs("Error initialising console output mode.", stderr);
+#else
+      fputs("Error initialising console output mode.", stderr);
+#endif
       exit(0);
    }
 
@@ -326,19 +400,30 @@ void init_libw32c(void)
    outbuf = GetStdHandle( STD_OUTPUT_HANDLE );
 
    if (inbuf == INVALID_HANDLE_VALUE || outbuf == INVALID_HANDLE_VALUE) {
+#ifdef JP 
       fputs("Could not initialise libw32c console support.", stderr);
+#else
+      fputs("Could not initialise libw32c console support.", stderr);
+#endif
       exit(0);
    }
 
    GetConsoleTitle( oldTitle, 78 );
+#ifdef JP
+   SetConsoleTitle( "Dungeon Crawl 日本語版" );
+#else
    SetConsoleTitle( "Crawl " VERSION );
-
+#endif
    init_colors(oldTitle);
 
    // by default,  set string input to false:  use char-input only
    setStringInput( false );
    if (SetConsoleMode( outbuf, 0 ) == 0) {
+#ifdef JP 
       fputs("Error initialising console output mode.", stderr);
+#else
+      fputs("Error initialising console output mode.", stderr);
+#endif
       exit(0);
    }
 
@@ -467,7 +552,11 @@ void gotoxy(int x, int y)
       xy.Y = cy;
       CLOCKIN
       if (SetConsoleCursorPosition(outbuf, xy) == 0)
+#ifdef JP 
          fputs("SetConsoleCursorPosition() failed!", stderr);
+#else
+         fputs("SetConsoleCursorPosition() failed!", stderr);
+#endif
       CLOCKOUT(2)
    }
 }
@@ -500,6 +589,13 @@ static void cprintf_aux(const char *s)
          p++;
          continue;
       }
+#ifdef JP
+      if ( _ismbblead(*p) )
+      {
+          writeWChar((unsigned char*)p);
+          p += 2;
+      } else
+#endif
       writeChar(*p++);
    }
 
@@ -548,7 +644,7 @@ void putch(char c)
    if (c==0)
       c = ' ';
 
-   writeChar(c);
+   writeChar( c );
 }
 
 // translate virtual keys
@@ -635,7 +731,11 @@ int getch(void)
     {
        CLOCKIN
        if (ReadConsoleInput( inbuf, &ir, 1, &nread) == 0)
+#ifdef JP 
            fputs("Error in ReadConsoleInput()!", stderr);
+#else
+           fputs("Error in ReadConsoleInput()!", stderr);
+#endif
        CLOCKOUT(5)
        if (nread > 0)
        {
@@ -713,7 +813,11 @@ int getConsoleString(char *buf, int maxlen)
    SetConsoleTextAttribute( outbuf, WIN32COLOR(current_color) );
 
    if (ReadConsole( inbuf, buf, (DWORD)(maxlen-1), &nread, NULL) == 0)
+#ifdef JP 
       fputs("Error in ReadConsole()!", stderr);
+#else
+      fputs("Error in ReadConsole()!", stderr);
+#endif
 
    // terminate string,  then strip CRLF, replace with \0
    buf[maxlen-1] = '\0';
@@ -750,4 +854,47 @@ bool setBuffering( bool value )
    buffering = value;
 
    return oldValue;
+}
+
+
+//---------------------------------------------------------------
+//
+// getstr for win32console
+//
+//---------------------------------------------------------------
+void w32c_get_input_line(char* buffer, int bufferSize)
+{
+    ASSERT(buffer != NULL);
+    ASSERT(bufferSize > 1);
+
+    int index = 0;
+    int ccx = cx+1;
+    int ccy = cy+1;
+
+    while (index < bufferSize - 1)
+    {
+        char ch;
+        ch = getch();
+
+        if (ch == '\r' && index >= 0)
+            break;
+        else if (ch == 0x08 && index > 0)
+            {
+                --index;
+                buffer[index] = '\0';
+                gotoxy(ccx,ccy);
+                cprintf( "%s ", buffer );
+                gotoxy(ccx + index,ccy);
+            }
+        else if (isprint(ch))
+            {
+                buffer[index++] = ch;
+                buffer[index] = '\0';
+                gotoxy(ccx,ccy);
+                cprintf( "%s ", buffer );
+                gotoxy(ccx + index, ccy);
+            }
+    }
+
+    buffer[index] = '\0';
 }

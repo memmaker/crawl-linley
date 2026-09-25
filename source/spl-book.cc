@@ -36,7 +36,7 @@
 #include "spl-util.h"
 #include "stuff.h"
 
-static int spellbook_template_array[NUMBER_SPELLBOOKS][SPELLBOOK_SIZE] = 
+static int spellbook_template_array[NUMBER_SPELLBOOKS][SPELLBOOK_SIZE] =
 {
     // 0 - Minor Magic I
     {0,
@@ -293,7 +293,7 @@ static int spellbook_template_array[NUMBER_SPELLBOOKS][SPELLBOOK_SIZE] =
      SPELL_NO_SPELL,
      SPELL_NO_SPELL,
      },
-    // 23 - Book of Necromancy 
+    // 23 - Book of Necromancy
     {0,
      SPELL_PAIN,
      SPELL_ANIMATE_SKELETON,
@@ -391,7 +391,7 @@ static int spellbook_template_array[NUMBER_SPELLBOOKS][SPELLBOOK_SIZE] =
      SPELL_FLY,
      SPELL_DEFLECT_MISSILES,
      SPELL_LIGHTNING_BOLT,
-     SPELL_CONJURE_BALL_LIGHTNING, 
+     SPELL_CONJURE_BALL_LIGHTNING,
 #ifndef USE_SILENCE_CODE
      SPELL_NO_SPELL,
 #endif
@@ -778,7 +778,7 @@ static unsigned char spellbook_contents( item_def &book, int action )
 
     bool spell_skills = false;
 
-    for (i = SK_SPELLCASTING; i <= SK_POISON_MAGIC; i++) 
+    for (i = SK_SPELLCASTING; i <= SK_POISON_MAGIC; i++)
     {
         if (you.skills[i])
         {
@@ -804,7 +804,11 @@ static unsigned char spellbook_contents( item_def &book, int action )
     item_name( book, DESC_CAP_THE, str_pass );
     cprintf( str_pass );
 
+#ifdef JP
+    cprintf( EOL EOL " 呪文                               系統                     レベル" EOL );
+#else
     cprintf( EOL EOL " Spells                             Type                      Level" EOL );
+#endif
 
     for (j = 1; j < SPELLBOOK_SIZE; j++)
     {
@@ -825,7 +829,7 @@ static unsigned char spellbook_contents( item_def &book, int action )
         int colour = DARKGREY;
         if (action == RBOOK_USE_STAFF)
         {
-            if (you.experience_level >= level_diff 
+            if (you.experience_level >= level_diff
                 && you.magic_points >= level_diff)
             {
                 colour = LIGHTGREY;
@@ -835,7 +839,7 @@ static unsigned char spellbook_contents( item_def &book, int action )
         {
             if (knowsSpell)
                 colour = LIGHTGREY;
-            else if (you.experience_level >= level_diff 
+            else if (you.experience_level >= level_diff
                         && spell_levels >= levels_req
                         && spell_skills)
             {
@@ -860,9 +864,13 @@ static unsigned char spellbook_contents( item_def &book, int action )
         cprintf( spell_title(spell_types[j]) );
         gotoxy( 35, wherey() );
 
-        
+
         if (action == RBOOK_USE_STAFF)
+#ifdef JP
+            cprintf( "発動" );
+#else
             cprintf( "Evocations" );
+#endif
         else
         {
             bool already = false;
@@ -896,16 +904,29 @@ static unsigned char spellbook_contents( item_def &book, int action )
     switch (action)
     {
     case RBOOK_USE_STAFF:
+#ifdef JP
+        cprintf( "唱える呪文を選択してください。" EOL );
+#else
         cprintf( "Select a spell to cast." EOL );
+#endif
         break;
 
     case RBOOK_MEMORIZE:
+#ifdef JP
+        cprintf( "覚える呪文を選択してください。(%dレベル分の記憶が可能)" EOL,
+                 spell_levels );
+#else
         cprintf( "Select a spell to memorise (%d level%s available)." EOL,
                  spell_levels, (spell_levels == 1) ? "" : "s" );
+#endif
         break;
 
     case RBOOK_READ_SPELL:
+#ifdef JP
+        cprintf( "解説を読みたい呪文を選択してください。" EOL );
+#else
         cprintf( "Select a spell to read its description." EOL );
+#endif
         break;
 
     default:
@@ -1036,7 +1057,11 @@ static bool which_spellbook( int &book, int &spell )
     // Knowing delayed fireball will allow Fireball to be learned for free -bwr
     if (avail_levels < 1 && !player_has_spell(SPELL_DELAYED_FIREBALL))
     {
+#ifdef JP
+        mpr("あなたは今のところ呪文を覚えることはできない。");
+#else
         mpr("You can't memorise any more spells yet.");
+#endif
         return (false);
     }
     else if (inv_count() < 1)
@@ -1045,12 +1070,21 @@ static bool which_spellbook( int &book, int &spell )
         return (false);
     }
 
+#ifdef JP
+    snprintf( info, INFO_SIZE, "あなたは%dレベル分の呪文を覚えることができる。",
+             avail_levels );
+#else
     snprintf( info, INFO_SIZE, "You can memorise %d more level%s of spells.",
              avail_levels, (avail_levels > 1) ? "s" : "" );
+#endif
 
     mpr( info );
 
+#ifdef JP
+    book = prompt_invent_item( "どの呪文書から覚えますか？", OBJ_BOOKS );
+#else
     book = prompt_invent_item( "Memorise from which spellbook?", OBJ_BOOKS );
+#endif
     if (book == PROMPT_ABORT)
     {
         canned_msg( MSG_OK );
@@ -1060,7 +1094,11 @@ static bool which_spellbook( int &book, int &spell )
     if (you.inv[book].base_type != OBJ_BOOKS
         || you.inv[book].sub_type == BOOK_MANUAL)
     {
+#ifdef JP
+        mpr("それは呪文書ではない！");
+#else
         mpr("That isn't a spellbook!");
+#endif
         return (false);
     }
 
@@ -1071,12 +1109,14 @@ static bool which_spellbook( int &book, int &spell )
     }
 
     spell = read_book( you.inv[book], RBOOK_MEMORIZE );
+#ifndef USE_MULTIWIN
     clrscr();
+#endif
 
     return (true);
 }                               // end which_spellbook()
 
-// Returns false if the player cannot read/memorize from the book, 
+// Returns false if the player cannot read/memorize from the book,
 // and true otherwise. -- bwr
 static bool player_can_read_spellbook( const item_def &book )
 {
@@ -1108,7 +1148,11 @@ unsigned char read_book( item_def &book, int action )
 
     if (book.base_type == OBJ_BOOKS && !player_can_read_spellbook( book ))
     {
+#ifdef JP
+        mpr( "この本の内容は現在のあなたの理解力を遥かに越えている。" );
+#else
         mpr( "This book is beyond your current level of understanding." );
+#endif
         more();
         return (0);
     }
@@ -1227,7 +1271,11 @@ bool learn_spell(void)
 
     if (j == 0)
     {
+#ifdef JP
+        mpr("あなたは魔法書など読めない！現在のところ巻物のみ読むことができる。");
+#else
         mpr("You can't use spell magic! I'm afraid it's scrolls only for now.");
+#endif
         return (false);
     }
 
@@ -1238,13 +1286,17 @@ bool learn_spell(void)
     {
       whatt:
         redraw_screen();
+#ifdef JP
+        mpr("なんでしょうか？");
+#else
         mpr("What?");
+#endif
         return (false);
     }
 
     index = letter_to_index( spell );
 
-    if (index > SPELLBOOK_SIZE)
+    if (index >= SPELLBOOK_SIZE)
         goto whatt;
 
     if (!is_valid_spell_in_book( book, index ))
@@ -1259,21 +1311,33 @@ bool learn_spell(void)
     if (you.spell_no == 21 && specspell != SPELL_SELECTIVE_AMNESIA)
     {
         redraw_screen();
+#ifdef JP
+        mpr("あなたの頭はすでに呪文でいっぱいだ！");
+#else
         mpr("Your head is already too full of spells!");
+#endif
         return (false);
     }
 
     if (you.is_undead && spell_typematch(specspell, SPTYP_HOLY))
     {
         redraw_screen();
+#ifdef JP
+        mpr("あなたはこの系統の魔法を使うことはできない！");
+#else
         mpr("You cannot use this type of magic!");
+#endif
         return (false);
     }
 
     if (undead_cannot_memorise(specspell, you.is_undead))
     {
         redraw_screen();
+#ifdef JP
+        mpr("あなたはこの呪文を使うことはできない。");
+#else
         mpr("You cannot use this spell.");
+#endif
         return (false);
     }
 
@@ -1282,7 +1346,11 @@ bool learn_spell(void)
         if (you.spells[i] == specspell)
         {
             redraw_screen();
+#ifdef JP
+            mpr("あなたはその呪文を既に知っている！");
+#else
             mpr("You already know that spell!");
+#endif
             you.turn_is_over = 1;
             return (false);
         }
@@ -1293,7 +1361,11 @@ bool learn_spell(void)
     if (player_spell_levels() < levels_needed)
     {
         redraw_screen();
+#ifdef JP
+        mpr("あなたはまだそのような高レベルの魔法は覚えられない！");
+#else
         mpr("You can't memorise that many levels of magic yet!");
+#endif
         you.turn_is_over = 1;
         return (false);
     }
@@ -1301,7 +1373,11 @@ bool learn_spell(void)
     if (you.experience_level < spell_difficulty(specspell))
     {
         redraw_screen();
+#ifdef JP
+        mpr("あなたはその呪文を習得するにはあまりに経験不足だ！");
+#else
         mpr("You're too inexperienced to learn that spell!");
+#endif
         you.turn_is_over = 1;
         return (false);
     }
@@ -1310,6 +1386,31 @@ bool learn_spell(void)
 
     chance = spell_fail(specspell);
 
+    int temp_rand = random2(3);
+
+#ifdef JP
+    strcpy(info, "その呪文を");
+
+    temp_rand = random2(4);
+    strcat(info, (temp_rand == 0) ? "覚える" :
+                 (temp_rand == 1) ? "記憶する" :
+                 (temp_rand == 2) ? "身につける" :
+                 (temp_rand == 3) ? "理解する"
+                                  : "");
+    temp_rand = random2(3);
+    strcat(info, (temp_rand == 0) ? "難しさは" :
+                 (temp_rand == 1) ? "厄介さは" :
+                 (temp_rand == 2) ? "大変さは"
+                                  : "");
+
+    strcat(info, (chance >= 80) ? "とてつもない" :
+                 (chance >= 60) ? "非常なものだ" :
+                 (chance >= 45) ? "なかなかのものだ" :
+                 (chance >= 30) ? "そこそこのものだ"
+                                : "大した事がない");
+
+    strcat(info, "。");
+#else
     strcpy(info, "This spell is ");
 
     strcat(info, (chance >= 80) ? "very" :
@@ -1319,8 +1420,6 @@ bool learn_spell(void)
                                 : "not that");
 
     strcat(info, " ");
-
-    int temp_rand = random2(3);
 
     strcat(info, (temp_rand == 0) ? "difficult" :
                  (temp_rand == 1) ? "tricky" :
@@ -1338,12 +1437,21 @@ bool learn_spell(void)
                                   : "");
 
     strcat(info, ".");
+#endif
 
     mpr(info);
 
+#ifdef JP
+    strcpy(info, "");
+#else
     strcpy(info, "Memorise ");
+#endif
     strcat(info, spell_title(specspell));
+#ifdef JP
+    strcat(info, "を覚えますか？");
+#else
     strcat(info, "?");
+#endif
     mpr(info);
 
     for (;;)
@@ -1365,7 +1473,11 @@ bool learn_spell(void)
     if (you.mutation[MUT_BLURRY_VISION] > 0
                 && random2(4) < you.mutation[MUT_BLURRY_VISION])
     {
+#ifdef JP
+        mpr("文字が不可解なちんぷんかんぷんに霞んだ。");
+#else
         mpr("The writing blurs into unreadable gibberish.");
+#endif
         you.turn_is_over = 1;
         return (false);
     }
@@ -1373,34 +1485,60 @@ bool learn_spell(void)
     if (random2(40) + random2(40) + random2(40) < chance)
     {
         redraw_screen();
+#ifdef JP
+        mpr("あなたは呪文を覚えるのに失敗した。");
+#else
         mpr("You fail to memorise the spell.");
+#endif
         you.turn_is_over = 1;
 
         if (you.inv[ book ].sub_type == BOOK_NECRONOMICON)
         {
+#ifdef JP
+            mpr("ネクロノミコンのページが暗黒の憎悪に輝いた……。");
+            miscast_effect( SPTYP_NECROMANCY, 8, random2avg(88, 3), 100,
+                            "ネクロノミコンの閲覧" );
+#else
             mpr("The pages of the Necronomicon glow with a dark malevolence...");
-            miscast_effect( SPTYP_NECROMANCY, 8, random2avg(88, 3), 100, 
+            miscast_effect( SPTYP_NECROMANCY, 8, random2avg(88, 3), 100,
                             "reading the Necronomicon" );
+#endif
         }
         else if (you.inv[ book ].sub_type == BOOK_DEMONOLOGY)
         {
+#ifdef JP
+            mpr("この本はあなたの愚行に煩わされることを喜ばない！");
+            miscast_effect( SPTYP_SUMMONING, 7, random2avg(88, 3), 100,
+                            "悪魔術の魔法書の閲覧" );
+#else
             mpr("This book does not appreciate being disturbed by one of your ineptitude!");
             miscast_effect( SPTYP_SUMMONING, 7, random2avg(88, 3), 100,
                             "reading the book of Demonology" );
+#endif
         }
         else if (you.inv[ book ].sub_type == BOOK_ANNIHILATIONS)
         {
+#ifdef JP
+            mpr("この本はあなたの愚行に煩わされることを喜ばない！");
+            miscast_effect( SPTYP_CONJURATION, 8, random2avg(88, 3), 100,
+                            "殲滅の魔法書の閲覧" );
+#else
             mpr("This book does not appreciate being disturbed by one of your ineptitude!");
             miscast_effect( SPTYP_CONJURATION, 8, random2avg(88, 3), 100,
                             "reading the book of Annihilations" );
+#endif
         }
 
-#if WIZARD
+#ifdef WIZARD
         if (!you.wizard)
             return (false);
+#ifdef JP
+        else if (!yesno("どうしても覚えますか？"))
+#else
         else if (!yesno("Memorize anyway?"))
+#endif
             return (false);
-#else 
+#else
         return (false);
 #endif
     }
@@ -1425,10 +1563,10 @@ int staff_spell( int staff )
     // converting sub_type into book index type
     const int type = you.inv[staff].sub_type + 40;
 
-    // Spell staves are mostly for the benefit of non-spellcasters, so we're 
+    // Spell staves are mostly for the benefit of non-spellcasters, so we're
     // not going to involve INT or Spellcasting skills for power. -- bwr
-    const int powc = 5 + you.skills[SK_EVOCATIONS] 
-                       + roll_dice( 2, you.skills[SK_EVOCATIONS] ); 
+    const int powc = 5 + you.skills[SK_EVOCATIONS]
+                       + roll_dice( 2, you.skills[SK_EVOCATIONS] );
 
     if (you.inv[staff].sub_type < STAFF_SMITING
         || you.inv[staff].sub_type >= STAFF_AIR)
@@ -1447,7 +1585,7 @@ int staff_spell( int staff )
     spellbook_template( type, spell_list );
 
     unsigned char num_spells;
-    for (num_spells = 0; num_spells < SPELLBOOK_SIZE - 1; num_spells++) 
+    for (num_spells = 0; num_spells < SPELLBOOK_SIZE - 1; num_spells++)
     {
         if (spell_list[ num_spells + 1 ] == SPELL_NO_SPELL)
             break;
@@ -1462,13 +1600,17 @@ int staff_spell( int staff )
         spell = 'a';  // automatically selected if its the only option
     else
     {
-        snprintf( info, INFO_SIZE, 
+        snprintf( info, INFO_SIZE,
+#ifdef JP
+                  "ロッドからどの呪文を発動しますか？([a-%c]呪文 [*][?]一覧) ",
+#else
                   "Evoke which spell from the rod ([a-%c] spell [?*] list)? ",
+#endif
                   'a' + num_spells - 1 );
 
         mpr( info, MSGCH_PROMPT );
         spell = get_ch();
-        
+
         if (spell == '?' || spell == '*')
             spell = read_book( you.inv[staff], RBOOK_USE_STAFF );
     }
@@ -1480,7 +1622,7 @@ int staff_spell( int staff )
 
     spell = letter_to_index( spell );
 
-    if (spell > SPELLBOOK_SIZE)
+    if (spell >= SPELLBOOK_SIZE)
         goto whattt;
 
     if (!is_valid_spell_in_book( staff, spell ))
@@ -1496,14 +1638,18 @@ int staff_spell( int staff )
 
     if (you.magic_points < mana || you.experience_level < diff)
     {
+#ifdef JP
+        mpr("あなたの脳髄は傷ついた！");
+#else
         mpr("Your brain hurts!");
+#endif
         confuse_player( 2 + random2(4) );
         you.turn_is_over = 1;
         return (0);
     }
 
-    // Exercising the spell skills doesn't make very much sense given 
-    // that spell staves are largely intended to supply spells to 
+    // Exercising the spell skills doesn't make very much sense given
+    // that spell staves are largely intended to supply spells to
     // non-spellcasters, and they don't use spell skills to determine
     // power in the same way that spellcasting does. -- bwr
     //
@@ -1518,7 +1664,11 @@ int staff_spell( int staff )
     return (roll_dice( 1, 1 + spell_difficulty(specspell) / 2 ));
 
   whattt:
+#ifdef JP
+    mpr("何でしょう？");
+#else
     mpr("What?");
+#endif
 
     return (0);
 }                               // end staff_spell()

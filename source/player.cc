@@ -45,6 +45,12 @@
 #include "view.h"
 #include "wpn-misc.h"
 
+#ifdef USE_TILE
+#include "tiles.h"
+#endif
+
+// from itemname.cc
+extern char id[4][50];
 
 /*
    you.duration []: //jmf: obsolete, see enum.h instead
@@ -111,7 +117,7 @@ bool player_in_branch( int branch )
 bool player_in_hell( void )
 {
     return (you.level_type == LEVEL_DUNGEON
-            && (you.where_are_you >= BRANCH_DIS 
+            && (you.where_are_you >= BRANCH_DIS
                 && you.where_are_you <= BRANCH_THE_PIT)
             && you.where_are_you != BRANCH_VESTIBULE_OF_HELL);
 }
@@ -177,7 +183,7 @@ bool player_genus(unsigned char which_genus, unsigned char species)
 
 // Looks in equipment "slot" to see if there is an equiped "sub_type".
 // Returns number of matches (in the case of rings, both are checked)
-int player_equip( int slot, int sub_type )
+int player_equip( int slot, int sub_type, bool calc_unid)
 {
     int ret = 0;
 
@@ -197,34 +203,37 @@ int player_equip( int slot, int sub_type )
         // Like above, but must be magical stave.
         if (you.equip[EQ_WEAPON] != -1
             && you.inv[you.equip[EQ_WEAPON]].base_type == OBJ_STAVES
-            && you.inv[you.equip[EQ_WEAPON]].sub_type == sub_type)
+            && you.inv[you.equip[EQ_WEAPON]].sub_type == sub_type
+            &&(item_ident(you.inv[you.equip[EQ_WEAPON]], ISFLAG_KNOW_TYPE) || calc_unid) )
         {
             ret++;
         }
         break;
 
     case EQ_RINGS:
-        if (you.equip[EQ_LEFT_RING] != -1 
-            && you.inv[you.equip[EQ_LEFT_RING]].sub_type == sub_type)
+        if (you.equip[EQ_LEFT_RING] != -1
+            && you.inv[you.equip[EQ_LEFT_RING]].sub_type == sub_type
+            &&(item_ident(you.inv[you.equip[EQ_LEFT_RING]], ISFLAG_KNOW_TYPE) || calc_unid) )
         {
             ret++;
         }
 
-        if (you.equip[EQ_RIGHT_RING] != -1 
-            && you.inv[you.equip[EQ_RIGHT_RING]].sub_type == sub_type)
+        if (you.equip[EQ_RIGHT_RING] != -1
+            && you.inv[you.equip[EQ_RIGHT_RING]].sub_type == sub_type
+            &&(item_ident(you.inv[you.equip[EQ_RIGHT_RING]], ISFLAG_KNOW_TYPE) || calc_unid) )
         {
             ret++;
         }
         break;
 
     case EQ_RINGS_PLUS:
-        if (you.equip[EQ_LEFT_RING] != -1 
+        if (you.equip[EQ_LEFT_RING] != -1
             && you.inv[you.equip[EQ_LEFT_RING]].sub_type == sub_type)
         {
             ret += you.inv[you.equip[EQ_LEFT_RING]].plus;
         }
 
-        if (you.equip[EQ_RIGHT_RING] != -1 
+        if (you.equip[EQ_RIGHT_RING] != -1
             && you.inv[you.equip[EQ_RIGHT_RING]].sub_type == sub_type)
         {
             ret += you.inv[you.equip[EQ_RIGHT_RING]].plus;
@@ -232,13 +241,13 @@ int player_equip( int slot, int sub_type )
         break;
 
     case EQ_RINGS_PLUS2:
-        if (you.equip[EQ_LEFT_RING] != -1 
+        if (you.equip[EQ_LEFT_RING] != -1
             && you.inv[you.equip[EQ_LEFT_RING]].sub_type == sub_type)
         {
             ret += you.inv[you.equip[EQ_LEFT_RING]].plus2;
         }
 
-        if (you.equip[EQ_RIGHT_RING] != -1 
+        if (you.equip[EQ_RIGHT_RING] != -1
             && you.inv[you.equip[EQ_RIGHT_RING]].sub_type == sub_type)
         {
             ret += you.inv[you.equip[EQ_RIGHT_RING]].plus2;
@@ -250,8 +259,9 @@ int player_equip( int slot, int sub_type )
         break;
 
     default:
-        if (you.equip[slot] != -1 
-            && you.inv[you.equip[slot]].sub_type == sub_type)
+        if (you.equip[slot] != -1
+            && you.inv[you.equip[slot]].sub_type == sub_type
+            &&(item_ident(you.inv[you.equip[slot]], ISFLAG_KNOW_TYPE) || calc_unid) )
         {
             ret++;
         }
@@ -259,6 +269,11 @@ int player_equip( int slot, int sub_type )
     }
 
     return (ret);
+}
+
+int player_equip( int slot, int sub_type )
+{
+    return player_equip(slot, sub_type, true);
 }
 
 
@@ -299,7 +314,7 @@ int player_equip_ego_type( int slot, int special )
         // Check all armour slots:
         for (int i = EQ_CLOAK; i <= EQ_BODY_ARMOUR; i++)
         {
-            if (you.equip[i] != -1 
+            if (you.equip[i] != -1
                 && get_armour_ego_type( you.inv[you.equip[i]] ) == special)
             {
                 ret++;
@@ -330,7 +345,7 @@ int player_damage_type( void )
     }
     else if (you.attribute[ATTR_TRANSFORMATION] == TRAN_BLADE_HANDS
             || you.attribute[ATTR_TRANSFORMATION] == TRAN_DRAGON
-            || you.mutation[MUT_CLAWS] 
+            || you.mutation[MUT_CLAWS]
             || you.species == SP_TROLL
             || you.species == SP_GHOUL)
     {
@@ -346,7 +361,7 @@ int player_damage_brand( void )
     int ret = SPWPN_NORMAL;
     const int wpn = you.equip[ EQ_WEAPON ];
 
-    if (wpn != -1) 
+    if (wpn != -1)
         ret = get_weapon_brand( you.inv[wpn] );
     else if (you.confusing_touch)
         ret = SPWPN_CONFUSE;
@@ -378,10 +393,15 @@ int player_damage_brand( void )
 
 int player_teleport(void)
 {
+    return player_teleport(true);
+}
+
+int player_teleport(bool calc_unid)
+{
     int tp = 0;
 
     /* rings */
-    tp += 8 * player_equip( EQ_RINGS, RING_TELEPORTATION );
+    tp += 8 * player_equip( EQ_RINGS, RING_TELEPORTATION, calc_unid);
 
     /* mutations */
     tp += you.mutation[MUT_TELEPORT] * 3;
@@ -391,7 +411,7 @@ int player_teleport(void)
         && you.inv[you.equip[EQ_WEAPON]].base_type == OBJ_WEAPONS
         && is_random_artefact( you.inv[you.equip[EQ_WEAPON]] ))
     {
-        tp += scan_randarts(RAP_CAUSE_TELEPORTATION);
+        tp += scan_randarts(RAP_CAUSE_TELEPORTATION, calc_unid);
     }
 
     return tp;
@@ -495,10 +515,10 @@ int player_hunger_rate(void)
     hunger -= 2 * player_equip( EQ_RINGS, RING_SUSTENANCE );
 
     // weapon ego types
-    hunger += 6 * player_equip_ego_type( EQ_WEAPON, SPWPN_VAMPIRICISM ); 
-    hunger += 9 * player_equip_ego_type( EQ_WEAPON, SPWPN_VAMPIRES_TOOTH ); 
+    hunger += 6 * player_equip_ego_type( EQ_WEAPON, SPWPN_VAMPIRICISM );
+    hunger += 9 * player_equip_ego_type( EQ_WEAPON, SPWPN_VAMPIRES_TOOTH );
 
-    // troll leather armour 
+    // troll leather armour
     hunger += player_equip( EQ_BODY_ARMOUR, ARM_TROLL_LEATHER_ARMOUR );
 
     // randarts
@@ -546,7 +566,7 @@ int player_spell_levels(void)
     return (sl);
 }
 
-int player_res_magic(void)
+int player_res_magic(bool calc_unid)
 {
     int rm = 0;
 
@@ -580,10 +600,10 @@ int player_res_magic(void)
     rm += 30 * player_equip_ego_type( EQ_ALL_ARMOUR, SPARM_MAGIC_RESISTANCE );
 
     /* rings of magic resistance */
-    rm += 40 * player_equip( EQ_RINGS, RING_PROTECTION_FROM_MAGIC );
+    rm += 40 * player_equip( EQ_RINGS, RING_PROTECTION_FROM_MAGIC, calc_unid );
 
     /* randarts */
-    rm += scan_randarts(RAP_MAGIC);
+    rm += scan_randarts(RAP_MAGIC, calc_unid);
 
     /* Enchantment skill */
     rm += 2 * you.skills[SK_ENCHANTMENTS];
@@ -598,19 +618,25 @@ int player_res_magic(void)
     return rm;
 }
 
-int player_res_fire(void)
+int player_res_magic(void)
+{
+    return player_res_magic(true);
+}
+
+
+int player_res_fire(bool calc_unid)
 {
     int rf = 0;
 
     /* rings of fire resistance/fire */
-    rf += player_equip( EQ_RINGS, RING_PROTECTION_FROM_FIRE );
-    rf += player_equip( EQ_RINGS, RING_FIRE );
+    rf += player_equip( EQ_RINGS, RING_PROTECTION_FROM_FIRE, calc_unid );
+    rf += player_equip( EQ_RINGS, RING_FIRE, calc_unid );
 
     /* rings of ice */
-    rf -= player_equip( EQ_RINGS, RING_ICE );
+    rf -= player_equip( EQ_RINGS, RING_ICE, calc_unid );
 
     /* Staves */
-    rf += player_equip( EQ_STAFF, STAFF_FIRE );
+    rf += player_equip( EQ_STAFF, STAFF_FIRE, calc_unid );
 
     // body armour:
     rf += 2 * player_equip( EQ_BODY_ARMOUR, ARM_DRAGON_ARMOUR );
@@ -622,7 +648,7 @@ int player_res_fire(void)
     rf += player_equip_ego_type( EQ_ALL_ARMOUR, SPARM_RESISTANCE );
 
     // randart weapons:
-    rf += scan_randarts(RAP_FIRE);
+    rf += scan_randarts(RAP_FIRE, calc_unid);
 
     // species:
     if (you.species == SP_MUMMY)
@@ -661,19 +687,25 @@ int player_res_fire(void)
     return (rf);
 }
 
-int player_res_cold(void)
+int player_res_fire(void)
+{
+    return player_res_fire(true);
+}
+
+
+int player_res_cold(bool calc_unid)
 {
     int rc = 0;
 
     /* rings of fire resistance/fire */
-    rc += player_equip( EQ_RINGS, RING_PROTECTION_FROM_COLD );
-    rc += player_equip( EQ_RINGS, RING_ICE );
+    rc += player_equip( EQ_RINGS, RING_PROTECTION_FROM_COLD, calc_unid );
+    rc += player_equip( EQ_RINGS, RING_ICE, calc_unid );
 
     /* rings of ice */
-    rc -= player_equip( EQ_RINGS, RING_FIRE );
+    rc -= player_equip( EQ_RINGS, RING_FIRE, calc_unid );
 
     /* Staves */
-    rc += player_equip( EQ_STAFF, STAFF_COLD );
+    rc += player_equip( EQ_STAFF, STAFF_COLD, calc_unid );
 
     // body armour:
     rc += 2 * player_equip( EQ_BODY_ARMOUR, ARM_ICE_DRAGON_ARMOUR );
@@ -685,7 +717,7 @@ int player_res_cold(void)
     rc += player_equip_ego_type( EQ_ALL_ARMOUR, SPARM_RESISTANCE );
 
     // randart weapons:
-    rc += scan_randarts(RAP_COLD);
+    rc += scan_randarts(RAP_COLD, calc_unid);
 
     // species:
     if (you.species == SP_MUMMY || you.species == SP_GHOUL)
@@ -724,7 +756,13 @@ int player_res_cold(void)
     return (rc);
 }
 
-int player_res_electricity(void)
+int player_res_cold(void)
+{
+    return player_res_cold(true);
+}
+
+
+int player_res_electricity(bool calc_unid)
 {
     int re = 0;
 
@@ -732,13 +770,13 @@ int player_res_electricity(void)
         re++;
 
     // staff
-    re += player_equip( EQ_STAFF, STAFF_AIR );
+    re += player_equip( EQ_STAFF, STAFF_AIR, calc_unid );
 
     // body armour:
     re += player_equip( EQ_BODY_ARMOUR, ARM_STORM_DRAGON_ARMOUR );
 
     // randart weapons:
-    re += scan_randarts(RAP_ELECTRICITY);
+    re += scan_randarts(RAP_ELECTRICITY, calc_unid);
 
     // species:
     if (you.species == SP_BLACK_DRACONIAN && you.experience_level > 17)
@@ -763,16 +801,22 @@ int player_res_electricity(void)
     return (re);
 }                               // end player_res_electricity()
 
+int player_res_electricity(void)
+{
+    return player_res_electricity(true);
+}
+
+
 // funny that no races are susceptible to poisons {dlb}
-int player_res_poison(void)
+int player_res_poison(bool calc_unid)
 {
     int rp = 0;
 
     /* rings of poison resistance */
-    rp += player_equip( EQ_RINGS, RING_POISON_RESISTANCE );
+    rp += player_equip( EQ_RINGS, RING_POISON_RESISTANCE, calc_unid );
 
     /* Staves */
-    rp += player_equip( EQ_STAFF, STAFF_POISON );
+    rp += player_equip( EQ_STAFF, STAFF_POISON, calc_unid );
 
     /* the staff of Olgreb: */
     if (you.equip[EQ_WEAPON] != -1
@@ -794,7 +838,7 @@ int player_res_poison(void)
         rp++;
 
     // randart weapons:
-    rp += scan_randarts(RAP_POISON);
+    rp += scan_randarts(RAP_POISON, calc_unid);
 
     // species:
     if (you.species == SP_MUMMY || you.species == SP_NAGA
@@ -825,6 +869,12 @@ int player_res_poison(void)
 
     return (rp);
 }                               // end player_res_poison()
+
+int player_res_poison(void)
+{
+    return player_res_poison(true);
+}
+
 
 unsigned char player_spec_death(void)
 {
@@ -922,7 +972,7 @@ unsigned char player_spec_conj(void)
     /* Staves */
     sc += player_equip( EQ_STAFF, STAFF_CONJURATION );
 
-    // armour of the Archmagi 
+    // armour of the Archmagi
     if (player_equip_ego_type( EQ_BODY_ARMOUR, SPARM_ARCHMAGI ))
         sc++;
 
@@ -984,12 +1034,12 @@ unsigned char player_energy(void)
     return pe;
 }
 
-int player_prot_life(void)
+int player_prot_life(bool calc_unid)
 {
     int pl = 0;
 
     // rings
-    pl += player_equip( EQ_RINGS, RING_LIFE_PROTECTION );
+    pl += player_equip( EQ_RINGS, RING_LIFE_PROTECTION, calc_unid );
 
     // armour: (checks body armour only)
     pl += player_equip_ego_type( EQ_ALL_ARMOUR, SPARM_POSITIVE_ENERGY );
@@ -1016,7 +1066,7 @@ int player_prot_life(void)
     }
 
     // randart wpns
-    pl += scan_randarts(RAP_NEGATIVE_ENERGY);
+    pl += scan_randarts(RAP_NEGATIVE_ENERGY, calc_unid);
 
     // demonic power
     pl += you.mutation[MUT_NEGATIVE_ENERGY_RESISTANCE];
@@ -1026,6 +1076,12 @@ int player_prot_life(void)
 
     return (pl);
 }
+
+int player_prot_life(void)
+{
+    return player_prot_life(true);
+}
+
 
 // New player movement speed system... allows for a bit more that
 // "player runs fast" and "player walks slow" in that the speed is
@@ -1137,7 +1193,7 @@ int player_AC(void)
     int i;                      // loop variable
 
     // get the armour race value that corresponds to the character's race:
-    const unsigned long racial_type 
+    const unsigned long racial_type
                             = ((player_genus(GENPC_DWARVEN)) ? ISFLAG_DWARVEN :
                                (player_genus(GENPC_ELVEN))   ? ISFLAG_ELVEN :
                                (you.species == SP_HILL_ORC)  ? ISFLAG_ORCISH
@@ -1145,7 +1201,7 @@ int player_AC(void)
 
     for (i = EQ_CLOAK; i <= EQ_BODY_ARMOUR; i++)
     {
-        const int item = you.equip[i]; 
+        const int item = you.equip[i];
 
         if (item == -1 || i == EQ_SHIELD)
             continue;
@@ -1155,7 +1211,7 @@ int player_AC(void)
         // Note that helms and boots have a sub-sub classing system
         // which uses "plus2"... since not all members have the same
         // AC value, we use special cases. -- bwr
-        if (i == EQ_HELMET 
+        if (i == EQ_HELMET
             && (cmp_helmet_type( you.inv[ item ], THELM_CAP )
                 || cmp_helmet_type( you.inv[ item ], THELM_WIZARD_HAT )
                 || cmp_helmet_type( you.inv[ item ], THELM_SPECIAL )))
@@ -1163,7 +1219,7 @@ int player_AC(void)
             continue;
         }
 
-        if (i == EQ_BOOTS 
+        if (i == EQ_BOOTS
             && (you.inv[ item ].plus2 == TBOOT_NAGA_BARDING
                 || you.inv[ item ].plus2 == TBOOT_CENTAUR_BARDING))
         {
@@ -1180,7 +1236,7 @@ int player_AC(void)
 
         if (racial_type && armour_race == racial_type)
         {
-            // Elven armour is light, but still gives one level 
+            // Elven armour is light, but still gives one level
             // to elves.  Orcish and Dwarven armour are worth +2
             // to the correct species, plus the plus that anyone
             // gets with dwarven armour. -- bwr
@@ -1226,7 +1282,7 @@ int player_AC(void)
     {
         // Being a lich doesn't preclude the benefits of hide/scales -- bwr
         //
-        // Note: Even though necromutation is a high level spell, it does 
+        // Note: Even though necromutation is a high level spell, it does
         // allow the character full armour (so the bonus is low). -- bwr
         if (you.attribute[ATTR_TRANSFORMATION] == TRAN_LICH)
             AC += (3 + you.skills[SK_NECROMANCY] / 6);          // max 7
@@ -1343,7 +1399,7 @@ int player_AC(void)
             AC += (5 + (you.skills[SK_ICE_MAGIC] + 1) / 4);     // max 12
 
             if (you.duration[DUR_ICY_ARMOUR])
-                AC += (1 + you.skills[SK_ICE_MAGIC] / 4);       // max +7 
+                AC += (1 + you.skills[SK_ICE_MAGIC] / 4);       // max +7
             break;
 
         case TRAN_DRAGON:
@@ -1388,7 +1444,10 @@ bool is_light_armour( const item_def &item )
     case ARM_MOTTLED_DRAGON_HIDE:
     case ARM_MOTTLED_DRAGON_ARMOUR:
     //case ARM_TROLL_HIDE: //jmf: these are knobbly and stiff
-    //case ARM_TROLL_LEATHER_ARMOUR:
+#ifdef V_FIX
+    case ARM_TROLL_HIDE:
+    case ARM_TROLL_LEATHER_ARMOUR:
+#endif
         return (true);
 
     default:
@@ -1520,7 +1579,7 @@ int player_magical_power( void )
 
     ret += 13 * player_equip( EQ_STAFF, STAFF_POWER );
     ret +=  9 * player_equip( EQ_RINGS, RING_MAGICAL_POWER );
-    
+
     return (ret);
 }
 
@@ -1578,9 +1637,14 @@ int player_shield_class(void)   //jmf: changes for new spell
 
 unsigned char player_see_invis(void)
 {
+    return player_see_invis(true);
+}
+
+unsigned char player_see_invis(bool calc_unid)
+{
     unsigned char si = 0;
 
-    si += player_equip( EQ_RINGS, RING_SEE_INVISIBLE );
+    si += player_equip( EQ_RINGS, RING_SEE_INVISIBLE, calc_unid);
 
     /* armour: (checks head armour only) */
     si += player_equip_ego_type( EQ_HELMET, SPARM_SEE_INVISIBLE );
@@ -1605,7 +1669,7 @@ unsigned char player_see_invis(void)
     return si;
 }
 
-// This does NOT do line of sight!  It checks the monster's visibility 
+// This does NOT do line of sight!  It checks the monster's visibility
 // with repect to the players perception, but doesn't do walls or range...
 // to find if the square the monster is in is visible see mons_near().
 bool player_monster_visible( struct monsters *mon )
@@ -1621,9 +1685,14 @@ bool player_monster_visible( struct monsters *mon )
 
 unsigned char player_sust_abil(void)
 {
+    return player_sust_abil(true);
+}
+
+unsigned char player_sust_abil(bool calc_unid)
+{
     unsigned char sa = 0;
 
-    sa += player_equip( EQ_RINGS, RING_SUSTAIN_ABILITIES );
+    sa += player_equip( EQ_RINGS, RING_SUSTAIN_ABILITIES, calc_unid);
 
     return sa;
 }                               // end player_sust_abil()
@@ -1674,7 +1743,11 @@ int burden_change(void)
 
         // this message may have to change, just testing {dlb}
         if (old_burdenstate != you.burden_state)
+#ifdef JP
+            mpr("あなたの荷物は耐え難いほど重いということはなくなった。");
+#else
             mpr("Your possessions no longer seem quite so burdensome.");
+#endif
     }
     else if (you.burden < (max_carried * 11) / 12)
     // (you.burden < max_carried - 500)
@@ -1682,15 +1755,28 @@ int burden_change(void)
         you.burden_state = BS_ENCUMBERED;
 
         if (old_burdenstate != you.burden_state)
+#ifdef JP
+            mpr("あなたは荷物の重さが負担になっている。");
+#else
             mpr("You are being weighed down by all of your possessions.");
+#endif
     }
     else
     {
         you.burden_state = BS_OVERLOADED;
 
         if (old_burdenstate != you.burden_state)
+#ifdef JP
+            mpr("あなたは荷物の重みに押し潰されそうだ。");
+#else
             mpr("You are being crushed by all of your possessions.");
+#endif
     }
+
+    // Stop travel if we get burdened (as from potions of might/levitation
+    // wearing off).
+    if (you.burden_state > old_burdenstate && you.running < 0)
+    you.running = 0;
 
     return you.burden;
 }                               // end burden_change()
@@ -1706,8 +1792,12 @@ bool you_resist_magic(int power)
     int mrch2 = random2(100) + random2(101);
 
 #if DEBUG_DIAGNOSTICS
-    snprintf( info, INFO_SIZE, "Power: %d, player's MR: %d, target: %d, roll: %d", 
-             ench_power, player_res_magic(), mrchance, mrch2 ); 
+#ifdef JP
+    snprintf( info, INFO_SIZE, "Power: %d, player's MR: %d, target: %d, roll: %d",
+#else
+    snprintf( info, INFO_SIZE, "Power: %d, player's MR: %d, target: %d, roll: %d",
+#endif
+             ench_power, player_res_magic(), mrchance, mrch2 );
 
     mpr( info, MSGCH_DIAGNOSTICS );
 #endif
@@ -1734,19 +1824,26 @@ void forget_map(unsigned char chance_forgotten)
             }
         }
     }
+#ifdef USE_TILE
+                init_gmap();
+#endif
 }                               // end forget_map()
 
 void gain_exp( unsigned int exp_gained )
 {
 
-    if (player_equip_ego_type( EQ_BODY_ARMOUR, SPARM_ARCHMAGI ) 
+    if (player_equip_ego_type( EQ_BODY_ARMOUR, SPARM_ARCHMAGI )
         && !one_chance_in(20))
     {
         return;
     }
 
 #if DEBUG_DIAGNOSTICS
+#ifdef JP
     snprintf( info, INFO_SIZE, "gain_exp: %d", exp_gained );
+#else
+    snprintf( info, INFO_SIZE, "gain_exp: %d", exp_gained );
+#endif
     mpr( info, MSGCH_DIAGNOSTICS );
 #endif
 
@@ -1779,7 +1876,11 @@ void level_change(void)
 
         if (you.experience_level <= you.max_level)
         {
+#ifdef JP
+            snprintf( info, INFO_SIZE, "再びレベル%dになった！",
+#else
             snprintf( info, INFO_SIZE, "Welcome back to level %d!",
+#endif
                       you.experience_level );
 
             mpr(info, MSGCH_INTRINSIC_GAIN);
@@ -1791,7 +1892,11 @@ void level_change(void)
         }
         else  // character has gained a new level
         {
-            snprintf( info, INFO_SIZE, "You are now a level %d %s!", 
+#ifdef JP
+            snprintf( info, INFO_SIZE, "あなたはレベル%dの%sになった！",
+#else
+            snprintf( info, INFO_SIZE, "You are now a level %d %s!",
+#endif
                       you.experience_level, you.class_name );
 
             mpr(info, MSGCH_INTRINSIC_GAIN);
@@ -1836,7 +1941,11 @@ void level_change(void)
                 if (you.experience_level == 15)
                 {
                     //jmf: got Glamour ability
+#ifdef JP
+                    mpr("あなたは魅力的になった！", MSGCH_INTRINSIC_GAIN);
+#else
                     mpr("You feel charming!", MSGCH_INTRINSIC_GAIN);
+#endif
                 }
 
                 if (you.experience_level % 3)
@@ -1856,7 +1965,11 @@ void level_change(void)
                 if (you.experience_level == 5)
                 {
                     //jmf: got Glamour ability
+#ifdef JP
+                    mpr("あなたは魅力的になった！", MSGCH_INTRINSIC_GAIN);
+#else
                     mpr("You feel charming!", MSGCH_INTRINSIC_GAIN);
+#endif
                     mp_adjust++;
                 }
 
@@ -1972,13 +2085,21 @@ void level_change(void)
             case SP_MUMMY:
                 if (you.experience_level == 13 || you.experience_level == 26)
                 {
+#ifdef JP
+                    mpr( "あなたは死の力との接触をより強めた。",
+#else
                     mpr( "You feel more in touch with the powers of death.",
+#endif
                          MSGCH_INTRINSIC_GAIN );
                 }
 
                 if (you.experience_level == 13)  // level 13 for now -- bwr
                 {
+#ifdef JP
+                    mpr( "あなたは今や、腐敗した肉体を回復するために肉体に魔力を充填できる。", MSGCH_INTRINSIC_GAIN );
+#else
                     mpr( "You can now infuse your body with magic to restore decomposition.", MSGCH_INTRINSIC_GAIN );
+#endif
                 }
                 break;
 
@@ -1994,7 +2115,11 @@ void level_change(void)
 
                 if (!(you.experience_level % 3))
                 {
+#ifdef JP
+                    mpr("あなたの皮膚はより硬くなった。", MSGCH_INTRINSIC_GAIN);
+#else
                     mpr("Your skin feels tougher.", MSGCH_INTRINSIC_GAIN);
+#endif
                     you.redraw_armour_class = 1;
                 }
                 break;
@@ -2059,36 +2184,76 @@ void level_change(void)
             case SP_UNK2_DRACONIAN:
                 if (you.experience_level == 7)
                 {
+#ifdef USE_TILE
+                    if (Options.use_tile)
+                        TilePlayerRefresh();
+#endif
                     switch (you.species)
                     {
                     case SP_RED_DRACONIAN:
+#ifdef JP
+                        mpr("あなたの鱗は燃えるような赤い色に変化していった。",
+#else
                         mpr("Your scales start taking on a fiery red colour.",
+#endif
                             MSGCH_INTRINSIC_GAIN);
                         break;
                     case SP_WHITE_DRACONIAN:
+#ifdef JP
+                        mpr("あなたの鱗は氷のような白い色に変化していった。",
+#else
                         mpr("Your scales start taking on an icy white colour.",
+#endif
                             MSGCH_INTRINSIC_GAIN);
                         break;
                     case SP_GREEN_DRACONIAN:
+#ifdef JP
+                        mpr("あなたの鱗は緑色に変化していった。",
+#else
                         mpr("Your scales start taking on a green colour.",
+#endif
                             MSGCH_INTRINSIC_GAIN);
+#ifdef JP
+                        mpr("あなたは毒への耐性を得たようだ。", MSGCH_INTRINSIC_GAIN);
+#else
                         mpr("You feel resistant to poison.", MSGCH_INTRINSIC_GAIN);
+#endif
                         break;
 
                     case SP_GOLDEN_DRACONIAN:
+#ifdef JP
+                        mpr("あなたの鱗は黄金の色に変化していった。", MSGCH_INTRINSIC_GAIN);
+#else
                         mpr("Your scales start taking on a golden yellow colour.", MSGCH_INTRINSIC_GAIN);
+#endif
                         break;
                     case SP_BLACK_DRACONIAN:
+#ifdef JP
+                        mpr("あなたの鱗は黒色に変化していった。", MSGCH_INTRINSIC_GAIN);
+#else
                         mpr("Your scales start turning black.", MSGCH_INTRINSIC_GAIN);
+#endif
                         break;
                     case SP_PURPLE_DRACONIAN:
+#ifdef JP
+                        mpr("あなたの鱗は鮮やかな紫色に変化していった。", MSGCH_INTRINSIC_GAIN);
+#else
                         mpr("Your scales start taking on a rich purple colour.", MSGCH_INTRINSIC_GAIN);
+#endif
                         break;
                     case SP_MOTTLED_DRACONIAN:
+#ifdef JP
+                        mpr("あなたの鱗は奇妙なまだら模様に変化していった。", MSGCH_INTRINSIC_GAIN);
+#else
                         mpr("Your scales start taking on a weird mottled pattern.", MSGCH_INTRINSIC_GAIN);
+#endif
                         break;
                     case SP_PALE_DRACONIAN:
+#ifdef JP
+                        mpr("あなたの鱗は青ざめた灰色に変化していった。", MSGCH_INTRINSIC_GAIN);
+#else
                         mpr("Your scales start fading to a pale grey colour.", MSGCH_INTRINSIC_GAIN);
+#endif
                         break;
                     case SP_UNK0_DRACONIAN:
                     case SP_UNK1_DRACONIAN:
@@ -2105,13 +2270,25 @@ void level_change(void)
                     switch (you.species)
                     {
                     case SP_RED_DRACONIAN:
+#ifdef JP
+                        mpr("あなたは火への耐性を得たようだ。", MSGCH_INTRINSIC_GAIN);
+#else
                         mpr("You feel resistant to fire.", MSGCH_INTRINSIC_GAIN);
+#endif
                         break;
                     case SP_WHITE_DRACONIAN:
+#ifdef JP
+                        mpr("あなたは冷気への耐性を得たようだ。", MSGCH_INTRINSIC_GAIN);
+#else
                         mpr("You feel resistant to cold.", MSGCH_INTRINSIC_GAIN);
+#endif
                         break;
                     case SP_BLACK_DRACONIAN:
+#ifdef JP
+                        mpr("あなたは電気への耐性を得たようだ。",
+#else
                         mpr("You feel resistant to electrical energy.",
+#endif
                             MSGCH_INTRINSIC_GAIN);
                         break;
                     }
@@ -2122,7 +2299,11 @@ void level_change(void)
 
                 if (you.experience_level > 7 && !(you.experience_level % 4))
                 {
+#ifdef JP
+                    mpr("あなたの鱗はより強固になったようだ。", MSGCH_INTRINSIC_GAIN);
+#else
                     mpr("Your scales feel tougher.", MSGCH_INTRINSIC_GAIN);
+#endif
                     you.redraw_armour_class = 1;
                     modify_stat(STAT_RANDOM, 1, false);
                 }
@@ -2131,7 +2312,11 @@ void level_change(void)
             case SP_GREY_DRACONIAN:
                 if (you.experience_level == 7)
                 {
+#ifdef JP
+                    mpr("あなたの鱗は灰色に変化していった。", MSGCH_INTRINSIC_GAIN);
+#else
                     mpr("Your scales start turning grey.", MSGCH_INTRINSIC_GAIN);
+#endif
                     more();
                     redraw_screen();
                 }
@@ -2145,7 +2330,11 @@ void level_change(void)
 
                 if (you.experience_level > 7 && !(you.experience_level % 2))
                 {
+#ifdef JP
+                    mpr("あなたの鱗はより強固になったようだ。", MSGCH_INTRINSIC_GAIN);
+#else
                     mpr("Your scales feel tougher.", MSGCH_INTRINSIC_GAIN);
+#endif
                     you.redraw_armour_class = 1;
                 }
 
@@ -2301,9 +2490,17 @@ void level_change(void)
                     modify_stat(STAT_RANDOM, 1, false);
 
                 if (you.experience_level == 5)
+#ifdef JP
+                    mpr("あなたは飛行する能力を獲得した。", MSGCH_INTRINSIC_GAIN);
+#else
                     mpr("You have gained the ability to fly.", MSGCH_INTRINSIC_GAIN);
+#endif
                 else if (you.experience_level == 15)
+#ifdef JP
+                    mpr("あなたは今や間断なく飛びつづけることができる。", MSGCH_INTRINSIC_GAIN);
+#else
                     mpr("You can now fly continuously.", MSGCH_INTRINSIC_GAIN);
+#endif
                 break;
 
             case SP_MERFOLK:
@@ -2341,7 +2538,7 @@ void level_change(void)
 // here's a question for you: does the ordering of mods make a difference?
 // (yes) -- are these things in the right order of application to stealth?
 // - 12mar2000 {dlb}
-int check_stealth(void)
+int check_stealth(bool calc_unid)
 {
     if (you.special_wield == SPWLD_SHADOW)
         return (0);
@@ -2406,7 +2603,7 @@ int check_stealth(void)
             stealth += 20;
     }
 
-    stealth += scan_randarts( RAP_STEALTH );
+    stealth += scan_randarts( RAP_STEALTH, calc_unid );
 
     if (player_is_levitating())
         stealth += 10;
@@ -2434,17 +2631,31 @@ int check_stealth(void)
     return (stealth);
 }                               // end check_stealth()
 
+int check_stealth(void)
+{
+    return check_stealth(true);
+}
+
+
 void ability_increase(void)
 {
     unsigned char keyin;
 
+#ifdef JP
+    mpr("経験によってあなたの能力は増加した！",
+#else
     mpr("Your experience leads to an increase in your attributes!",
+#endif
         MSGCH_INTRINSIC_GAIN);
 
     more();
     mesclr();
 
+#ifdef JP
+    mpr("どの能力を伸ばしますか？ (S)腕力 (I)知力 (D)器用さ ", MSGCH_PROMPT);
+#else
     mpr("Increase (S)trength, (I)ntelligence, or (D)exterity? ", MSGCH_PROMPT);
+#endif
 
   get_key:
     keyin = getch();
@@ -2479,144 +2690,323 @@ void ability_increase(void)
 void display_char_status(void)
 {
     if (you.is_undead)
+#ifdef JP
+        mpr( "あなたはアンデッドだ。" );
+#else
         mpr( "You are undead." );
+#endif
     else if (you.deaths_door)
+#ifdef JP
+        mpr( "あなたは死のとば口への道に立っている。" );
+#else
         mpr( "You are standing in death's doorway." );
+#endif
     else
+#ifdef JP
+        mpr( "あなたは生ある者だ。" );
+#else
         mpr( "You are alive." );
+#endif
 
     switch (you.attribute[ATTR_TRANSFORMATION])
     {
     case TRAN_SPIDER:
+#ifdef JP
+        mpr( "あなたは蜘蛛の形態を取っている。" );
+#else
         mpr( "You are in spider-form." );
+#endif
         break;
     case TRAN_BLADE_HANDS:
+#ifdef JP
+        mpr( "あなたの手には刃がついている。" );
+#else
         mpr( "You have blades for hands." );
+#endif
         break;
     case TRAN_STATUE:
+#ifdef JP
+        mpr( "あなたは石像だ。" );
+#else
         mpr( "You are a statue." );
+#endif
         break;
     case TRAN_ICE_BEAST:
+#ifdef JP
+        mpr( "あなたは氷の生物だ。" );
+#else
         mpr( "You are an ice creature." );
+#endif
         break;
     case TRAN_DRAGON:
+#ifdef JP
+        mpr( "あなたはドラゴンの形態を取っている。" );
+#else
         mpr( "You are in dragon-form." );
+#endif
         break;
     case TRAN_LICH:
+#ifdef JP
+        mpr( "あなたはリッチの形態を取っている。" );
+#else
         mpr( "You are in lich-form." );
+#endif
         break;
     case TRAN_SERPENT_OF_HELL:
+#ifdef JP
+        mpr( "あなたは巨大で悪魔的なサーペントだ。" );
+#else
         mpr( "You are a huge demonic serpent." );
+#endif
         break;
     case TRAN_AIR:
+#ifdef JP
+        mpr( "あなたは拡散するガスの雲だ。" );
+#else
         mpr( "You are a cloud of diffuse gas." );
+#endif
         break;
     }
 
     if (you.duration[DUR_BREATH_WEAPON])
+#ifdef JP
+        mpr( "あなたは息があがっている。" );
+#else
         mpr( "You are short of breath." );
+#endif
 
     if (you.duration[DUR_REPEL_UNDEAD])
+#ifdef JP
+        mpr( "あなたは聖なる霊気によってアンデッドから護られている。" );
+#else
         mpr( "You have a holy aura protecting you from undead." );
+#endif
 
     if (you.duration[DUR_LIQUID_FLAMES])
+#ifdef JP
+        mpr( "あなたは燃えたぎる液体を被っている。" );
+#else
         mpr( "You are covered in liquid flames." );
+#endif
 
     if (you.duration[DUR_ICY_ARMOUR])
+#ifdef JP
+        mpr( "あなたは氷の盾に護られている。" );
+#else
         mpr( "You are protected by an icy shield." );
+#endif
 
     if (you.duration[DUR_REPEL_MISSILES])
+#ifdef JP
+        mpr( "あなたは飛び道具から保護されている。" );
+#else
         mpr( "You are protected from missiles." );
+#endif
 
     if (you.duration[DUR_DEFLECT_MISSILES])
+#ifdef JP
+        mpr( "あなたは飛び道具を偏向させる。" );
+#else
         mpr( "You deflect missiles." );
+#endif
 
     if (you.duration[DUR_PRAYER])
+#ifdef JP
+        mpr( "あなたは祈祷している。" );
+#else
         mpr( "You are praying." );
+#endif
 
     if (you.duration[DUR_REGENERATION])
+#ifdef JP
+        mpr( "あなたは再生している。" );
+#else
         mpr( "You are regenerating." );
+#endif
 
     if (you.duration[DUR_SWIFTNESS])
+#ifdef JP
+        mpr( "あなたは軽快に動いている。" );
+#else
         mpr( "You can move swiftly." );
+#endif
 
     if (you.duration[DUR_INSULATION])
+#ifdef JP
+        mpr( "あなたは電気から絶縁されている。" );
+#else
         mpr( "You are insulated." );
+#endif
 
     if (you.duration[DUR_STONEMAIL])
+#ifdef JP
+        mpr( "あなたは石の鱗で覆われている。" );
+#else
         mpr( "You are covered in scales of stone." );
+#endif
 
     if (you.duration[DUR_CONTROLLED_FLIGHT])
+#ifdef JP
+        mpr( "あなたは飛行を制御できる。" );
+#else
         mpr( "You can control your flight." );
+#endif
 
     if (you.duration[DUR_TELEPORT])
+#ifdef JP
+        mpr( "あなたはテレポートしようとしている。" );
+#else
         mpr( "You are about to teleport." );
+#endif
 
     if (you.duration[DUR_CONTROL_TELEPORT])
+#ifdef JP
+        mpr( "あなたはテレポートをコントロールできる。" );
+#else
         mpr( "You can control teleportation." );
+#endif
 
     if (you.duration[DUR_DEATH_CHANNEL])
+#ifdef JP
+        mpr( "あなたは死と交信している。" );
+#else
         mpr( "You are channeling the dead." );
+#endif
 
     if (you.duration[DUR_FORESCRY])     //jmf: added 19mar2000
+#ifdef JP
+        mpr( "あなたは予感能力がある。" );
+#else
         mpr( "You are forewarned." );
+#endif
 
     if (you.duration[DUR_SILENCE])      //jmf: added 27mar2000
+#ifdef JP
+        mpr( "あなたは静寂を放っている。" );
+#else
         mpr( "You radiate silence." );
+#endif
 
     if (you.duration[DUR_INFECTED_SHUGGOTH_SEED])       //jmf: added 19mar2000
+#ifdef JP
+        mpr( "あなたはショゴスの寄生体を宿している。" );
+#else
         mpr( "You are infected with a shuggoth parasite." );
+#endif
 
     if (you.duration[DUR_STONESKIN])
+#ifdef JP
+        mpr( "あなたの皮膚は石のように硬い。" );
+#else
         mpr( "Your skin is tough as stone." );
+#endif
 
     if (you.duration[DUR_SEE_INVISIBLE])
+#ifdef JP
+        mpr( "あなたは目に見えない存在を見ることができる。" );
+#else
         mpr( "You can see invisible." );
+#endif
 
     if (you.invis)
+#ifdef JP
+        mpr( "あなたは目に見えない。" );
+#else
         mpr( "You are invisible." );
+#endif
 
     if (you.conf)
+#ifdef JP
+        mpr( "あなたは混乱している。" );
+#else
         mpr( "You are confused." );
+#endif
 
     if (you.paralysis)
+#ifdef JP
+        mpr( "あなたは麻痺している。" );
+#else
         mpr( "You are paralysed." );
+#endif
 
     if (you.exhausted)
+#ifdef JP
+        mpr( "あなたは疲労困憊している。" );
+#else
         mpr( "You are exhausted." );
+#endif
 
     if (you.slow && you.haste)
+#ifdef JP
+        mpr( "あなたは減速と加速両方の効果を受けている。" );
+#else
         mpr( "You are under both slowing and hasting effects." );
+#endif
     else if (you.slow)
+#ifdef JP
+        mpr( "あなたの動きは非常に遅い。" );
+#else
         mpr( "You are moving very slowly." );
+#endif
     else if (you.haste)
+#ifdef JP
+        mpr( "あなたの動きは非常に速い。" );
+#else
         mpr( "You are moving very quickly." );
+#endif
 
     if (you.might)
+#ifdef JP
+        mpr( "あなたは力強くなっている。" );
+#else
         mpr( "You are mighty." );
+#endif
 
     if (you.berserker)
+#ifdef JP
+        mpr( "あなたは狂戦士の激怒に駆られている。" );
+#else
         mpr( "You are possessed by a berserker rage." );
+#endif
 
     if (player_is_levitating())
+#ifdef JP
+        mpr( "あなたは床の上を浮いている。" );
+#else
         mpr( "You are hovering above the floor." );
+#endif
 
     if (you.poison)
-    { 
+    {
+#ifdef JP
+        snprintf( info, INFO_SIZE, "あなたは%s毒に冒されている。",
+                  (you.poison > 10) ? "極めてひどく" :
+                  (you.poison > 5)  ? "ひどく" :
+                  (you.poison > 3)  ? "かなり"
+                                    : "少し" );
+#else
         snprintf( info, INFO_SIZE, "You are %s poisoned.",
                   (you.poison > 10) ? "extremely" :
                   (you.poison > 5)  ? "very" :
                   (you.poison > 3)  ? "quite"
                                     : "mildly" );
+#endif
         mpr(info);
     }
 
     if (you.disease)
     {
+#ifdef JP
+        snprintf( info, INFO_SIZE, "あなたは%s病気にかかっている。",
+                  (you.disease > 120) ? "ひどく" :
+                  (you.disease >  40) ? ""
+                                      : "少し" );
+#else
         snprintf( info, INFO_SIZE, "You are %sdiseased.",
                   (you.disease > 120) ? "badly " :
                   (you.disease >  40) ? ""
                                       : "mildly " );
+#endif
         mpr(info);
     }
 
@@ -2624,12 +3014,21 @@ void display_char_status(void)
     {
         // I apologize in advance for the horrendous ugliness about to
         // transpire.  Avert your eyes!
+#ifdef JP
+        snprintf( info, INFO_SIZE, "あなたの肉は%s",
+                  (you.rotting > 15) ? "みるまに腐っていく！":
+                  (you.rotting > 8)  ? "急速に腐っていく。":
+                  (you.rotting > 4)  ? "腐っていく。"
+             : ((you.species == SP_GHOUL && you.rotting > 0)
+                        ? "普段より速く腐っていく。" : "腐っていく。") );
+#else
         snprintf( info, INFO_SIZE, "Your flesh is rotting%s",
                   (you.rotting > 15) ? " before your eyes!":
                   (you.rotting > 8)  ? " away quickly.":
                   (you.rotting > 4)  ? " badly."
              : ((you.species == SP_GHOUL && you.rotting > 0)
                         ? " faster than usual." : ".") );
+#endif
         mpr(info);
     }
 
@@ -2637,19 +3036,33 @@ void display_char_status(void)
 
     if (you.confusing_touch)
     {
+#ifdef JP
+        snprintf( info, INFO_SIZE, "あなたの手は%s赤に輝いている。",
+                  (you.confusing_touch > 40) ? "まばゆい" :
+                  (you.confusing_touch > 20) ? "明るい"
+                                             : "" );
+#else
         snprintf( info, INFO_SIZE, "Your hands are glowing %s red.",
                   (you.confusing_touch > 40) ? "an extremely bright" :
                   (you.confusing_touch > 20) ? "bright"
                                              : "a soft" );
+#endif
         mpr(info);
     }
 
     if (you.sure_blade)
     {
+#ifdef JP
+        snprintf( info, INFO_SIZE, "あなたは剣と%s結合している。",
+                  (you.sure_blade > 15) ? "強く" :
+                  (you.sure_blade >  5) ? ""
+                                        : "弱く" );
+#else
         snprintf( info, INFO_SIZE, "You have a %sbond with your blade.",
                   (you.sure_blade > 15) ? "strong " :
                   (you.sure_blade >  5) ? ""
                                         : "weak " );
+#endif
         mpr(info);
     }
 }                               // end display_char_status()
@@ -2659,7 +3072,11 @@ void redraw_skill(const char your_name[kNameLen], const char class_name[80])
     char print_it[80];
 
     memset( print_it, ' ', sizeof(print_it) );
+#ifdef JP
+    snprintf( print_it, sizeof(print_it), "%s : %s", your_name, class_name );
+#else
     snprintf( print_it, sizeof(print_it), "%s the %s", your_name, class_name );
+#endif
 
     int in_len = strlen( print_it );
     if (in_len > 40)
@@ -2673,10 +3090,14 @@ void redraw_skill(const char your_name[kNameLen], const char class_name[80])
         // squeeze name if required, the "- 8" is too not squueze too much
         if (in_len > 40 && (name_len - 8) > (in_len - 40))
             name_buff[ name_len - (in_len - 40) - 1 ] = '\0';
-        else 
+        else
             name_buff[ kNameLen - 1 ] = '\0';
 
+#ifdef JP
         snprintf( print_it, sizeof(print_it), "%s, %s", name_buff, class_name );
+#else
+        snprintf( print_it, sizeof(print_it), "%s, %s", name_buff, class_name );
+#endif
     }
 
     for (int i = strlen(print_it); i < 41; i++)
@@ -2687,10 +3108,20 @@ void redraw_skill(const char your_name[kNameLen], const char class_name[80])
 #ifdef DOS_TERM
     window(1, 1, 80, 25);
 #endif
-    gotoxy(40, 1);
 
+    gotoxy(40, 1);
     textcolor( LIGHTGREY );
+
+#ifdef USE_TILE
+    mpr_on(MODE_STAT);
+#endif
+
     cprintf( print_it );
+
+#ifdef USE_TILE
+    mpr_on(MODE_CRT);
+#endif
+
 }                               // end redraw_skill()
 
 // Note that this function only has the one static buffer, so if you
@@ -2703,48 +3134,96 @@ char *species_name( int  speci, int level, bool genus, bool adj, bool cap )
     if (player_genus( GENPC_DRACONIAN, speci ))
     {
         if (adj || genus)  // adj doesn't care about exact species
+#ifdef JP
+            strcpy( species_buff, "ドラコニアン" );
+#else
             strcpy( species_buff, "Draconian" );
+#endif
         else
         {
             // No longer have problems with ghosts here -- Sharp Aug2002
             if (level < 7)
+#ifdef JP
+                strcpy( species_buff, "ドラコニアン" );
+#else
                 strcpy( species_buff, "Draconian" );
+#endif
             else
             {
                 switch (speci)
                 {
                 case SP_RED_DRACONIAN:
+#ifdef JP
+                    strcpy( species_buff, "赤色ドラコニアン" );
+#else
                     strcpy( species_buff, "Red Draconian" );
+#endif
                     break;
                 case SP_WHITE_DRACONIAN:
+#ifdef JP
+                    strcpy( species_buff, "白色ドラコニアン" );
+#else
                     strcpy( species_buff, "White Draconian" );
+#endif
                     break;
                 case SP_GREEN_DRACONIAN:
+#ifdef JP
+                    strcpy( species_buff, "緑色ドラコニアン" );
+#else
                     strcpy( species_buff, "Green Draconian" );
+#endif
                     break;
                 case SP_GOLDEN_DRACONIAN:
+#ifdef JP
+                    strcpy( species_buff, "黄金ドラコニアン" );
+#else
                     strcpy( species_buff, "Yellow Draconian" );
+#endif
                     break;
                 case SP_GREY_DRACONIAN:
+#ifdef JP
+                    strcpy( species_buff, "灰色ドラコニアン" );
+#else
                     strcpy( species_buff, "Grey Draconian" );
+#endif
                     break;
                 case SP_BLACK_DRACONIAN:
+#ifdef JP
+                    strcpy( species_buff, "黒色ドラコニアン" );
+#else
                     strcpy( species_buff, "Black Draconian" );
+#endif
                     break;
                 case SP_PURPLE_DRACONIAN:
+#ifdef JP
+                    strcpy( species_buff, "紫ドラコニアン" );
+#else
                     strcpy( species_buff, "Purple Draconian" );
+#endif
                     break;
                 case SP_MOTTLED_DRACONIAN:
+#ifdef JP
+                    strcpy( species_buff, "斑紋ドラコニアン" );
+#else
                     strcpy( species_buff, "Mottled Draconian" );
+#endif
                     break;
                 case SP_PALE_DRACONIAN:
+#ifdef JP
+                    strcpy( species_buff, "蒼白ドラコニアン" );
+#else
                     strcpy( species_buff, "Pale Draconian" );
+#endif
                     break;
                 case SP_UNK0_DRACONIAN:
                 case SP_UNK1_DRACONIAN:
                 case SP_UNK2_DRACONIAN:
                 default:
+#ifdef JP
+                    strcpy( species_buff, "ドラコニアン" );
+#else
                     strcpy( species_buff, "Draconian" );
+#endif
                     break;
                 }
             }
@@ -2753,28 +3232,56 @@ char *species_name( int  speci, int level, bool genus, bool adj, bool cap )
     else if (player_genus( GENPC_ELVEN, speci ))
     {
         if (adj)  // doesn't care about species/genus
+#ifdef JP
+            strcpy( species_buff, "エルフ族" );
+#else
             strcpy( species_buff, "Elven" );
+#endif
         else if (genus)
+#ifdef JP
+            strcpy( species_buff, "エルフ" );
+#else
             strcpy( species_buff, "Elf" );
+#endif
         else
         {
             switch (speci)
             {
             case SP_ELF:
             default:
+#ifdef JP
+                strcpy( species_buff, "エルフ" );
+#else
                 strcpy( species_buff, "Elf" );
+#endif
                 break;
             case SP_HIGH_ELF:
+#ifdef JP
+                strcpy( species_buff, "ハイエルフ" );
+#else
                 strcpy( species_buff, "High Elf" );
+#endif
                 break;
             case SP_GREY_ELF:
+#ifdef JP
+                strcpy( species_buff, "灰色エルフ" );
+#else
                 strcpy( species_buff, "Grey Elf" );
+#endif
                 break;
             case SP_DEEP_ELF:
+#ifdef JP
+                strcpy( species_buff, "闇エルフ" );
+#else
                 strcpy( species_buff, "Deep Elf" );
+#endif
                 break;
             case SP_SLUDGE_ELF:
+#ifdef JP
+                strcpy( species_buff, "泥エルフ" );
+#else
                 strcpy( species_buff, "Sludge Elf" );
+#endif
                 break;
             }
         }
@@ -2782,21 +3289,41 @@ char *species_name( int  speci, int level, bool genus, bool adj, bool cap )
     else if (player_genus( GENPC_DWARVEN, speci ))
     {
         if (adj)  // doesn't care about species/genus
+#ifdef JP
+            strcpy( species_buff, "ドワーフ族" );
+#else
             strcpy( species_buff, "Dwarven" );
+#endif
         else if (genus)
+#ifdef JP
+            strcpy( species_buff, "ドワーフ" );
+#else
             strcpy( species_buff, "Dwarf" );
+#endif
         else
         {
             switch (speci)
             {
             case SP_HILL_DWARF:
+#ifdef JP
+                strcpy( species_buff, "丘ドワーフ" );
+#else
                 strcpy( species_buff, "Hill Dwarf" );
+#endif
                 break;
             case SP_MOUNTAIN_DWARF:
+#ifdef JP
+                strcpy( species_buff, "山岳ドワーフ" );
+#else
                 strcpy( species_buff, "Mountain Dwarf" );
+#endif
                 break;
             default:
+#ifdef JP
+                strcpy( species_buff, "ドワーフ" );
+#else
                 strcpy( species_buff, "Dwarf" );
+#endif
                 break;
             }
         }
@@ -2806,76 +3333,163 @@ char *species_name( int  speci, int level, bool genus, bool adj, bool cap )
         switch (speci)
         {
         case SP_HUMAN:
+#ifdef JP
+            strcpy( species_buff, (adj) ? "人族" : "人間" );
+#else
             strcpy( species_buff, "Human" );
+#endif
             break;
         case SP_HALFLING:
+#ifdef JP
+            strcpy( species_buff, "ホビット" );
+#else
             strcpy( species_buff, "Halfling" );
+#endif
             break;
         case SP_HILL_ORC:
-            strcpy( species_buff, (adj) ? "Orcish" : (genus) ? "Orc" 
+#ifdef JP
+            strcpy( species_buff, (adj) ? "オーク族" : (genus) ? "オーク"
+                                                             : "丘オーク" );
+#else
+            strcpy( species_buff, (adj) ? "Orcish" : (genus) ? "Orc"
                                                              : "Hill Orc" );
+#endif
             break;
         case SP_KOBOLD:
+#ifdef JP
+            strcpy( species_buff, "コボルド" );
+#else
             strcpy( species_buff, "Kobold" );
+#endif
             break;
         case SP_MUMMY:
+#ifdef JP
+            strcpy( species_buff, "ミイラ" );
+#else
             strcpy( species_buff, "Mummy" );
+#endif
             break;
         case SP_NAGA:
+#ifdef JP
+            strcpy( species_buff, "ナーガ" );
+#else
             strcpy( species_buff, "Naga" );
+#endif
             break;
         case SP_GNOME:
+#ifdef JP
+            strcpy( species_buff, (adj) ? "ノーム族" : "ノーム" );
+#else
             strcpy( species_buff, (adj) ? "Gnomish" : "Gnome" );
+#endif
             break;
         case SP_OGRE:
+#ifdef JP
+            strcpy( species_buff, (adj) ? "オーガ族" : "オーガ" );
+#else
             strcpy( species_buff, (adj) ? "Ogreish" : "Ogre" );
+#endif
             break;
         case SP_TROLL:
+#ifdef JP
+            strcpy( species_buff, (adj) ? "トロル族" : "トロル" );
+#else
             strcpy( species_buff, (adj) ? "Trollish" : "Troll" );
+#endif
             break;
         case SP_OGRE_MAGE:
-            // We've previously declared that these are radically 
-            // different from Ogres... so we're not going to 
+            // We've previously declared that these are radically
+            // different from Ogres... so we're not going to
             // refer to them as Ogres.  -- bwr
+#ifdef JP
+            strcpy( species_buff, "オーガメイジ" );
+#else
             strcpy( species_buff, "Ogre-Mage" );
+#endif
             break;
         case SP_CENTAUR:
+#ifdef JP
+            strcpy( species_buff, "セントール" );
+#else
             strcpy( species_buff, "Centaur" );
+#endif
             break;
         case SP_DEMIGOD:
+#ifdef JP
+            strcpy( species_buff, (adj) ? "神族" : "神々の末裔" );
+#else
             strcpy( species_buff, (adj) ? "Divine" : "Demigod" );
+#endif
             break;
         case SP_SPRIGGAN:
+#ifdef JP
+            strcpy( species_buff, "スプリガン" );
+#else
             strcpy( species_buff, "Spriggan" );
+#endif
             break;
         case SP_MINOTAUR:
+#ifdef JP
+            strcpy( species_buff, "ミノタウロス" );
+#else
             strcpy( species_buff, "Minotaur" );
+#endif
             break;
         case SP_DEMONSPAWN:
+#ifdef JP
+            strcpy( species_buff, (adj) ? "悪魔族" : "悪魔の血族" );
+#else
             strcpy( species_buff, (adj) ? "Demonic" : "Demonspawn" );
+#endif
             break;
         case SP_GHOUL:
+#ifdef JP
+            strcpy( species_buff, (adj) ? "グール" : "グール" );
+#else
             strcpy( species_buff, (adj) ? "Ghoulish" : "Ghoul" );
+#endif
             break;
         case SP_KENKU:
+#ifdef JP
+            strcpy( species_buff, "ケンク" );
+#else
             strcpy( species_buff, "Kenku" );
+#endif
             break;
         case SP_MERFOLK:
+#ifdef JP
+            strcpy( species_buff, (adj) ? "水の民" : "水棲の民" );
+#else
             strcpy( species_buff, (adj) ? "Merfolkian" : "Merfolk" );
+#endif
             break;
         default:
+#ifdef JP
+            strcpy( species_buff, (adj) ? "ヤク族" : "ヤク" );
+#else
             strcpy( species_buff, (adj) ? "Yakish" : "Yak" );
+#endif
             break;
         }
     }
 
     if (!cap)
+#ifdef JP
+    {
+    }
+#else
         strlwr( species_buff );
+#endif
 
     return (species_buff);
 }                               // end species_name()
 
 bool wearing_amulet(char amulet)
+{
+    return wearing_amulet(amulet, true);
+}
+
+bool wearing_amulet(char amulet, bool calc_unid)
 {
     if (amulet == AMU_CONTROLLED_FLIGHT
         && (you.duration[DUR_CONTROLLED_FLIGHT]
@@ -2899,7 +3513,10 @@ bool wearing_amulet(char amulet)
         return false;
 
     if (you.inv[you.equip[EQ_AMULET]].sub_type == amulet)
-        return true;
+    {
+        if ( (calc_unid)||(item_ident( you.inv[you.equip[EQ_AMULET]], ISFLAG_KNOW_TYPE) ) )
+            return true;
+    }
 
     return false;
 }                               // end wearing_amulet()
@@ -2991,7 +3608,7 @@ unsigned long exp_needed(int lev)
         break;
 #endif
 
-    // This is a better behaved function than the above.  The above looks 
+    // This is a better behaved function than the above.  The above looks
     // really ugly when you consider the second derivative, its not smooth
     // and has a horrible bump at level 12 followed by comparitively easy
     // teen levels.  This tries to sort out those issues.
@@ -3001,12 +3618,12 @@ unsigned long exp_needed(int lev)
     // Section 2: levels  6-13, second derivative is exponential/doubling.
     // Section 3: levels 14-27, second derivative is constant at 6000.
     //
-    // Section three is constant so we end up with high levels at about 
+    // Section three is constant so we end up with high levels at about
     // their old values (level 27 at 850k), without delta2 ever decreasing.
-    // The values that are considerably different (ie level 13 is now 29000, 
-    // down from 41040 are because the second derivative goes from 9040 to 
+    // The values that are considerably different (ie level 13 is now 29000,
+    // down from 41040 are because the second derivative goes from 9040 to
     // 1430 at that point in the original, and then slowly builds back
-    // up again).  This function smoothes out the old level 10-15 area 
+    // up again).  This function smoothes out the old level 10-15 area
     // considerably.
 
     // Here's a table:
@@ -3061,10 +3678,10 @@ unsigned long exp_needed(int lev)
         if (lev < 13)
         {
             lev -= 4;
-            level = 10 + 10 * lev 
+            level = 10 + 10 * lev
                        + 30 * (static_cast<int>(pow( 2.0, lev + 1 )));
         }
-        else 
+        else
         {
             lev -= 12;
             level = 15500 + 10500 * lev + 3000 * lev * lev;
@@ -3096,7 +3713,7 @@ int slaying_bonus(char which_affected)
 
 /* Checks each equip slot for a randart, and adds up all of those with
    a given property. Slow if any randarts are worn, so avoid where possible. */
-int scan_randarts(char which_property)
+int scan_randarts(char which_property, bool calc_unid)
 {
     int i = 0;
     int retval = 0;
@@ -3112,7 +3729,11 @@ int scan_randarts(char which_property)
         if (i == EQ_WEAPON && you.inv[ eq ].base_type != OBJ_WEAPONS)
             continue;
 
-        if (!is_random_artefact( you.inv[ eq ] ))
+        if (!is_random_artefact( you.inv[ eq ] ) )
+            continue;
+
+        if (!item_ident(you.inv[ eq ], ISFLAG_KNOW_PROPERTIES)
+         && !calc_unid)
             continue;
 
         retval += randart_wpn_property( you.inv[ eq ], which_property );
@@ -3120,6 +3741,12 @@ int scan_randarts(char which_property)
 
     return (retval);
 }                               // end scan_randarts()
+
+int scan_randarts(char which_property)
+{
+    return scan_randarts(which_property, true);
+}
+
 
 void modify_stat(unsigned char which_stat, char amount, bool suppress_msg)
 {
@@ -3131,8 +3758,16 @@ void modify_stat(unsigned char which_stat, char amount, bool suppress_msg)
     if (amount == 0)
         return;
 
+    // Stop running/travel if a stat drops.
+    if (amount < 0)
+        you.running = 0;
+
     if (!suppress_msg)
+#ifdef JP
+        strcpy(info, "あなたは");
+#else
         strcpy(info, "You feel ");
+#endif
 
     if (which_stat == STAT_RANDOM)
         which_stat = random2(NUM_STATS);
@@ -3144,7 +3779,11 @@ void modify_stat(unsigned char which_stat, char amount, bool suppress_msg)
         ptr_stat_max = &you.max_strength;
         ptr_redraw = &you.redraw_strength;
         if (!suppress_msg)
+#ifdef JP
+            strcat(info, (amount > 0) ? "力強くなった。" : "力が弱くなった。");
+#else
             strcat(info, (amount > 0) ? "stronger." : "weaker.");
+#endif
         break;
 
     case STAT_DEXTERITY:
@@ -3152,7 +3791,11 @@ void modify_stat(unsigned char which_stat, char amount, bool suppress_msg)
         ptr_stat_max = &you.max_dex;
         ptr_redraw = &you.redraw_dexterity;
         if (!suppress_msg)
+#ifdef JP
+            strcat(info, (amount > 0) ? "機敏になった。" : "不器用になった。");
+#else
             strcat(info, (amount > 0) ? "agile." : "clumsy.");
+#endif
         break;
 
     case STAT_INTELLIGENCE:
@@ -3160,7 +3803,11 @@ void modify_stat(unsigned char which_stat, char amount, bool suppress_msg)
         ptr_stat_max = &you.max_intel;
         ptr_redraw = &you.redraw_intelligence;
         if (!suppress_msg)
+#ifdef JP
+            strcat(info, (amount > 0) ? "賢くなった。" : "愚かになった。");
+#else
             strcat(info, (amount > 0) ? "clever." : "stupid.");
+#endif
         break;
     }
 
@@ -3213,7 +3860,11 @@ bool enough_hp(int minimum, bool suppress_msg)
     if (you.hp < minimum + 1)
     {
         if (!suppress_msg)
+#ifdef JP
+            mpr("あなたには十分な活力がない。");
+#else
             mpr("You haven't enough vitality at the moment.");
+#endif
 
         return false;
     }
@@ -3226,7 +3877,11 @@ bool enough_mp(int minimum, bool suppress_msg)
     if (you.magic_points < minimum)
     {
         if (!suppress_msg)
+#ifdef JP
+            mpr("あなたには十分な魔力がない。");
+#else
             mpr("You haven't enough magic at the moment.");
+#endif
 
         return false;
     }
@@ -3397,11 +4052,18 @@ void set_mp(int new_amount, bool max_too)
 }                               // end set_mp()
 
 
-static const char * Species_Abbrev_List[ NUM_SPECIES ] = 
+static const char * Species_Abbrev_List[ NUM_SPECIES ] =
+#ifdef JP
     { "XX", "Hu", "El", "HE", "GE", "DE", "SE", "HD", "MD", "Ha",
-      "HO", "Ko", "Mu", "Na", "Gn", "Og", "Tr", "OM", "Dr", "Dr", 
-      "Dr", "Dr", "Dr", "Dr", "Dr", "Dr", "Dr", "Dr", "Dr", "Dr", 
+      "HO", "Ko", "Mu", "Na", "Gn", "Og", "Tr", "OM", "Dr", "Dr",
+      "Dr", "Dr", "Dr", "Dr", "Dr", "Dr", "Dr", "Dr", "Dr", "Dr",
       "Ce", "DG", "Sp", "Mi", "DS", "Gh", "Ke", "Mf" };
+#else
+    { "XX", "Hu", "El", "HE", "GE", "DE", "SE", "HD", "MD", "Ha",
+      "HO", "Ko", "Mu", "Na", "Gn", "Og", "Tr", "OM", "Dr", "Dr",
+      "Dr", "Dr", "Dr", "Dr", "Dr", "Dr", "Dr", "Dr", "Dr", "Dr",
+      "Ce", "DG", "Sp", "Mi", "DS", "Gh", "Ke", "Mf" };
+#endif
 
 int get_species_index_by_abbrev( const char *abbrev )
 {
@@ -3427,7 +4089,10 @@ int get_species_index_by_name( const char *name )
     char lowered_buff[80];
 
     strncpy( lowered_buff, name, sizeof( lowered_buff ) );
+#ifdef JP
+#else
     strlwr( lowered_buff );
+#endif
 
     for (i = SP_HUMAN; i < NUM_SPECIES; i++)
     {
@@ -3452,18 +4117,33 @@ const char *get_species_abbrev( int which_species )
 }
 
 
-static const char * Class_Abbrev_List[ NUM_JOBS ] = 
-    { "Fi", "Wz", "Pr", "Th", "Gl", "Ne", "Pa", "As", "Be", "Hu", 
-      "Cj", "En", "FE", "IE", "Su", "AE", "EE", "Cr", "DK", "VM", 
+static const char * Class_Abbrev_List[ NUM_JOBS ] =
+#ifdef JP
+    { "Fi", "Wz", "Pr", "Th", "Gl", "Ne", "Pa", "As", "Be", "Hu",
+      "Cj", "En", "FE", "IE", "Su", "AE", "EE", "Cr", "DK", "VM",
       "CK", "Tm", "He", "XX", "Re", "St", "Mo", "Wr", "Wn" };
+#else
+    { "Fi", "Wz", "Pr", "Th", "Gl", "Ne", "Pa", "As", "Be", "Hu",
+      "Cj", "En", "FE", "IE", "Su", "AE", "EE", "Cr", "DK", "VM",
+      "CK", "Tm", "He", "XX", "Re", "St", "Mo", "Wr", "Wn" };
+#endif
 
-static const char * Class_Name_List[ NUM_JOBS ] = 
+static const char * Class_Name_List[ NUM_JOBS ] =
+#ifdef JP
+    { "戦士", "魔術師", "司祭", "盗賊", "闘士", "死人使い",
+      "聖騎士", "暗殺者", "狂戦士", "狩人", "妖術師", "呪術師",
+      "火の精霊使い", "氷の精霊使い", "召換術師", "風の精霊使い",
+      "地の精霊使い", "聖戦者", "死の騎士", "毒素の魔術師",
+      "混沌の騎士", "変異術師", "癒し手", "意気地なし", "略奪者", "刺客",
+      "修行僧", "転位術師", "放浪者" };
+#else
     { "Fighter", "Wizard", "Priest", "Thief", "Gladiator", "Necromancer",
       "Paladin", "Assassin", "Berserker", "Hunter", "Conjurer", "Enchanter",
       "Fire Elementalist", "Ice Elementalist", "Summoner", "Air Elementalist",
       "Earth Elementalist", "Crusader", "Death Knight", "Venom Mage",
       "Chaos Knight", "Transmuter", "Healer", "Quitter", "Reaver", "Stalker",
       "Monk", "Warper", "Wanderer" };
+#endif
 
 int get_class_index_by_abbrev( const char *abbrev )
 {
@@ -3501,7 +4181,11 @@ int get_class_index_by_name( const char *name )
     char lowered_class[80];
 
     strncpy( lowered_buff, name, sizeof( lowered_buff ) );
+#ifdef JP
+#else
     strlwr( lowered_buff );
+#endif
+
 
     for (i = 0; i < NUM_JOBS; i++)
     {
@@ -3509,7 +4193,10 @@ int get_class_index_by_name( const char *name )
             continue;
 
         strncpy( lowered_class, Class_Name_List[i], sizeof( lowered_class ) );
+#ifdef JP
+#else
         strlwr( lowered_class );
+#endif
 
         ptr = strstr( lowered_class, lowered_buff );
         if (ptr != NULL)
@@ -3523,7 +4210,7 @@ int get_class_index_by_name( const char *name )
     return (cl);
 }
 
-const char *get_class_name( int which_job ) 
+const char *get_class_name( int which_job )
 {
     ASSERT( which_job < NUM_JOBS && which_job != JOB_QUITTER );
 
@@ -3599,7 +4286,11 @@ void contaminate_player(int change, bool statusOnly)
 #if DEBUG_DIAGNOSTICS
     if (change > 0 || (change < 0 && you.magic_contamination))
     {
-        snprintf( info, INFO_SIZE, "change: %d  radiation: %d", 
+#ifdef JP
+        snprintf( info, INFO_SIZE, "change: %d  radiation: %d",
+#else
+        snprintf( info, INFO_SIZE, "change: %d  radiation: %d",
+#endif
                  change, change + you.magic_contamination );
 
         mpr( info, MSGCH_DIAGNOSTICS );
@@ -3637,16 +4328,29 @@ void contaminate_player(int change, bool statusOnly)
             if (new_level > 3)
             {
                 strcpy(info, (new_level == 4) ?
+#ifdef JP
+                    "あなたは全身に無気味な光を受けた！" :
+                    "あなたはバチバチ爆ぜる魔力の雲に飲み込まれた！");
+#else
                     "Your entire body has taken on an eerie glow!" :
                     "You are engulfed in a nimbus of crackling magics!");
+#endif
             }
             else
             {
+#ifdef JP
+                snprintf( info, INFO_SIZE, "あなたは残留した魔力で%s%s",
+                    (new_level == 3) ? "光りを放つほどだ" :
+                    (new_level == 2) ? "満たされている"
+                                     : "汚染されている",
+                    (new_level == 3) ? "！" : "。");
+#else
                 snprintf( info, INFO_SIZE, "You are %s with residual magics%c",
                     (new_level == 3) ? "practically glowing" :
                     (new_level == 2) ? "heavily infused"
                                      : "contaminated",
                     (new_level == 3) ? '!' : '.');
+#endif
             }
 
             mpr(info);
@@ -3657,8 +4361,13 @@ void contaminate_player(int change, bool statusOnly)
     if (new_level == old_level)
         return;
 
-    snprintf( info, INFO_SIZE, "You feel %s contaminated with magical energies.", 
+#ifdef JP
+    snprintf( info, INFO_SIZE, "あなたは魔法のエネルギーによる汚染が%sのを感じた。",
+              (change < 0) ? "軽くなった" : "重くなった" );
+#else
+    snprintf( info, INFO_SIZE, "You feel %s contaminated with magical energies.",
               (change < 0) ? "less" : "more" );
+#endif
 
     mpr( info, (change > 0) ? MSGCH_WARN : MSGCH_RECOVERY );
 }
@@ -3676,8 +4385,13 @@ void poison_player( int amount, bool force )
 
     if (you.poison > old_value)
     {
+#ifdef JP
+        snprintf( info, INFO_SIZE, "あなたは%s毒に冒された。",
+                  (old_value > 0) ? "更に" : "" );
+#else
         snprintf( info, INFO_SIZE, "You are %spoisoned.",
                   (old_value > 0) ? "more " : "" );
+#endif
 
         // XXX: which message channel for this message?
         mpr( info );
@@ -3694,11 +4408,19 @@ void reduce_poison_player( int amount )
     if (you.poison <= 0)
     {
         you.poison = 0;
+#ifdef JP
+        mpr( "あなたは気分が良くなった。", MSGCH_RECOVERY );
+#else
         mpr( "You feel better.", MSGCH_RECOVERY );
+#endif
     }
     else
     {
+#ifdef JP
+        mpr( "あなたは少しだけ気分が良くなった。", MSGCH_RECOVERY );
+#else
         mpr( "You feel a little better.", MSGCH_RECOVERY );
+#endif
     }
 }
 
@@ -3709,7 +4431,11 @@ void confuse_player( int amount, bool resistable )
 
     if (resistable && wearing_amulet(AMU_CLARITY))
     {
+#ifdef JP
+        mpr( "あなたは一瞬だけ混乱を覚えた。" );
+#else
         mpr( "You feel momentarily confused." );
+#endif
         return;
     }
 
@@ -3721,8 +4447,13 @@ void confuse_player( int amount, bool resistable )
 
     if (you.conf > old_value)
     {
-        snprintf( info, INFO_SIZE, "You are %sconfused.", 
+#ifdef JP
+        snprintf( info, INFO_SIZE, "あなたは%s混乱した。",
+                  (old_value > 0) ? "更に" : "" );
+#else
+        snprintf( info, INFO_SIZE, "You are %sconfused.",
                   (old_value > 0) ? "more " : "" );
+#endif
 
         // XXX: which message channel for this message?
         mpr( info );
@@ -3739,7 +4470,11 @@ void reduce_confuse_player( int amount )
     if (you.conf <= 0)
     {
         you.conf = 0;
+#ifdef JP
+        mpr( "あなたの混乱は軽くなった。" );
+#else
         mpr( "You feel less confused." );
+#endif
     }
 }
 
@@ -3749,15 +4484,31 @@ void slow_player( int amount )
         return;
 
     if (wearing_amulet( AMU_RESIST_SLOW ))
+#ifdef JP
+        mpr("あなたは一瞬だけ気怠さを覚えた。");
+#else
         mpr("You feel momentarily lethargic.");
+#endif
     else if (you.slow >= 100)
+#ifdef JP
+        mpr( "あなたはすでに限界まで遅くなっている。" );
+#else
         mpr( "You already are as slow as you could be." );
+#endif
     else
-    {   
+    {
         if (you.slow == 0)
+#ifdef JP
+            mpr( "あなたは動きが遅くなった。" );
+#else
             mpr( "You feel yourself slow down." );
+#endif
         else
+#ifdef JP
+            mpr( "あなたはより長い時間を遅いままでいることになった。" );
+#else
             mpr( "You feel as though you will be slow longer." );
+#endif
 
         you.slow += amount;
 
@@ -3782,7 +4533,11 @@ void dec_slow_player( void )
     }
     else if (you.slow == 1)
     {
+#ifdef JP
+        mpr("あなたは動きの速さが戻った。", MSGCH_DURATION);
+#else
         mpr("You feel yourself speed up.", MSGCH_DURATION);
+#endif
         you.slow = 0;
     }
 }
@@ -3795,15 +4550,31 @@ void haste_player( int amount )
         return;
 
     if (amu_eff)
+#ifdef JP
+        mpr( "あなたの護符が明るく輝いた。" );
+#else
         mpr( "Your amulet glows brightly." );
+#endif
 
     if (you.haste == 0)
+#ifdef JP
+        mpr( "あなたは動きが速くなった。" );
+#else
         mpr( "You feel yourself speed up." );
+#endif
     else if (you.haste > 80 + 20 * amu_eff)
+#ifdef JP
+        mpr( "あなたはすでに限界まで速くなっている。" );
+#else
         mpr( "You already have as much speed as you can handle." );
+#endif
     else
     {
+#ifdef JP
+        mpr( "あなたはより長い時間を加速されたままでいることになった。" );
+#else
         mpr( "You feel as though your hastened speed will last longer." );
+#endif
         contaminate_player(1);
     }
 
@@ -3825,14 +4596,22 @@ void dec_haste_player( void )
 
         if (you.haste == 6)
         {
+#ifdef JP
+            mpr( "あなたの加速はなくなりつつある。", MSGCH_DURATION );
+#else
             mpr( "Your extra speed is starting to run out.", MSGCH_DURATION );
+#endif
             if (coinflip())
                 you.haste--;
         }
     }
     else if (you.haste == 1)
     {
+#ifdef JP
+        mpr( "あなたの加速はなくなった。", MSGCH_DURATION );
+#else
         mpr( "You feel yourself slow down.", MSGCH_DURATION );
+#endif
         you.haste = 0;
     }
 }
@@ -3842,7 +4621,11 @@ void disease_player( int amount )
     if (you.is_undead || amount <= 0)
         return;
 
+#ifdef JP
+    mpr( "あなたは病気に冒されている。" );
+#else
     mpr( "You feel ill." );
+#endif
 
     const int tmp = you.disease + amount;
     you.disease = (tmp > 210) ? 210 : tmp;
@@ -3851,19 +4634,23 @@ void disease_player( int amount )
 void dec_disease_player( void )
 {
     if (you.disease > 0)
-    {       
+    {
         you.disease--;
-                
+
         if (you.disease > 5
-            && (you.species == SP_KOBOLD 
+            && (you.species == SP_KOBOLD
                 || you.duration[ DUR_REGENERATION ]
                 || you.mutation[ MUT_REGENERATION ] == 3))
         {
             you.disease -= 2;
         }
-                 
+
         if (!you.disease)
+#ifdef JP
+            mpr("あなたの健康状態は回復してきた。", MSGCH_RECOVERY);
+#else
             mpr("You feel your health improve.", MSGCH_RECOVERY);
+#endif
     }
 }
 
@@ -3876,8 +4663,13 @@ void rot_player( int amount )
     {
         // Either this, or the actual rotting message should probably
         // be changed so that they're easier to tell apart. -- bwr
+#ifdef JP
+        snprintf( info, INFO_SIZE, "あなたの肉が%s！",
+                  (you.rotting) ? "腐っていく" : "腐り始めた" );
+#else
         snprintf( info, INFO_SIZE, "You feel your flesh %s away!",
                   (you.rotting) ? "rotting" : "start to rot" );
+#endif
         mpr( info, MSGCH_WARN );
 
         you.rotting += amount;

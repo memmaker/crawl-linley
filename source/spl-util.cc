@@ -455,7 +455,11 @@ int apply_one_neighbouring_square(int (*func) (int, int, int, int), int power)
 {
     struct dist bmove;
 
+#ifdef JP 
+    mpr("どの方向に？ [ESCでキャンセル]", MSGCH_PROMPT);
+#else
     mpr("Which direction? [ESC to cancel]", MSGCH_PROMPT);
+#endif
     direction( bmove, DIR_DIR, TARG_ENEMY );
 
     if (!bmove.isValid)
@@ -666,16 +670,35 @@ void apply_area_cloud( int (*func) (int, int, int, int), int x, int y,
 char spell_direction( struct dist &spelld, struct bolt &pbolt, 
                       int restrict, int mode )
 {
+    char ki;
+
     if (restrict == DIR_TARGET)
+#ifdef JP 
+        mpr( "目標を選択してください。 (+:次の目標 -:前の目標)", MSGCH_PROMPT );
+#else
         mpr( "Choose a target (+/- for next/prev monster)", MSGCH_PROMPT );
+#endif
     else
         mpr( STD_DIRECTION_PROMPT, MSGCH_PROMPT );
 
     message_current_target();
 
     direction( spelld, restrict, mode );
+/*
+    bool answer = true;
+    if ( (you.x_pos == spelld.tx)&&(you.y_pos == spelld.ty) )
+    {
+#ifdef JP
+        mpr("自分を照準しています。宜しいのですか？(y/n)");
+#else
+        mpr("Shoot yourself？(y/n)");
+#endif
+        answer = yesno("", true, true);
+    }
+    if ( (!spelld.isValid)||(!answer) )
+*/
 
-    if (!spelld.isValid)
+    if ( (!spelld.isValid) )
     {
         // check for user cancel
         canned_msg(MSG_SPELL_FIZZLES);
@@ -697,34 +720,90 @@ const char *spelltype_name(unsigned int which_spelltype)
     switch (which_spelltype)
     {
     case SPTYP_CONJURATION:
+#ifdef JP 
+        return ("妖術");
+#else
         return ("Conjuration");
+#endif
     case SPTYP_ENCHANTMENT:
+#ifdef JP 
+        return ("呪術");
+#else
         return ("Enchantment");
+#endif
     case SPTYP_FIRE:
+#ifdef JP 
+        return ("炎");
+#else
         return ("Fire");
+#endif
     case SPTYP_ICE:
+#ifdef JP 
+        return ("氷");
+#else
         return ("Ice");
+#endif
     case SPTYP_TRANSMIGRATION:
+#ifdef JP 
+        return ("変異");
+#else
         return ("Transmigration");
+#endif
     case SPTYP_NECROMANCY:
+#ifdef JP 
+        return ("死霊");
+#else
         return ("Necromancy");
+#endif
     case SPTYP_HOLY:
+#ifdef JP 
+        return ("神聖");
+#else
         return ("Holy");
+#endif
     case SPTYP_SUMMONING:
+#ifdef JP 
+        return ("召換");
+#else
         return ("Summoning");
+#endif
     case SPTYP_DIVINATION:
+#ifdef JP 
+        return ("予見");
+#else
         return ("Divination");
+#endif
     case SPTYP_TRANSLOCATION:
+#ifdef JP 
+        return ("転位");
+#else
         return ("Translocation");
+#endif
     case SPTYP_POISON:
+#ifdef JP 
+        return ("毒");
+#else
         return ("Poison");
+#endif
     case SPTYP_EARTH:
+#ifdef JP 
+        return ("地");
+#else
         return ("Earth");
+#endif
     case SPTYP_AIR:
+#ifdef JP 
+        return ("風");
+#else
         return ("Air");
+#endif
     default:
         snprintf( bug_string, sizeof(bug_string), 
+#ifdef JP 
+                  "不正(%d)", which_spelltype );
+#else
                   "invalid(%d)", which_spelltype );
+#endif
 
         return (bug_string);
     }
@@ -752,7 +831,11 @@ int spell_type2skill(unsigned int spelltype)
     default:
     case SPTYP_HOLY:
         snprintf( buffer, sizeof(buffer), 
+#ifdef JP 
                   "spell_type2skill: called with spelltype %d", spelltype );
+#else
+                  "spell_type2skill: called with spelltype %d", spelltype );
+#endif
 
         mpr( buffer );
         return (-1);

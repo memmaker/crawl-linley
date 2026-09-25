@@ -61,16 +61,33 @@ static void surge_power(int spell)
 
     if (enhanced)               // one way or the other {dlb}
     {
+#ifdef JP
+        strcpy(info, "あなたは");
+#else
         strcpy(info, "You feel a");
+#endif
 
+#ifdef JP
+        strcat(info, (enhanced < -2)  ? "異常なまでの" :
+                     (enhanced == -2) ? "非常な" :
+                     (enhanced == 2)  ? "強力な" :
+                     (enhanced > 2)   ? "強大な"
+                                      : "");
+#else
         strcat(info, (enhanced < -2)  ? "n extraordinarily" :
                      (enhanced == -2) ? "n extremely" :
                      (enhanced == 2)  ? " strong" :
                      (enhanced > 2)   ? " huge"
                                       : "");
+#endif
 
+#ifdef JP
+        strcat(info, (enhanced < 0) ? "無力感を覚えた。"
+                                    : "魔力の増幅を感じた！");
+#else
         strcat(info, (enhanced < 0) ? " numb sensation."
                                     : " surge of power!");
+#endif
         mpr(info);
     }
 }                               // end surge_power()
@@ -98,7 +115,11 @@ char list_spells(void)
 
     clrscr();
 
+#ifdef JP
+    cprintf( " 呪文                             系統                          成功率  レベル" );
+#else
     cprintf( " Your Spells                      Type                          Success   Level" );
+#endif
     lines++;
 
     for (j = 0; j < 52; j++)
@@ -106,7 +127,11 @@ char list_spells(void)
         if (lines > num_lines - 2)
         {
             gotoxy(1, num_lines);
+#ifdef JP
+            cprintf("-続く-");
+#else
             cprintf("-more-");
+#endif
 
             ki = getch();
 
@@ -136,7 +161,7 @@ char list_spells(void)
         }
 
         const char letter = index_to_letter(j);
-        const int  spell  = get_spell_by_letter(letter); 
+        const int  spell  = get_spell_by_letter(letter);
 
         if (spell != SPELL_NO_SPELL)
         {
@@ -171,6 +196,20 @@ char list_spells(void)
 
             int spell_f = spell_fail( spell );
 
+#ifdef JP
+            cprintf( (spell_f == 100) ? "不可能"    :
+                     (spell_f >   90) ? "極めて悪い":
+                     (spell_f >   80) ? "かなり悪い":
+                     (spell_f >   70) ? "悪い"      :
+                     (spell_f >   60) ? "劣る"      :
+                     (spell_f >   50) ? "やや劣る"  :
+                     (spell_f >   40) ? "やや良い"  :
+                     (spell_f >   30) ? "良い"      :
+                     (spell_f >   20) ? "とても良い":
+                     (spell_f >   10) ? "素晴らしい":
+                     (spell_f >    0) ? "卓越"
+                                      : "完璧" );
+#else
             cprintf( (spell_f == 100) ? "Useless"   :
                      (spell_f >   90) ? "Terrible"  :
                      (spell_f >   80) ? "Cruddy"    :
@@ -181,8 +220,9 @@ char list_spells(void)
                      (spell_f >   30) ? "Good"      :
                      (spell_f >   20) ? "Very Good" :
                      (spell_f >   10) ? "Great"     :
-                     (spell_f >    0) ? "Excellent" 
+                     (spell_f >    0) ? "Excellent"
                                       : "Perfect" );
+#endif
 
             gotoxy(77, wherey());
 
@@ -250,7 +290,7 @@ int spell_fail(int spell)
         //     Truth is, even a much worse penalty than the above can
         //     easily be overcome by gaining spell skills... and a lot
         //     faster than any reasonable rate of bonus here.
-        int lim_str = (you.strength > 30) ? 30 : 
+        int lim_str = (you.strength > 30) ? 30 :
                       (you.strength < 10) ? 10 : you.strength;
 
         armour -= ((you.skills[SK_ARMOUR] * lim_str) / 15);
@@ -287,7 +327,7 @@ int spell_fail(int spell)
             chance += armour;
     }
 
-    if (you.equip[EQ_WEAPON] != -1 
+    if (you.equip[EQ_WEAPON] != -1
             && you.inv[you.equip[EQ_WEAPON]].base_type == OBJ_WEAPONS)
     {
         int wpn_penalty = (3 * (property( you.inv[you.equip[EQ_WEAPON]], PWPN_SPEED ) - 12)) / 2;
@@ -393,7 +433,7 @@ int spell_fail(int spell)
     if (chance < -180)
         chance2 = 0;
 
-    if (you.religion == GOD_VEHUMET 
+    if (you.religion == GOD_VEHUMET
         && you.duration[DUR_PRAYER]
         && (!player_under_penance() && you.piety >= 50)
         && (spell_typematch(spell, SPTYP_CONJURATION)
@@ -430,7 +470,7 @@ int calc_spell_power( int spell, bool apply_intel )
     unsigned int disciplines = spell_type( spell );
 
     //jmf: evil evil evil -- exclude HOLY bit
-    disciplines &= (~SPTYP_HOLY);       
+    disciplines &= (~SPTYP_HOLY);
 
     int skillcount = count_bits( disciplines );
     if (skillcount)
@@ -526,7 +566,11 @@ bool cast_a_spell(void)
 
     if (!you.spell_no)
     {
+#ifdef JP
+        mpr("あなたは呪文を知らない。");
+#else
         mpr("You don't know any spells.");
+#endif
         return (false);
     }
 
@@ -538,7 +582,11 @@ bool cast_a_spell(void)
 
     if (silenced(you.x_pos, you.y_pos))
     {
+#ifdef JP
+        mpr("あなたは静寂状態で呪文を唱えることはできない！");
+#else
         mpr("You cannot cast spells when silenced!");
+#endif
         return (false);
     }
 
@@ -546,7 +594,11 @@ bool cast_a_spell(void)
     for (;;)
     {
         //jmf: FIXME: change to reflect range of known spells
+#ifdef JP
+        mpr( "どの呪文を唱えますか？([*][?]一覧) ", MSGCH_PROMPT );
+#else
         mpr( "Cast which spell ([?*] list)? ", MSGCH_PROMPT );
+#endif
 
         keyin = get_ch();
 
@@ -556,9 +608,13 @@ bool cast_a_spell(void)
 
             redraw_screen();
             if (unthing == 2)
+            {
+                canned_msg(MSG_OK);
                 return (false);
+            }
 
-            if (unthing >= 'a' && unthing <= 'y')
+            if ( (unthing >= 'a' && unthing <= 'z')
+               ||(unthing >= 'A' && unthing <= 'Z') )
             {
                 keyin = unthing;
                 break;
@@ -574,13 +630,20 @@ bool cast_a_spell(void)
     }
 
     if (keyin == ESCAPE)
+    {
+        canned_msg(MSG_OK);
         return (false);
+    }
 
     spc = (int) keyin;
 
     if (!isalpha(spc))
     {
+#ifdef JP
+        mpr("あなたはその呪文を知らない。");
+#else
         mpr("You don't know that spell.");
+#endif
         return (false);
     }
 
@@ -590,13 +653,21 @@ bool cast_a_spell(void)
 
     if (spell == SPELL_NO_SPELL)
     {
+#ifdef JP
+        mpr("あなたはその呪文を知らない。");
+#else
         mpr("You don't know that spell.");
+#endif
         return (false);
     }
 
     if (spell_mana( spell ) > you.magic_points)
     {
+#ifdef JP
+        mpr("あなたはその呪文を唱えるのに十分な魔力を持っていない。");
+#else
         mpr("You don't have enough magic to cast that spell.");
+#endif
         return (false);
     }
 
@@ -604,7 +675,11 @@ bool cast_a_spell(void)
         && (you.hunger_state < HS_HUNGRY
             || you.hunger <= spell_hunger( spell )))
     {
+#ifdef JP
+        mpr("あなたには呪文を唱えるための活力が足りない。");
+#else
         mpr("You don't have the energy to cast that spell.");
+#endif
         return (false);
     }
 
@@ -633,7 +708,7 @@ bool cast_a_spell(void)
         exercise_spell( spell, true, your_spells( spell ) );
         naughty( NAUGHTY_SPELLCASTING, 1 + random2(5) );
     }
-    
+
     return (true);
 }                               // end cast_a_spell()
 
@@ -718,10 +793,18 @@ bool your_spells( int spc2, int powc, bool allow_fail )
 
             set_ident_flags( you.inv[you.equip[EQ_WEAPON]], ISFLAG_KNOW_TYPE );
 
+#ifdef JP
+            strcpy(info, "あなたは");
+#else
             strcpy(info, "You are wielding ");
+#endif
             in_name(you.equip[EQ_WEAPON], DESC_NOCAP_A, str_pass);
             strcat(info, str_pass);
+#ifdef JP
+            strcat(info, "を手にしている。");
+#else
             strcat(info, ".");
+#endif
             mpr(info);
 
             more();
@@ -739,7 +822,11 @@ bool your_spells( int spc2, int powc, bool allow_fail )
         if (you.religion != GOD_SIF_MUNA
             && you.penance[GOD_SIF_MUNA] && one_chance_in(40))
         {
+#ifdef JP
+            god_speaks(GOD_SIF_MUNA, "あなたは神の悪意が押し寄せるのを感じた。");
+#else
             god_speaks(GOD_SIF_MUNA, "You feel a surge of divine spite.");
+#endif
 
             // This will cause failure and increase the miscast effect.
             spfl = -you.penance[GOD_SIF_MUNA];
@@ -747,12 +834,16 @@ bool your_spells( int spc2, int powc, bool allow_fail )
             // Reduced penenance reduction here because casting spells
             // is a player controllable act.  -- bwr
             if (one_chance_in(7))
-                dec_penance(1);
+                dec_penance(GOD_SIF_MUNA, 1);
         }
 
         if (spfl < spell_fail(spc2))
         {
+#ifdef JP
+            mpr( "あなたは呪文の詠唱を失敗した。" );
+#else
             mpr( "You miscast the spell." );
+#endif
             flush_input_buffer( FLUSH_ON_FAILURE );
 
             if (you.religion == GOD_SIF_MUNA
@@ -796,7 +887,11 @@ bool your_spells( int spc2, int powc, bool allow_fail )
 
     if (you.is_undead && spell_typematch( spc2, SPTYP_HOLY ))
     {
+#ifdef JP
+        mpr( "あなたはこの系統の魔法を使うことはできない！" );
+#else
         mpr( "You can't use this type of magic!" );
+#endif
         return (false);         // XXX: still gets trained!
     }
 
@@ -806,16 +901,24 @@ bool your_spells( int spc2, int powc, bool allow_fail )
     if (spc2 != SPELL_NECROMUTATION
         && undead_cannot_memorise( spc2, you.is_undead ))
     {
+#ifdef JP
+        mpr( "あなたは現在の形態でその呪文を唱えることはできない！" );
+#else
         mpr( "You cannot cast that spell in your current form!" );
+#endif
         return (false);         // XXX: still gets trained!
     }
 
-    // Linley says: Condensation Shield needs some disadvantages to keep 
+    // Linley says: Condensation Shield needs some disadvantages to keep
     // it from being a no-brainer... this isn't much, but its a start -- bwr
-    if (you.duration[DUR_CONDENSATION_SHIELD] > 0 
+    if (you.duration[DUR_CONDENSATION_SHIELD] > 0
         && spell_typematch( spc2, SPTYP_FIRE ))
     {
+#ifdef JP
+        mpr( "あなたの氷の盾は消散してしまった！", MSGCH_DURATION );
+#else
         mpr( "Your icy shield dissipates!", MSGCH_DURATION );
+#endif
         you.duration[DUR_CONDENSATION_SHIELD] = 0;
         you.redraw_armour_class = 1;
     }
@@ -833,8 +936,8 @@ bool your_spells( int spc2, int powc, bool allow_fail )
         naughty( NAUGHTY_NECROMANCY, 10 + spell_difficulty(spc2) );
 
     if (spc2 == SPELL_NECROMUTATION
-        && (you.religion == GOD_ELYVILON 
-            || you.religion == GOD_SHINING_ONE 
+        && (you.religion == GOD_ELYVILON
+            || you.religion == GOD_SHINING_ONE
             || you.religion == GOD_ZIN))
     {
         excommunication();
@@ -847,7 +950,11 @@ bool your_spells( int spc2, int powc, bool allow_fail )
     }
 
 #if DEBUG_DIAGNOSTICS
+#ifdef JP
     snprintf( info, INFO_SIZE, "Spell #%d, power=%d", spc2, powc );
+#else
+    snprintf( info, INFO_SIZE, "Spell #%d, power=%d", spc2, powc );
+#endif
     mpr( info, MSGCH_DIAGNOSTICS );
 #endif
 
@@ -868,7 +975,11 @@ bool your_spells( int spc2, int powc, bool allow_fail )
     case SPELL_CREATE_NOISE:  // unused, the player can shout to do this - bwr
         if (!silenced(you.x_pos, you.y_pos))
         {
+#ifdef JP
+            mpr("あなたの名を呼ぶ声が聞こえた！");
+#else
             mpr("You hear a voice call your name!");
+#endif
             noisy( 25, you.x_pos, you.y_pos );
         }
         break;
@@ -891,14 +1002,14 @@ bool your_spells( int spc2, int powc, bool allow_fail )
     case SPELL_DELAYED_FIREBALL:
         // This spell has two main advantages over Fireball:
         //
-        // (1) The release is instantaneous, so monsters will not 
+        // (1) The release is instantaneous, so monsters will not
         //     get an action before the player... this allows the
         //     player to hit monsters with a double fireball (this
         //     is why we only allow one delayed fireball at a time,
-        //     if you want to allow for more, then the release should 
+        //     if you want to allow for more, then the release should
         //     take at least some amount of time).
         //
-        //     The casting of this spell still costs a turn.  So 
+        //     The casting of this spell still costs a turn.  So
         //     casting Delayed Fireball and immediately releasing
         //     the fireball is only slightly different than casting
         //     a regular Fireball (monsters act in the middle instead
@@ -908,9 +1019,9 @@ bool your_spells( int spc2, int powc, bool allow_fail )
         //     both).
         //
         // (2) When the fireball is released, it is guaranteed to
-        //     go off... the spell only fails at this point.  This can 
-        //     be a large advantage for characters who have difficulty 
-        //     casting Fireball in their standard equipment.  However, 
+        //     go off... the spell only fails at this point.  This can
+        //     be a large advantage for characters who have difficulty
+        //     casting Fireball in their standard equipment.  However,
         //     the power level for the actual fireball is determined at
         //     release, so if you do swap out your enhancers you'll
         //     get a less powerful ball when its released. -- bwr
@@ -918,7 +1029,11 @@ bool your_spells( int spc2, int powc, bool allow_fail )
         if (!you.attribute[ ATTR_DELAYED_FIREBALL ])
         {
             // okay, this message is weak but functional -- bwr
+#ifdef JP
+            mpr( "あなたは魔力が装填されたのを意識した。" );
+#else
             mpr( "You feel magically charged." );
+#endif
             you.attribute[ ATTR_DELAYED_FIREBALL ] = 1;
         }
         else
@@ -980,7 +1095,11 @@ bool your_spells( int spc2, int powc, bool allow_fail )
 
         if (spd.isMe)
         {
+#ifdef JP
+            mpr("残念ながら、それはそのようには使用できない。");
+#else
             mpr("Sorry, it doesn't work like that.");
+#endif
             return (false);
         }
         zapping(ZAP_POLYMORPH_OTHER, powc, beam);
@@ -1080,7 +1199,11 @@ bool your_spells( int spc2, int powc, bool allow_fail )
 
         if (spd.isMe)
         {
+#ifdef JP
+            mpr("残念ながら、それはそのようには使用できない。");
+#else
             mpr("Sorry, it doesn't work like that.");
+#endif
             return (false);
         }
         // teleport creature (I think)
@@ -1181,8 +1304,13 @@ bool your_spells( int spc2, int powc, bool allow_fail )
         break;
 
     case SPELL_DETECT_TRAPS:
+#ifdef JP
+        strcpy(info, "あなたは");
+        strcat(info, (detect_traps(powc) > 0) ? "罠を探知した！" : "罠がないことを確認した。");
+#else
         strcpy(info, "You detect ");
         strcat(info, (detect_traps(powc) > 0) ? "some traps!" : "nothing.");
+#endif
         mpr(info);
         break;
 
@@ -1218,12 +1346,24 @@ bool your_spells( int spc2, int powc, bool allow_fail )
 
     case SPELL_MAGIC_MAPPING:
         if (you.level_type == LEVEL_LABYRINTH || you.level_type == LEVEL_ABYSS)
+#ifdef JP
+            mpr("あなたは一時的な見当識喪失に陥った。");
+#else
             mpr("You feel momentarily disoriented.");
+#endif
         else if (you.level_type == LEVEL_PANDEMONIUM)
+#ifdef JP
+            mpr("地の魔法ではパンデモニウムの地図を描けない。");
+#else
             mpr("Your Earth magic cannot map Pandemonium.");
+#endif
         else
         {
+#ifdef JP
+            mpr( "あなたは周囲の地形を感知した。" );
+#else
             mpr( "You feel aware of your surroundings." );
+#endif
             powc = stepdown_value( powc, 10, 10, 40, 45 );
             magic_mapping( 5 + powc, 50 + random2avg( powc * 2, 2 ) );
         }
@@ -1235,14 +1375,22 @@ bool your_spells( int spc2, int powc, bool allow_fail )
 
         if (spd.isMe)
         {
+#ifdef JP
+            mpr("残念ながら、それはそのようには使用できない。");
+#else
             mpr("Sorry, it doesn't work like that.");
+#endif
             return (false);
         }
         zapping(ZAP_HEALING, powc, beam);
         break;
 
     case SPELL_ANIMATE_DEAD:
+#ifdef JP
+        mpr("あなたは死体に従者となることを命じた。");
+#else
         mpr("You call on the dead to walk for you.");
+#endif
         animate_dead(powc + 1, BEH_FRIENDLY, you.pet_target, 1);
         break;
 
@@ -1262,7 +1410,11 @@ bool your_spells( int spc2, int powc, bool allow_fail )
         break;
 
     case SPELL_ANIMATE_SKELETON:
+#ifdef JP
+        mpr("あなたは死体に生命を与えようと試みた……。");
+#else
         mpr("You attempt to give life to the dead...");
+#endif
         animate_a_corpse(you.x_pos, you.y_pos, BEH_FRIENDLY, you.pet_target,
                          CORPSE_SKELETON);
         break;
@@ -1410,7 +1562,7 @@ bool your_spells( int spc2, int powc, bool allow_fail )
         dancing_weapon(powc, false);
         break;
 
-    case SPELL_HELLFIRE:        
+    case SPELL_HELLFIRE:
         // should only be available from:
         // staff of Dispater & Sceptre of Asmodeus
         if (spell_direction(spd, beam) == -1)
@@ -1420,12 +1572,20 @@ bool your_spells( int spc2, int powc, bool allow_fail )
         break;
 
     case SPELL_SUMMON_DEMON:
+#ifdef JP
+        mpr("あなたはパンデモニウムへの門を開いた！");
+#else
         mpr("You open a gate to Pandemonium!");
+#endif
         summon_ice_beast_etc(powc, summon_any_demon(DEMON_COMMON));
         break;
 
     case SPELL_DEMONIC_HORDE:
+#ifdef JP
+        mpr("あなたはパンデモニウムへの門を開いた！");
+#else
         mpr("You open a gate to Pandemonium!");
+#endif
         dem_hor2 = 3 + random2(5);
         for (dem_hor = 0; dem_hor < 4 + dem_hor2; dem_hor++)
         {
@@ -1434,12 +1594,20 @@ bool your_spells( int spc2, int powc, bool allow_fail )
         break;
 
     case SPELL_SUMMON_GREATER_DEMON:
+#ifdef JP
+        mpr("あなたはパンデモニウムへの門を開いた！");
+#else
         mpr("You open a gate to Pandemonium!");
+#endif
 
         dem_hor = ((random2(powc) <= 5) ? BEH_HOSTILE : BEH_CHARMED);
 
         if (dem_hor == BEH_CHARMED)
+#ifdef JP
+            mpr("この存在にはあまり好感が持てない……。");
+#else
             mpr("You don't feel so good about this...");
+#endif
 
         create_monster( summon_any_demon(DEMON_GREATER), ENCH_ABJ_V, dem_hor,
                         you.x_pos, you.y_pos, MHITYOU, 250 );
@@ -1555,18 +1723,30 @@ bool your_spells( int spc2, int powc, bool allow_fail )
     case SPELL_ALTER_SELF:
         if (!enough_hp( you.hp_max / 2, true ))
         {
+#ifdef JP
+            mpr( "あなたの体はこの呪文が機能するには無理のある状態だ。" );
+#else
             mpr( "Your body is in too poor a condition "
                  "for this spell to function." );
+#endif
 
             return (false);
         }
 
+#ifdef JP
+        mpr("あなたの体は変異エネルギーで覆われた！");
+#else
         mpr("Your body is suffused with transfigurative energy!");
+#endif
 
         set_hp( 1 + random2(you.hp), false );
 
         if (!mutate(100, false))
+#ifdef JP
+            mpr("奇妙だ……。あなたは何も変化していないようだ。");
+#else
             mpr("Odd... you don't feel any different.");
+#endif
         break;
 
     case SPELL_DEBUGGING_RAY:
@@ -1645,7 +1825,11 @@ bool your_spells( int spc2, int powc, bool allow_fail )
     case SPELL_SYMBOL_OF_TORMENT:
         if (you.is_undead || you.mutation[MUT_TORMENT_RESISTANCE])
         {
+#ifdef JP
+            mpr("他者を責め苛むためには、まず自身が苦痛を知らねばならない。");
+#else
             mpr("To torment others, one must first know what torment means. ");
+#endif
             return (false);
         }
         torment(you.x_pos, you.y_pos);
@@ -1682,8 +1866,12 @@ bool your_spells( int spc2, int powc, bool allow_fail )
         break;
 
     case SPELL_SHADOW_CREATURES:
+#ifdef JP
+        mpr( "ゆらめく影があなたの周りで旋回している……。" );
+#else
         mpr( "Wisps of shadow whirl around you..." );
-        create_monster( RANDOM_MONSTER, ENCH_ABJ_II, BEH_FRIENDLY, 
+#endif
+        create_monster( RANDOM_MONSTER, ENCH_ABJ_II, BEH_FRIENDLY,
                         you.x_pos, you.y_pos, you.pet_target, 250 );
         break;
 
@@ -1748,8 +1936,13 @@ bool your_spells( int spc2, int powc, bool allow_fail )
         cast_mass_sleep(powc);
         break;
 
+//!!!!
     case SPELL_DETECT_MAGIC:
+#ifdef JP
         mpr("FIXME: implement!");
+#else
+        mpr("FIXME: implement!");
+#endif
         break;
 
     case SPELL_DETECT_SECRET_DOORS:
@@ -1877,7 +2070,11 @@ bool your_spells( int spc2, int powc, bool allow_fail )
         break;
 
     default:
+#ifdef JP
+        mpr("無効な呪文だ！");
+#else
         mpr("Invalid spell!");
+#endif
         break;
     }                           // end switch
 
@@ -1929,7 +2126,7 @@ void exercise_spell( int spell, bool spc, bool success )
 
     if (spc)
     {
-        exercise(SK_SPELLCASTING, one_chance_in(3) ? 1 
+        exercise(SK_SPELLCASTING, one_chance_in(3) ? 1
                             : random2(1 + random2(spell_difficulty(spell))));
     }
 
@@ -1951,7 +2148,7 @@ void exercise_spell( int spell, bool spc, bool success )
  * effects have been made much nastier since then).
  */
 
-bool miscast_effect( unsigned int sp_type, int mag_pow, int mag_fail, 
+bool miscast_effect( unsigned int sp_type, int mag_pow, int mag_fail,
                      int force_effect, const char *cause )
 {
 /*  sp_type is the type of the spell
@@ -1996,7 +2193,11 @@ bool miscast_effect( unsigned int sp_type, int mag_pow, int mag_fail,
         spec_effect = 0;
 
 #if DEBUG_DIAGNOSTICS
-    snprintf( info, INFO_SIZE, "Sptype: %d, failure1: %d, failure2: %d", 
+#ifdef JP
+    snprintf( info, INFO_SIZE, "Sptype: %d, failure1: %d, failure2: %d",
+#else
+    snprintf( info, INFO_SIZE, "Sptype: %d, failure1: %d, failure2: %d",
+#endif
               sp_type, old_fail, spec_effect );
     mpr( info, MSGCH_DIAGNOSTICS );
 #endif
@@ -2013,34 +2214,66 @@ bool miscast_effect( unsigned int sp_type, int mag_pow, int mag_fail,
             switch (random2(10))
             {
             case 0:
-                snprintf( info, INFO_SIZE, "Sparks fly from your %s!", 
+#ifdef JP
+                snprintf( info, INFO_SIZE, "あなたの%sから火花が飛んだ！",
+#else
+                snprintf( info, INFO_SIZE, "Sparks fly from your %s!",
+#endif
                           your_hand(true) );
                 mpr(info);
                 break;
 
             case 1:
+#ifdef JP
+                mpr("あなたの周囲の大気がエネルギーでバチバチと爆ぜた！");
+#else
                 mpr("The air around you crackles with energy!");
+#endif
                 break;
 
             case 2:
+#ifdef JP
+                snprintf( info, INFO_SIZE, "あなたの%sから煙が一筋立ち昇った。",
+#else
                 snprintf( info, INFO_SIZE, "Wisps of smoke drift from your %s.",
+#endif
                           your_hand(true));
                 mpr(info);
                 break;
             case 3:
+#ifdef JP
+                mpr("あなたはエネルギーの奇妙な高まりを感じた！");
+#else
                 mpr("You feel a strange surge of energy!");
+#endif
                 break;
             case 4:
+#ifdef JP
+                mpr("あなたは一瞬、閃光に目が眩んだ！");
+#else
                 mpr("You are momentarily dazzled by a flash of light!");
+#endif
                 break;
             case 5:
+#ifdef JP
+                mpr("奇妙なエネルギーがあなたの体を透過して行った。");
+#else
                 mpr("Strange energies run through your body.");
+#endif
                 break;
             case 6:
+#ifdef JP
+                mpr("あなたの皮膚はひりひりした。");
+#else
                 mpr("Your skin tingles.");
+#endif
                 break;
             case 7:
+#ifdef JP
+                mpr("あなたの皮膚は一瞬輝いた。");
+#else
                 mpr("Your skin glows momentarily.");
+#endif
                 break;
             case 8:
                 canned_msg(MSG_NOTHING_HAPPENS);
@@ -2048,9 +2281,17 @@ bool miscast_effect( unsigned int sp_type, int mag_pow, int mag_fail,
             case 9:
                 // josh declares mummies cannot smell {dlb}
                 if (you.species != SP_MUMMY)
+#ifdef JP
+                    mpr("あなたは何か奇妙な臭いを嗅いだ。");
+#else
                     mpr("You smell something strange.");
+#endif
                 else
+#ifdef JP
+                    mpr("あなたの包帯がひらひらと翻った。");
+#else
                     mpr("Your bandages flutter.");
+#endif
             }
             break;
 
@@ -2058,7 +2299,11 @@ bool miscast_effect( unsigned int sp_type, int mag_pow, int mag_fail,
             switch (random2(2))
             {
             case 0:
-                snprintf( info, INFO_SIZE, "Smoke pours from your %s!", 
+#ifdef JP
+                snprintf( info, INFO_SIZE, "あなたの%sから煙が上がった！",
+#else
+                snprintf( info, INFO_SIZE, "Smoke pours from your %s!",
+#endif
                           your_hand(true));
                 mpr(info);
 
@@ -2066,7 +2311,11 @@ bool miscast_effect( unsigned int sp_type, int mag_pow, int mag_fail,
                            7 + random2(7) );
                 break;
             case 1:
+#ifdef JP
+                mpr("猛烈なエネルギーの波があなたの全身をなぶった。");
+#else
                 mpr("A wave of violent energy washes through your body!");
+#endif
                 ouch(6 + random2avg(7, 2), 0, KILLED_BY_WILD_MAGIC, cause);
                 break;
             }
@@ -2076,11 +2325,19 @@ bool miscast_effect( unsigned int sp_type, int mag_pow, int mag_fail,
             switch (random2(2))
             {
             case 0:
+#ifdef JP
+                mpr("エネルギーがあなたの体を切り裂いた！");
+#else
                 mpr("Energy rips through your body!");
+#endif
                 ouch(9 + random2avg(17, 2), 0, KILLED_BY_WILD_MAGIC, cause);
                 break;
             case 1:
+#ifdef JP
+                mpr("あなたは猛烈な爆発に巻き込まれた！");
+#else
                 mpr("You are caught in a violent explosion!");
+#endif
                 beam.type = SYM_BURST;
                 beam.damage = dice_def( 3, 12 );
                 beam.flavour = BEAM_MISSILE; // unsure about this
@@ -2088,7 +2345,11 @@ bool miscast_effect( unsigned int sp_type, int mag_pow, int mag_fail,
 
                 beam.target_x = you.x_pos;
                 beam.target_y = you.y_pos;
+#ifdef JP
+                strcpy(beam.beam_name, "爆発");
+#else
                 strcpy(beam.beam_name, "explosion");
+#endif
                 beam.colour = random_colour();
                 beam.beam_source = NON_MONSTER;
                 beam.thrower = (cause) ? KILL_MISC : KILL_YOU;
@@ -2104,18 +2365,30 @@ bool miscast_effect( unsigned int sp_type, int mag_pow, int mag_fail,
             switch (random2(2))
             {
             case 0:
+#ifdef JP
+                mpr("あなたは魔法のエネルギーの放射を受けた！");
+#else
                 mpr("You are blasted with magical energy!");
+#endif
                 ouch(12 + random2avg(29, 2), 0, KILLED_BY_WILD_MAGIC, cause);
                 break;
             case 1:
+#ifdef JP
+                mpr("魔法のエネルギーが突然に爆発した！");
+#else
                 mpr("There is a sudden explosion of magical energy!");
+#endif
                 beam.type = SYM_BURST;
                 beam.damage = dice_def( 3, 20 );
                 beam.flavour = BEAM_MISSILE; // unsure about this
                 // BEAM_EXPLOSION instead? {dlb}
                 beam.target_x = you.x_pos;
                 beam.target_y = you.y_pos;
+#ifdef JP
+                strcpy(beam.beam_name, "爆発");
+#else
                 strcpy(beam.beam_name, "explosion");
+#endif
                 beam.colour = random_colour();
                 beam.beam_source = NON_MONSTER;
                 beam.thrower = (cause) ? KILL_MISC : KILL_YOU;
@@ -2136,41 +2409,81 @@ bool miscast_effect( unsigned int sp_type, int mag_pow, int mag_fail,
             switch (random2(10))
             {
             case 0:
-                snprintf( info, INFO_SIZE, "Your %s glow momentarily.", 
+#ifdef JP
+                snprintf( info, INFO_SIZE, "あなたの%sは一瞬輝いた。",
+#else
+                snprintf( info, INFO_SIZE, "Your %s glow momentarily.",
+#endif
                           your_hand(true) );
                 mpr(info);
                 break;
             case 1:
+#ifdef JP
+                mpr("あなたの周囲の大気がエネルギーでバチバチと爆ぜた！");
+#else
                 mpr("The air around you crackles with energy!");
+#endif
                 break;
             case 2:
+#ifdef JP
+                mpr("色とりどりの光があなたの目の前で踊った！");
+#else
                 mpr("Multicolored lights dance before your eyes!");
+#endif
                 break;
             case 3:
+#ifdef JP
+                mpr("あなたは奇妙なエネルギーの高まりを感じた！");
+#else
                 mpr("You feel a strange surge of energy!");
+#endif
                 break;
             case 4:
+#ifdef JP
+                mpr("光の波紋があなたの体の上を流れた。");
+#else
                 mpr("Waves of light ripple over your body.");
+#endif
                 break;
             case 5:
+#ifdef JP
+                mpr("奇妙なエネルギーがあなたの体を走り抜けて行った。");
+#else
                 mpr("Strange energies run through your body.");
+#endif
                 break;
             case 6:
+#ifdef JP
+                mpr("あなたは肌がひりひりした。");
+#else
                 mpr("Your skin tingles.");
+#endif
                 break;
             case 7:
+#ifdef JP
+                mpr("あなたの皮膚は一瞬輝いた。");
+#else
                 mpr("Your skin glows momentarily.");
+#endif
                 break;
             case 8:
                 canned_msg(MSG_NOTHING_HAPPENS);
                 break;
             case 9:
                 if (!silenced(you.x_pos, you.y_pos))
+#ifdef JP
+                    mpr("あなたは何か奇妙な音を耳にした。");
+#else
                     mpr("You hear something strange.");
+#endif
                 else if (you.attribute[ATTR_TRANSFORMATION] != TRAN_AIR)
+#ifdef JP
+                    mpr("あなたの頭蓋骨は軽く振動した。");
+#else
                     mpr("Your skull vibrates slightly.");
-		 		else
-		 		    canned_msg(MSG_NOTHING_HAPPENS);
+#endif
+                else
+                    canned_msg(MSG_NOTHING_HAPPENS);
                 break;
             }
             break;
@@ -2193,7 +2506,11 @@ bool miscast_effect( unsigned int sp_type, int mag_pow, int mag_fail,
             case 0:
             case 1:
             case 2:
+#ifdef JP
+                mpr("あなたは悪意ある霊気を感じた。");
+#else
                 mpr("You sense a malignant aura.");
+#endif
                 curse_an_item(0, 0);
                 break;
             case 3:
@@ -2218,7 +2535,11 @@ bool miscast_effect( unsigned int sp_type, int mag_pow, int mag_fail,
                 }
                 while (loopj != 0);
 
+#ifdef JP
+                mpr("あなたは圧倒的な悪意の霊気を感じた！");
+#else
                 mpr("You sense an overwhelmingly malignant aura!");
+#endif
                 break;
             case 1:
                 potion_effect(POT_PARALYSIS, 10);
@@ -2227,7 +2548,11 @@ bool miscast_effect( unsigned int sp_type, int mag_pow, int mag_fail,
                 potion_effect(POT_CONFUSION, 10);
                 break;
             case 3:
+#ifdef JP
+                mpr("あなたは制御されざるエネルギーの浸透を知覚した！");
+#else
                 mpr("You feel saturated with unharnessed energies!");
+#endif
                 you.magic_contamination += random2avg(19,3);
                 break;
             }
@@ -2242,34 +2567,70 @@ bool miscast_effect( unsigned int sp_type, int mag_pow, int mag_fail,
             switch (random2(10))
             {
             case 0:
+#ifdef JP
+                mpr("あなたの周囲の空間が歪んだ。");
+#else
                 mpr("Space warps around you.");
+#endif
                 break;
             case 1:
+#ifdef JP
+                mpr("あなたの周囲の大気がエネルギーでバチバチと爆ぜた！");
+#else
                 mpr("The air around you crackles with energy!");
+#endif
                 break;
             case 2:
+#ifdef JP
+                mpr("あなたは捻れる感覚を味わった。");
+#else
                 mpr("You feel a wrenching sensation.");
+#endif
                 break;
             case 3:
+#ifdef JP
+                mpr("あなたは奇妙なエネルギーの高まりを感じた！");
+#else
                 mpr("You feel a strange surge of energy!");
+#endif
                 break;
             case 4:
+#ifdef JP
+                mpr("あなたはその場でクルクルと回転した。");
+#else
                 mpr("You spin around.");
+#endif
                 break;
             case 5:
+#ifdef JP
+                mpr("奇妙なエネルギーがあなたの体を走り抜けた。");
+#else
                 mpr("Strange energies run through your body.");
+#endif
                 break;
             case 6:
+#ifdef JP
+                mpr("あなたの皮膚はひりひりした。");
+#else
                 mpr("Your skin tingles.");
+#endif
                 break;
             case 7:
+#ifdef JP
+                mpr("世界が一瞬、歪んで見えた！");
+#else
                 mpr("The world appears momentarily distorted!");
+#endif
                 break;
             case 8:
                 canned_msg(MSG_NOTHING_HAPPENS);
                 break;
             case 9:
+#ifdef JP
+                mpr("あなたは心地の悪さを覚えた。");
+#else
                 mpr("You feel uncomfortable.");
+#endif
                 break;
             }
             break;
@@ -2280,17 +2641,29 @@ bool miscast_effect( unsigned int sp_type, int mag_pow, int mag_fail,
             case 0:
             case 1:
             case 2:
+#ifdef JP
+                mpr("あなたは局地的な空間歪曲の場に捕まった。");
+#else
                 mpr("You are caught in a localised field of spatial distortion.");
+#endif
                 ouch(4 + random2avg(9, 2), 0, KILLED_BY_WILD_MAGIC, cause);
                 break;
             case 3:
             case 4:
+#ifdef JP
+                mpr("あなたの周りの空間が曲がった！");
+#else
                 mpr("Space bends around you!");
+#endif
                 random_blink(false);
                 ouch(4 + random2avg(7, 2), 0, KILLED_BY_WILD_MAGIC, cause);
                 break;
             case 5:
+#ifdef JP
+                mpr("空間が渦を巻いて歪んだ！");
+#else
                 mpr("Space twists in upon itself!");
+#endif
                 create_monster( MONS_SPATIAL_VORTEX, ENCH_ABJ_III, BEH_HOSTILE,
                                 you.x_pos, you.y_pos, MHITYOU, 250 );
                 break;
@@ -2303,12 +2676,20 @@ bool miscast_effect( unsigned int sp_type, int mag_pow, int mag_fail,
             case 0:
             case 1:
             case 2:
+#ifdef JP
+                mpr("あなたは強力な局地的空間歪曲の場に捕まった。");
+#else
                 mpr("You are caught in a strong localised spatial distortion.");
+#endif
                 ouch(9 + random2avg(23, 2), 0, KILLED_BY_WILD_MAGIC, cause);
                 break;
             case 3:
             case 4:
+#ifdef JP
+                mpr("あなたの周りの空間が歪んだ！");
+#else
                 mpr("Space warps around you!");
+#endif
 
                 if (one_chance_in(3))
                     you_teleport2( true );
@@ -2319,17 +2700,25 @@ bool miscast_effect( unsigned int sp_type, int mag_pow, int mag_fail,
                 potion_effect(POT_CONFUSION, 40);
                 break;
             case 5:
+#ifdef JP
+                mpr("空間が渦を巻いて歪んだ！");
+#else
                 mpr("Space twists in upon itself!");
+#endif
 
                 for (loopj = 0; loopj < 2 + random2(3); loopj++)
                 {
-                    create_monster( MONS_SPATIAL_VORTEX, ENCH_ABJ_III, 
-                                    BEH_HOSTILE, you.x_pos, you.y_pos, 
+                    create_monster( MONS_SPATIAL_VORTEX, ENCH_ABJ_III,
+                                    BEH_HOSTILE, you.x_pos, you.y_pos,
                                     MHITYOU, 250 );
                 }
                 break;
             case 6:
+#ifdef JP
+                mpr("あなたはアビスに放り込まれた！");
+#else
                 mpr("You are cast into the Abyss!");
+#endif
                 more();
                 banished(DNGN_ENTER_ABYSS);     // sends you to the abyss
                 break;
@@ -2341,23 +2730,39 @@ bool miscast_effect( unsigned int sp_type, int mag_pow, int mag_fail,
             switch (random2(4))
             {
             case 0:
+#ifdef JP
+                mpr("あなたは極めて強力な局地的空間歪曲の場に捕まった！");
+#else
                 mpr("You are caught in an extremely strong localised spatial distortion!");
+#endif
                 ouch(15 + random2avg(29, 2), 0, KILLED_BY_WILD_MAGIC, cause);
                 break;
             case 1:
+#ifdef JP
+                mpr("あなたの周囲の空間が狂ったように歪曲した！");
+#else
                 mpr("Space warps crazily around you!");
+#endif
                 you_teleport2( true );
 
                 ouch(9 + random2avg(17, 2), 0, KILLED_BY_WILD_MAGIC, cause);
                 potion_effect(POT_CONFUSION, 60);
                 break;
             case 2:
+#ifdef JP
+                mpr("あなたはアビスに放り込まれた！");
+#else
                 mpr("You are cast into the Abyss!");
+#endif
                 more();
                 banished(DNGN_ENTER_ABYSS);     // sends you to the abyss
                 break;
             case 3:
+#ifdef JP
+                mpr("あなたは制御されざるエネルギーの浸透を知覚した！！");
+#else
                 mpr("You feel saturated with unharnessed energies!");
+#endif
                 you.magic_contamination += random2avg(19,3);
                 break;
             }
@@ -2372,37 +2777,77 @@ bool miscast_effect( unsigned int sp_type, int mag_pow, int mag_fail,
             switch (random2(10))
             {
             case 0:
+#ifdef JP
+                mpr("影のような輪郭があなたの周囲の空中に現れ、消失した。");
+#else
                 mpr("Shadowy shapes form in the air around you, then vanish.");
+#endif
                 break;
             case 1:
                 if (!silenced(you.x_pos, you.y_pos))
+#ifdef JP
+                    mpr("あなたは奇妙な声を耳にした。");
+#else
                     mpr("You hear strange voices.");
+#endif
                 else
+#ifdef JP
+                    mpr("あなたは一瞬目が眩んだ。");
+#else
                     mpr("You feel momentarily dizzy.");
+#endif
                 break;
             case 2:
+#ifdef JP
+                mpr("あなたは頭が痛んだ。");
+#else
                 mpr("Your head hurts.");
+#endif
                 break;
             case 3:
+#ifdef JP
+                mpr("あなたは奇妙なエネルギーの高まりを感じた。");
+#else
                 mpr("You feel a strange surge of energy!");
+#endif
                 break;
             case 4:
+#ifdef JP
+                mpr("あなたは脳が痛んだ。");
+#else
                 mpr("Your brain hurts!");
+#endif
                 break;
             case 5:
+#ifdef JP
+                mpr("奇妙なエネルギーがあなたの体を駆け抜けた。");
+#else
                 mpr("Strange energies run through your body.");
+#endif
                 break;
             case 6:
+#ifdef JP
+                mpr("一瞬、世界が歪んで見えた。");
+#else
                 mpr("The world appears momentarily distorted.");
+#endif
                 break;
             case 7:
+#ifdef JP
+                mpr("あなたの周りの空間が歪んだ。");
+#else
                 mpr("Space warps around you.");
+#endif
                 break;
             case 8:
                 canned_msg(MSG_NOTHING_HAPPENS);
                 break;
             case 9:
+#ifdef JP
+                mpr("遠くからの声があなたを呼び止めた！");
+#else
                 mpr("Distant voices call out to you!");
+#endif
                 break;
             }
             break;
@@ -2413,12 +2858,20 @@ bool miscast_effect( unsigned int sp_type, int mag_pow, int mag_fail,
             case 0:             // identical to translocation
             case 1:
             case 2:
+#ifdef JP
+                mpr("あなたは局地的な空間歪曲に捕まった。");
+#else
                 mpr("You are caught in a localised spatial distortion.");
+#endif
                 ouch(5 + random2avg(9, 2), 0, KILLED_BY_WILD_MAGIC, cause);
                 break;
 
             case 3:
+#ifdef JP
+                mpr("空間が渦を巻いている！");
+#else
                 mpr("Space twists in upon itself!");
+#endif
                 create_monster( MONS_SPATIAL_VORTEX, ENCH_ABJ_III, BEH_HOSTILE,
                                 you.x_pos, you.y_pos, MHITYOU, 250 );
                 break;
@@ -2429,7 +2882,11 @@ bool miscast_effect( unsigned int sp_type, int mag_pow, int mag_fail,
                                     BEH_HOSTILE, you.x_pos, you.y_pos,
                                     MHITYOU, 250 ) != -1)
                 {
+#ifdef JP
+                    mpr("閃光の中に何かが現れた！");
+#else
                     mpr("Something appears in a flash of light!");
+#endif
                 }
                 break;
             }
@@ -2438,12 +2895,16 @@ bool miscast_effect( unsigned int sp_type, int mag_pow, int mag_fail,
             switch (random2(6))
             {
             case 0:
+#ifdef JP
+                mpr("空間が渦を巻いて歪んだ！");
+#else
                 mpr("Space twists in upon itself!");
+#endif
 
                 for (loopj = 0; loopj < 2 + random2(3); loopj++)
                 {
-                    create_monster( MONS_SPATIAL_VORTEX, ENCH_ABJ_III, 
-                                    BEH_HOSTILE, you.x_pos, you.y_pos, 
+                    create_monster( MONS_SPATIAL_VORTEX, ENCH_ABJ_III,
+                                    BEH_HOSTILE, you.x_pos, you.y_pos,
                                     MHITYOU, 250 );
                 }
                 break;
@@ -2454,20 +2915,28 @@ bool miscast_effect( unsigned int sp_type, int mag_pow, int mag_fail,
                                     BEH_HOSTILE, you.x_pos, you.y_pos,
                                     MHITYOU, 250) != -1)
                 {
+#ifdef JP
+                    mpr("何者かがいずれともなく現れた！");
+#else
                     mpr("Something forms out of thin air!");
+#endif
                 }
                 break;
 
             case 3:
             case 4:
             case 5:
+#ifdef JP
+                mpr("ペチャクチャ喋る声の合唱があなたを呼んでいる！");
+#else
                 mpr("A chorus of chattering voices calls out to you!");
+#endif
                 create_monster( summon_any_demon(DEMON_LESSER), ENCH_ABJ_V,
-                                BEH_HOSTILE, you.x_pos, you.y_pos, 
+                                BEH_HOSTILE, you.x_pos, you.y_pos,
                                 MHITYOU, 250 );
 
                 create_monster( summon_any_demon(DEMON_LESSER), ENCH_ABJ_V,
-                                BEH_HOSTILE, you.x_pos, you.y_pos, 
+                                BEH_HOSTILE, you.x_pos, you.y_pos,
                                 MHITYOU, 250 );
 
                 if (coinflip())
@@ -2494,7 +2963,11 @@ bool miscast_effect( unsigned int sp_type, int mag_pow, int mag_fail,
                 if (create_monster( MONS_ABOMINATION_SMALL, 0, BEH_HOSTILE,
                                     you.x_pos, you.y_pos, MHITYOU, 250 ) != -1)
                 {
+#ifdef JP
+                    mpr("何者かがどこからともなく現れた。");
+#else
                     mpr("Something forms out of thin air.");
+#endif
                 }
                 break;
 
@@ -2503,19 +2976,27 @@ bool miscast_effect( unsigned int sp_type, int mag_pow, int mag_fail,
                                     BEH_HOSTILE, you.x_pos, you.y_pos,
                                     MHITYOU, 250 ) != -1)
                 {
+#ifdef JP
+                    mpr("あなたは敵対的な存在を感じた。");
+#else
                     mpr("You sense a hostile presence.");
+#endif
                 }
                 break;
 
             case 2:
+#ifdef JP
+                mpr("何者かがあなたにその悪意ある注視を向けた……。");
+#else
                 mpr("Something turns its malign attention towards you...");
+#endif
 
                 create_monster( summon_any_demon(DEMON_COMMON), ENCH_ABJ_III,
-                                BEH_HOSTILE, you.x_pos, you.y_pos, 
+                                BEH_HOSTILE, you.x_pos, you.y_pos,
                                 MHITYOU, 250 );
 
                 create_monster( summon_any_demon(DEMON_COMMON), ENCH_ABJ_III,
-                                BEH_HOSTILE, you.x_pos, you.y_pos, 
+                                BEH_HOSTILE, you.x_pos, you.y_pos,
                                 MHITYOU, 250);
 
                 if (coinflip())
@@ -2527,7 +3008,11 @@ bool miscast_effect( unsigned int sp_type, int mag_pow, int mag_fail,
                 break;
 
             case 3:
+#ifdef JP
+                mpr("あなたはアビスに放り込まれた！");
+#else
                 mpr("You are cast into the Abyss!");
+#endif
                 banished(DNGN_ENTER_ABYSS);
                 break;
             }
@@ -2542,37 +3027,77 @@ bool miscast_effect( unsigned int sp_type, int mag_pow, int mag_fail,
             switch (random2(10))
             {
             case 0:
+#ifdef JP
+                mpr("不気味なイメージがあなたの心を走り抜けた。");
+#else
                 mpr("Weird images run through your mind.");
+#endif
                 break;
             case 1:
                 if (!silenced(you.x_pos, you.y_pos))
+#ifdef JP
+                    mpr("あなたは奇妙な声を耳にした。");
+#else
                     mpr("You hear strange voices.");
+#endif
                 else
+#ifdef JP
+                    mpr("あなたの鼻がぴくぴくと動いた。");
+#else
                     mpr("Your nose twitches.");
+#endif
                 break;
             case 2:
+#ifdef JP
+                mpr("あなたの頭は痛んだ。");
+#else
                 mpr("Your head hurts.");
+#endif
                 break;
             case 3:
+#ifdef JP
+                mpr("あなたは奇妙なエネルギーの高まりを感じた！");
+#else
                 mpr("You feel a strange surge of energy!");
+#endif
                 break;
             case 4:
+#ifdef JP
+                mpr("あなたの脳が痛んだ！");
+#else
                 mpr("Your brain hurts!");
+#endif
                 break;
             case 5:
+#ifdef JP
+                mpr("奇妙なエネルギーがあなたの体を走り抜けた。");
+#else
                 mpr("Strange energies run through your body.");
+#endif
                 break;
             case 6:
+#ifdef JP
+                mpr("一瞬、全てが霞んで見えた。");
+#else
                 mpr("Everything looks hazy for a moment.");
+#endif
                 break;
             case 7:
+#ifdef JP
+                mpr("あなたは何か忘れた気がするが、それが何であるかを思い出せない！");
+#else
                 mpr("You seem to have forgotten something, but you can't remember what it was!");
+#endif
                 break;
             case 8:
                 canned_msg(MSG_NOTHING_HAPPENS);
                 break;
             case 9:
+#ifdef JP
+                mpr("あなたは心地の悪さを味わった。");
+#else
                 mpr("You feel uncomfortable.");
+#endif
                 break;
             }
             break;
@@ -2581,7 +3106,11 @@ bool miscast_effect( unsigned int sp_type, int mag_pow, int mag_fail,
             switch (random2(2))
             {
             case 0:
+#ifdef JP
+                mpr("あなたは軽い見当識喪失にかかった。");
+#else
                 mpr("You feel slightly disoriented.");
+#endif
                 forget_map(10 + random2(10));
                 break;
             case 1:
@@ -2595,14 +3124,30 @@ bool miscast_effect( unsigned int sp_type, int mag_pow, int mag_fail,
             {
             case 0:
                 if (you.is_undead)
+#ifdef JP
+                    mpr("あなたは突然に、以前の人生を思い出した！");
+#else
                     mpr("You suddenly recall your previous life!");
+#endif
                 else if (lose_stat(STAT_INTELLIGENCE, 1 + random2(3)))
+#ifdef JP
+                    mpr("あなたは脳に損傷を受けた！");
+#else
                     mpr("You have damaged your brain!");
+#endif
                 else
+#ifdef JP
+                    mpr("あなたはひどい頭痛に見舞われた。");
+#else
                     mpr("You have a terrible headache.");
+#endif
                 break;
             case 1:
+#ifdef JP
+                mpr("あなたは道に迷った。");
+#else
                 mpr("You feel lost.");
+#endif
                 forget_map(40 + random2(40));
                 break;
             }
@@ -2614,20 +3159,41 @@ bool miscast_effect( unsigned int sp_type, int mag_pow, int mag_fail,
             switch (random2(3))
             {
             case 0:
+#ifdef JP
+                mpr( forget_spell() ? "あなたは呪文を忘れた！"
+                                    : "あなたは激しい頭痛に見舞われた！" );
+#else
                 mpr( forget_spell() ? "You have forgotten a spell!"
                                     : "You get a splitting headache." );
+#endif
                 break;
             case 1:
+#ifdef JP
+                mpr("あなたは完全に道に迷った。");
+#else
                 mpr("You feel completely lost.");
+#endif
                 forget_map(100);
                 break;
             case 2:
                 if (you.is_undead)
+#ifdef JP
+                    mpr("あなたは突然に、以前の人生を思い出した。");
+#else
                     mpr("You suddenly recall your previous life.");
+#endif
                 else if (lose_stat(STAT_INTELLIGENCE, 3 + random2(3)))
+#ifdef JP
+                    mpr("あなたは脳に損傷を受けた！");
+#else
                     mpr("You have damaged your brain!");
+#endif
                 else
+#ifdef JP
+                    mpr("あなたはひどい頭痛に見舞われた。");
+#else
                     mpr("You have a terrible headache.");
+#endif
                 break;
             }
 
@@ -2653,37 +3219,77 @@ bool miscast_effect( unsigned int sp_type, int mag_pow, int mag_fail,
             case 0:
                 // mummies cannot smell {dlb}
                 if (you.species != SP_MUMMY)
+#ifdef JP
+                    mpr("あなたは腐敗の臭いを嗅いだ。");
+#else
                     mpr("You smell decay.");
+#endif
                 break;
             case 1:
                 if (!silenced(you.x_pos, you.y_pos))
+#ifdef JP
+                    mpr("あなたは遠くに奇妙な声を耳にした。");
+#else
                     mpr("You hear strange and distant voices.");
+#endif
                 else
+#ifdef JP
+                    mpr("あなたは我が家が恋しくなった。");
+#else
                     mpr("You feel homesick.");
+#endif
                 break;
             case 2:
+#ifdef JP
+                mpr("苦痛があなたの体を撃ち抜いた。");
+#else
                 mpr("Pain shoots through your body.");
+#endif
                 break;
             case 3:
+#ifdef JP
+                mpr("あなたの骨が痛んだ。");
+#else
                 mpr("Your bones ache.");
+#endif
                 break;
             case 4:
+#ifdef JP
+                mpr("あなたの周りの世界が、しばし薄暗くなったように感じた。");
+#else
                 mpr("The world around you seems to dim momentarily.");
+#endif
                 break;
             case 5:
+#ifdef JP
+                mpr("奇妙なエネルギーがあなたの体を駆け抜けて行った。");
+#else
                 mpr("Strange energies run through your body.");
+#endif
                 break;
             case 6:
+#ifdef JP
+                mpr("あなたは寒さに震えた。");
+#else
                 mpr("You shiver with cold.");
+#endif
                 break;
             case 7:
+#ifdef JP
+                mpr("あなたは悪意ある霊気を感じた。");
+#else
                 mpr("You sense a malignant aura.");
+#endif
                 break;
             case 8:
                 canned_msg(MSG_NOTHING_HAPPENS);
                 break;
             case 9:
+#ifdef JP
+                mpr("あなたは非常な心地悪さを味わった。");
+#else
                 mpr("You feel very uncomfortable.");
+#endif
                 break;
             }
             break;
@@ -2694,21 +3300,37 @@ bool miscast_effect( unsigned int sp_type, int mag_pow, int mag_fail,
             case 0:
                 if (you.is_undead)
                 {
+#ifdef JP
+                    mpr("あなたは一瞬だけ奇妙な気分になった。");
+#else
                     mpr("You feel weird for a moment.");
+#endif
                     break;
                 }
+#ifdef JP
+                mpr("苦痛があなたの体を撃ち抜いた！");
+#else
                 mpr("Pain shoots through your body!");
+#endif
                 ouch(5 + random2avg(15, 2), 0, KILLED_BY_WILD_MAGIC, cause);
                 break;
             case 1:
+#ifdef JP
+                mpr("あなたはひどい気怠さを覚えた。");
+#else
                 mpr("You feel horribly lethargic.");
+#endif
                 potion_effect(POT_SLOWING, 15);
                 break;
             case 2:
                 // josh declares mummies cannot smell {dlb}
                 if (you.species != SP_MUMMY)
                 {
+#ifdef JP
+                    mpr("あなたは腐敗の臭いを嗅いだ。"); // identical to a harmless message
+#else
                     mpr("You smell decay."); // identical to a harmless message
+#endif
                     you.rotting++;
                 }
                 break;
@@ -2719,20 +3341,24 @@ bool miscast_effect( unsigned int sp_type, int mag_pow, int mag_fail,
             switch (random2(3))
             {
             case 0:
+#ifdef JP
+                mpr("ゆらめく影があなたを取り巻いている。");
+#else
                 mpr("Flickering shadows surround you.");
+#endif
 
-                create_monster( MONS_SHADOW, ENCH_ABJ_II, BEH_HOSTILE, 
+                create_monster( MONS_SHADOW, ENCH_ABJ_II, BEH_HOSTILE,
                                 you.x_pos, you.y_pos, MHITYOU, 250 );
 
                 if (coinflip())
                 {
-                    create_monster( MONS_SHADOW, ENCH_ABJ_II, BEH_HOSTILE, 
-                                    you.x_pos, you.y_pos, MHITYOU, 250 ); 
+                    create_monster( MONS_SHADOW, ENCH_ABJ_II, BEH_HOSTILE,
+                                    you.x_pos, you.y_pos, MHITYOU, 250 );
                 }
 
                 if (coinflip())
                 {
-                    create_monster( MONS_SHADOW, ENCH_ABJ_II, BEH_HOSTILE, 
+                    create_monster( MONS_SHADOW, ENCH_ABJ_II, BEH_HOSTILE,
                                     you.x_pos, you.y_pos, MHITYOU, 250 );
                 }
                 break;
@@ -2747,10 +3373,18 @@ bool miscast_effect( unsigned int sp_type, int mag_pow, int mag_fail,
             case 2:
                 if (you.is_undead)
                 {
+#ifdef JP
+                    mpr("あなたは一瞬の気味悪さを感じた。");
+#else
                     mpr("You feel weird for a moment.");
+#endif
                     break;
                 }
+#ifdef JP
+                mpr("全身を苦痛に引き裂かれ、あなたは力なく痙攣した！");
+#else
                 mpr("You convulse helplessly as pain tears through your body!");
+#endif
                 ouch(15 + random2avg(23, 2), 0, KILLED_BY_WILD_MAGIC, cause);
                 break;
             }
@@ -2762,16 +3396,28 @@ bool miscast_effect( unsigned int sp_type, int mag_pow, int mag_fail,
             case 0:
                 if (you.is_undead)
                 {
+#ifdef JP
+                    mpr("何かが今、あなたの墓の上を歩いて行った。本当だって！");
+#else
                     mpr("Something just walked over your grave. No, really!");
+#endif
                     break;
                 }
+#ifdef JP
+                mpr("あなたの体は苦痛に痙攣した！");
+#else
                 mpr("Your body is wracked with pain!");
+#endif
 
                 dec_hp((you.hp / 2) - 1, false);
                 break;
 
             case 1:
+#ifdef JP
+                mpr("あなたは負のエネルギーに覆われた！");
+#else
                 mpr("You are engulfed in negative energy!");
+#endif
 
                 if (!player_prot_life())
                 {
@@ -2786,7 +3432,11 @@ bool miscast_effect( unsigned int sp_type, int mag_pow, int mag_fail,
             case 3:
                 if (you.is_undead)
                 {
+#ifdef JP
+                    mpr("あなたはひどい気分になった。");
+#else
                     mpr("You feel terrible.");
+#endif
                     break;
                 }
 
@@ -2797,7 +3447,11 @@ bool miscast_effect( unsigned int sp_type, int mag_pow, int mag_fail,
                 if (create_monster( MONS_SOUL_EATER, ENCH_ABJ_IV, BEH_HOSTILE,
                                     you.x_pos, you.y_pos, MHITYOU, 250) != -1)
                 {
+#ifdef JP
+                    mpr("何ものかがあなたに向かって這い出した……。");
+#else
                     mpr("Something reaches out for you...");
+#endif
                 }
                 break;
 
@@ -2805,7 +3459,11 @@ bool miscast_effect( unsigned int sp_type, int mag_pow, int mag_fail,
                 if (create_monster( MONS_REAPER, ENCH_ABJ_IV, BEH_HOSTILE,
                                     you.x_pos, you.y_pos, MHITYOU, 250) != -1)
                 {
+#ifdef JP
+                    mpr("死神があなたを迎えにきた……。");
+#else
                     mpr("Death has come for you...");
+#endif
                 }
                 break;
             }
@@ -2820,30 +3478,62 @@ bool miscast_effect( unsigned int sp_type, int mag_pow, int mag_fail,
             switch (random2(10))
             {
             case 0:
-                snprintf( info, INFO_SIZE, "Your %s glow momentarily.", 
+#ifdef JP
+                snprintf( info, INFO_SIZE, "あなたの%sは一瞬輝いた。",
+#else
+                snprintf( info, INFO_SIZE, "Your %s glow momentarily.",
+#endif
                           your_hand(true));
                 mpr(info);
                 break;
             case 1:
+#ifdef JP
+                mpr("あなたの周囲の大気がエネルギーでバチバチと爆ぜた！");
+#else
                 mpr("The air around you crackles with energy!");
+#endif
                 break;
             case 2:
+#ifdef JP
+                mpr("色とりどりの光があなたの目の前で踊った！");
+#else
                 mpr("Multicolored lights dance before your eyes!");
+#endif
                 break;
             case 3:
+#ifdef JP
+                mpr("あなたはエネルギーの奇妙な高まりを感じた！");
+#else
                 mpr("You feel a strange surge of energy!");
+#endif
                 break;
             case 4:
+#ifdef JP
+                mpr("光の波があなたの体の上を流れた。");
+#else
                 mpr("Waves of light ripple over your body.");
+#endif
                 break;
             case 5:
+#ifdef JP
+                mpr("奇妙なエネルギーがあなたの体を走り抜けた。");
+#else
                 mpr("Strange energies run through your body.");
+#endif
                 break;
             case 6:
+#ifdef JP
+                mpr("あなたは肌がひりひりした。");
+#else
                 mpr("Your skin tingles.");
+#endif
                 break;
             case 7:
+#ifdef JP
+                mpr("あなたの皮膚は一瞬輝いた。");
+#else
                 mpr("Your skin glows momentarily.");
+#endif
                 break;
             case 8:
                 canned_msg(MSG_NOTHING_HAPPENS);
@@ -2851,7 +3541,11 @@ bool miscast_effect( unsigned int sp_type, int mag_pow, int mag_fail,
             case 9:
                 // mummies cannot smell
                 if (you.species != SP_MUMMY)
+#ifdef JP
+                    mpr("あなたは何か奇妙な臭いを嗅いだ。");
+#else
                     mpr("You smell something strange.");
+#endif
                 break;
             }
             break;
@@ -2860,7 +3554,11 @@ bool miscast_effect( unsigned int sp_type, int mag_pow, int mag_fail,
             switch (random2(2))
             {
             case 0:
+#ifdef JP
+                mpr("あなたの肉体は痛々しく捻られた。");
+#else
                 mpr("Your body is twisted painfully.");
+#endif
                 ouch(1 + random2avg(11, 2), 0, KILLED_BY_WILD_MAGIC, cause);
                 break;
             case 1:
@@ -2873,11 +3571,19 @@ bool miscast_effect( unsigned int sp_type, int mag_pow, int mag_fail,
             switch (random2(4))
             {
             case 0:
+#ifdef JP
+                mpr("あなたの肉体はひどく痛々しく捻られた。");
+#else
                 mpr("Your body is twisted very painfully!");
+#endif
                 ouch(3 + random2avg(23, 2), 0, KILLED_BY_WILD_MAGIC, cause);
                 break;
             case 1:
+#ifdef JP
+                mpr("あなたは制御されざるエネルギーの浸透を知覚した！");
+#else
                 mpr("You feel saturated with unharnessed energies!");
+#endif
                 you.magic_contamination += random2avg(19,3);
                 break;
             case 2:
@@ -2894,20 +3600,32 @@ bool miscast_effect( unsigned int sp_type, int mag_pow, int mag_fail,
             switch (random2(3))
             {
             case 0:
+#ifdef JP
+                mpr("あなたの肉体は歪曲のエネルギーで満ち溢れた！");
+#else
                 mpr("Your body is flooded with distortional energies!");
+#endif
                 you.magic_contamination += random2avg(35, 3);
 
                 ouch(3 + random2avg(18, 2), 0, KILLED_BY_WILD_MAGIC, cause);
                 break;
 
             case 1:
+#ifdef JP
+                mpr("あなたはとても奇妙な気分だ。");
+#else
                 mpr("You feel very strange.");
+#endif
                 delete_mutation(100);
                 ouch(5 + random2avg(23, 2), 0, KILLED_BY_WILD_MAGIC, cause);
                 break;
 
             case 2:
+#ifdef JP
+                mpr("あなたの肉体は奇怪でおぞましい形に歪められた！");
+#else
                 mpr("Your body is distorted in a weirdly horrible way!");
+#endif
                 failMsg = !give_bad_mutation();
                 if (coinflip())
                     give_bad_mutation(false, failMsg);
@@ -2926,43 +3644,83 @@ bool miscast_effect( unsigned int sp_type, int mag_pow, int mag_fail,
             switch (random2(10))
             {
             case 0:
+#ifdef JP
+                snprintf( info, INFO_SIZE, "あなたの%sから火花が散った！",
+#else
                 snprintf( info, INFO_SIZE, "Sparks fly from your %s!",
+#endif
                           your_hand(true));
                 mpr(info);
                 break;
             case 1:
+#ifdef JP
+                mpr("あなたの周りの大気がエネルギーで燃えあがった！");
+#else
                 mpr("The air around you burns with energy!");
+#endif
                 break;
             case 2:
+#ifdef JP
+                snprintf( info, INFO_SIZE, "あなたの%sから一筋の煙が流れた。",
+#else
                 snprintf( info, INFO_SIZE, "Wisps of smoke drift from your %s.",
+#endif
                           your_hand(true));
                 mpr(info);
                 break;
             case 3:
+#ifdef JP
+                mpr("あなたは奇妙なエネルギーの高まりを感じた！");
+#else
                 mpr("You feel a strange surge of energy!");
+#endif
                 break;
             case 4:
                 // mummies cannot smell
                 if (you.species != SP_MUMMY)
+#ifdef JP
+                    mpr("あなたは煙の臭いを嗅いだ。");
+#else
                     mpr("You smell smoke.");
+#endif
                 break;
             case 5:
+#ifdef JP
+                mpr("あなたの体を熱気が駆け抜けた。");
+#else
                 mpr("Heat runs through your body.");
+#endif
                 break;
             case 6:
+#ifdef JP
+                mpr("あなたは不快な熱さを感じた。");
+#else
                 mpr("You feel uncomfortably hot.");
+#endif
                 break;
             case 7:
+#ifdef JP
+                mpr("生ぬるい炎があなたの体の上を流れて行った。");
+#else
                 mpr("Lukewarm flames ripple over your body.");
+#endif
                 break;
             case 8:
                 canned_msg(MSG_NOTHING_HAPPENS);
                 break;
             case 9:
                 if (!silenced(you.x_pos, you.y_pos))
+#ifdef JP
+                    mpr("あなたはジュージューいう音を耳にした。");
+#else
                     mpr("You hear a sizzling sound.");
+#endif
                 else
+#ifdef JP
+                    mpr("あなたは胸焼けを覚えた。");
+#else
                     mpr("You feel like you have heartburn.");
+#endif
                 break;
             }
             break;
@@ -2971,16 +3729,24 @@ bool miscast_effect( unsigned int sp_type, int mag_pow, int mag_fail,
             switch (random2(2))
             {
             case 0:
+#ifdef JP
+                snprintf( info, INFO_SIZE, "煙があなたの%sから立ち昇った！",
+#else
                 snprintf( info, INFO_SIZE, "Smoke pours from your %s!",
+#endif
                           your_hand(true) );
                 mpr(info);
 
-                big_cloud( CLOUD_GREY_SMOKE + random2(3), 
+                big_cloud( CLOUD_GREY_SMOKE + random2(3),
                            you.x_pos, you.y_pos, 20, 7 + random2(7) );
                 break;
 
             case 1:
+#ifdef JP
+                mpr("炎があなたの肉を焦がした。");
+#else
                 mpr("Flames sear your flesh.");
+#endif
                 scrolls_burn(3, OBJ_SCROLLS);
 
                 if (player_res_fire() < 0)
@@ -2995,7 +3761,11 @@ bool miscast_effect( unsigned int sp_type, int mag_pow, int mag_fail,
             switch (random2(2))
             {
             case 0:
+#ifdef JP
+                mpr("あなたは炎の突風を受けた。");
+#else
                 mpr("You are blasted with fire.");
+#endif
 
                 ouch( check_your_resists( 5 + random2avg(29, 2), 2 ), 0,
                       KILLED_BY_WILD_MAGIC, cause );
@@ -3004,14 +3774,22 @@ bool miscast_effect( unsigned int sp_type, int mag_pow, int mag_fail,
                 break;
 
             case 1:
+#ifdef JP
+                mpr("あなたは炎の爆発に巻き込まれた！");
+#else
                 mpr("You are caught a fiery explosion!");
+#endif
 
                 beam.type = SYM_BURST;
                 beam.damage = dice_def( 3, 14 );
                 beam.flavour = BEAM_FIRE;
                 beam.target_x = you.x_pos;
                 beam.target_y = you.y_pos;
+#ifdef JP
+                strcpy(beam.beam_name, "爆発");
+#else
                 strcpy(beam.beam_name, "explosion");
+#endif
                 beam.colour = RED;
                 beam.beam_source = NON_MONSTER;
                 beam.thrower = (cause) ? KILL_MISC : KILL_YOU;
@@ -3027,7 +3805,11 @@ bool miscast_effect( unsigned int sp_type, int mag_pow, int mag_fail,
             switch (random2(3))
             {
             case 0:
+#ifdef JP
+                mpr("あなたは灼けつく炎を浴びた！");
+#else
                 mpr("You are blasted with searing flames!");
+#endif
 
                 ouch( check_your_resists( 9 + random2avg(33, 2), 2 ), 0,
                       KILLED_BY_WILD_MAGIC, cause );
@@ -3035,14 +3817,22 @@ bool miscast_effect( unsigned int sp_type, int mag_pow, int mag_fail,
                 scrolls_burn( 10, OBJ_SCROLLS );
                 break;
             case 1:
+#ifdef JP
+                mpr("突如として猛烈な炎の爆発が巻き起こった！");
+#else
                 mpr("There is a sudden and violent explosion of flames!");
+#endif
 
                 beam.type = SYM_BURST;
                 beam.damage = dice_def( 3, 20 );
                 beam.flavour = BEAM_FIRE;
                 beam.target_x = you.x_pos;
                 beam.target_y = you.y_pos;
+#ifdef JP
+                strcpy( beam.beam_name, "ファイアボール" );
+#else
                 strcpy( beam.beam_name, "fireball" );
+#endif
                 beam.colour = RED;
                 beam.beam_source = NON_MONSTER;
                 beam.thrower = (cause) ? KILL_MISC : KILL_YOU;
@@ -3053,7 +3843,11 @@ bool miscast_effect( unsigned int sp_type, int mag_pow, int mag_fail,
                 break;
 
             case 2:
+#ifdef JP
+                mpr("あなたは燃えたぎる液体を浴びた！");
+#else
                 mpr("You are covered in liquid fire!");
+#endif
                 you.duration[DUR_LIQUID_FLAMES] += random2avg(7, 3) + 1;
                 break;
             }
@@ -3068,41 +3862,81 @@ bool miscast_effect( unsigned int sp_type, int mag_pow, int mag_fail,
             switch (random2(10))
             {
             case 0:
+#ifdef JP
+                mpr("あなたは冷気に震えた。");
+#else
                 mpr("You shiver with cold.");
+#endif
                 break;
             case 1:
+#ifdef JP
+                mpr("冷気があなたの体を走り抜けた。");
+#else
                 mpr("A chill runs through your body.");
+#endif
                 break;
             case 2:
+#ifdef JP
+                snprintf( info, INFO_SIZE, "あなたの%sから結露が滴った。",
+#else
                 snprintf( info, INFO_SIZE, "Wisps of condensation drift from your %s.",
+#endif
                           your_hand(true));
                 mpr(info);
                 break;
             case 3:
+#ifdef JP
+                mpr("あなたは奇妙なエネルギーの高まりを感じた。");
+#else
                 mpr("You feel a strange surge of energy!");
+#endif
                 break;
             case 4:
+#ifdef JP
+                snprintf( info, INFO_SIZE,"あなたの%sは冷気で痺れた。",
+#else
                 snprintf( info, INFO_SIZE,"Your %s feel numb with cold.",
+#endif
                           your_hand(true));
                 mpr(info);
                 break;
             case 5:
+#ifdef JP
+                mpr("冷気があなたの体を走り抜けた。");
+#else
                 mpr("A chill runs through your body.");
+#endif
                 break;
             case 6:
+#ifdef JP
+                mpr("あなたは不快な寒さを感じた。");
+#else
                 mpr("You feel uncomfortably cold.");
+#endif
                 break;
             case 7:
+#ifdef JP
+                mpr("霜があなたの体を覆った。");
+#else
                 mpr("Frost covers your body.");
+#endif
                 break;
             case 8:
                 canned_msg(MSG_NOTHING_HAPPENS);
                 break;
             case 9:
                 if (!silenced(you.x_pos, you.y_pos))
+#ifdef JP
+                    mpr("あなたはピシピシいう音を耳にした。");
+#else
                     mpr("You hear a crackling sound.");
+#endif
                 else
+#ifdef JP
+                    mpr("ひとつの雪片があなたの鼻の上に降りた。");
+#else
                     mpr("A snowflake lands on your nose.");
+#endif
                 break;
             }
             break;
@@ -3111,10 +3945,18 @@ bool miscast_effect( unsigned int sp_type, int mag_pow, int mag_fail,
             switch (random2(2))
             {
             case 0:
+#ifdef JP
+                mpr("あなたは非常な寒さを感じた。");
+#else
                 mpr("You feel extremely cold.");
+#endif
                 break;
             case 1:
+#ifdef JP
+                mpr("あなたは氷の薄い層で覆われてしまった。");
+#else
                 mpr("You are covered in a thin layer of ice");
+#endif
                 scrolls_burn(2, OBJ_POTIONS);
 
                 if (player_res_cold() < 0)
@@ -3127,7 +3969,11 @@ bool miscast_effect( unsigned int sp_type, int mag_pow, int mag_fail,
             switch (random2(2))
             {
             case 0:
+#ifdef JP
+                mpr("あなたの体から熱が奪われた。");
+#else
                 mpr("Heat is drained from your body.");
+#endif
 
                 ouch(check_your_resists(5 + random2(6) + random2(7), 3), 0,
                      KILLED_BY_WILD_MAGIC, cause);
@@ -3136,14 +3982,22 @@ bool miscast_effect( unsigned int sp_type, int mag_pow, int mag_fail,
                 break;
 
             case 1:
+#ifdef JP
+                mpr("あなたは氷と霜の爆発に巻き込まれた！");
+#else
                 mpr("You are caught in an explosion of ice and frost!");
+#endif
 
                 beam.type = SYM_BURST;
                 beam.damage = dice_def( 3, 11 );
                 beam.flavour = BEAM_COLD;
                 beam.target_x = you.x_pos;
                 beam.target_y = you.y_pos;
+#ifdef JP
+                strcpy(beam.beam_name, "爆発");
+#else
                 strcpy(beam.beam_name, "explosion");
+#endif
                 beam.colour = WHITE;
                 beam.beam_source = NON_MONSTER;
                 beam.thrower = (cause) ? KILL_MISC : KILL_YOU;
@@ -3159,7 +4013,11 @@ bool miscast_effect( unsigned int sp_type, int mag_pow, int mag_fail,
             switch (random2(2))
             {
             case 0:
+#ifdef JP
+                mpr("あなたは氷に撃たれた！");
+#else
                 mpr("You are blasted with ice!");
+#endif
 
                 ouch(check_your_resists(9 + random2avg(23, 2), 3), 0,
                      KILLED_BY_WILD_MAGIC, cause);
@@ -3167,7 +4025,11 @@ bool miscast_effect( unsigned int sp_type, int mag_pow, int mag_fail,
                 scrolls_burn(9, OBJ_POTIONS);
                 break;
             case 1:
+#ifdef JP
+                snprintf( info, INFO_SIZE,"あなたの%sから凍結ガスが流れ出た！",
+#else
                 snprintf( info, INFO_SIZE,"Freezing gasses pour from your %s!",
+#endif
                           your_hand(true));
                 mpr(info);
 
@@ -3187,43 +4049,90 @@ bool miscast_effect( unsigned int sp_type, int mag_pow, int mag_fail,
             switch (random2(10))
             {
             case 0:
+#ifdef JP
+                mpr("あなたは土の匂いを感じた。");
+#else
                 mpr("You feel earthy.");
+#endif
                 break;
             case 1:
+#ifdef JP
+                mpr("あなたは砂の微粒子を浴びた。");
+#else
                 mpr("You are showered with tiny particles of grit.");
+#endif
                 break;
             case 2:
-                snprintf( info, INFO_SIZE,"Sand pours from your %s.", 
+#ifdef JP
+                snprintf( info, INFO_SIZE,"あなたの%sから砂が流れ出た。",
+#else
+                snprintf( info, INFO_SIZE,"Sand pours from your %s.",
+#endif
                           your_hand(true));
                 mpr(info);
                 break;
             case 3:
+#ifdef JP
+                mpr("あなたは大地からのエネルギーの高まりを感じた。");
+#else
                 mpr("You feel a surge of energy from the ground.");
+#endif
                 break;
             case 4:
                 if (!silenced(you.x_pos, you.y_pos))
+#ifdef JP
+                    mpr("あなたは遠くに大地の轟きを耳にした。");
+#else
                     mpr("You hear a distant rumble.");
+#endif
                 else
+#ifdef JP
+                    mpr("あなたは石くれに共感した。");
+#else
                     mpr("You sympathise with the stones.");
+#endif
                 break;
             case 5:
+#ifdef JP
+                mpr("あなたは勇気が沸いた。");
+#else
                 mpr("You feel gritty.");
+#endif
                 break;
             case 6:
+#ifdef JP
+                mpr("あなたは一瞬の気怠さを覚えた。");
+#else
                 mpr("You feel momentarily lethargic.");
+#endif
                 break;
             case 7:
+#ifdef JP
+                mpr("砂の微粉があなたの目の前でクルクル舞った。");
+#else
                 mpr("Motes of dust swirl before your eyes.");
+#endif
                 break;
             case 8:
                 canned_msg(MSG_NOTHING_HAPPENS);
                 break;
             case 9:
+#ifdef JP
+                strcpy(info, "あなたの");
+#else
                 strcpy(info, "Your ");
+#endif
+#ifdef JP
+                strcat(info, (you.species == SP_NAGA)    ? "下半身" :
+                             (you.species == SP_CENTAUR) ? "蹄"
+                                                         : "足");
+                strcat(info, "は大地の温もりを感じた。");
+#else
                 strcat(info, (you.species == SP_NAGA)    ? "underbelly feels" :
                              (you.species == SP_CENTAUR) ? "hooves feel"
                                                          : "feet feel");
                 strcat(info, " warm.");
+#endif
                 mpr(info);
                 break;
             }
@@ -3236,13 +4145,25 @@ bool miscast_effect( unsigned int sp_type, int mag_pow, int mag_fail,
                 switch (random2(3))
                 {
                 case 0:
+#ifdef JP
+                    mpr("あなたは飛んできた岩に打たれた！");
+#else
                     mpr("You are hit by flying rocks!");
+#endif
                     break;
                 case 1:
+#ifdef JP
+                    mpr("あなたは砂の突風をくらった！");
+#else
                     mpr("You are blasted with sand!");
+#endif
                     break;
                 case 2:
+#ifdef JP
+                    mpr("どこからともなく岩があなたに落ちてきた！");
+#else
                     mpr("Rocks fall onto you out of nowhere!");
+#endif
                     break;
                 }
 
@@ -3258,14 +4179,22 @@ bool miscast_effect( unsigned int sp_type, int mag_pow, int mag_fail,
             switch (random2(1))
             {
             case 0:
+#ifdef JP
+                mpr("あなたは飛び交う破片の爆発に巻き込まれた！");
+#else
                 mpr("You are caught in an explosion of flying shrapnel!");
+#endif
 
                 beam.type = SYM_BURST;
                 beam.damage = dice_def( 3, 15 );
                 beam.flavour = BEAM_FRAG;
                 beam.target_x = you.x_pos;
                 beam.target_y = you.y_pos;
+#ifdef JP
+                strcpy(beam.beam_name, "爆発");
+#else
                 strcpy(beam.beam_name, "explosion");
+#endif
                 beam.colour = CYAN;
 
                 if (one_chance_in(5))
@@ -3292,36 +4221,72 @@ bool miscast_effect( unsigned int sp_type, int mag_pow, int mag_fail,
             switch (random2(10))
             {
             case 0:
+#ifdef JP
+                mpr("痛い！あなたは自分に電気ショックを食らわせてしまった。");
+#else
                 mpr("Ouch! You gave yourself an electric shock.");
+#endif
                 break;
             case 1:
+#ifdef JP
+                mpr("あなたは一瞬だけ無重力を感じた。");
+#else
                 mpr("You feel momentarily weightless.");
+#endif
                 break;
             case 2:
+#ifdef JP
+                snprintf( info, INFO_SIZE, "蒸気があなたの%sから流れ出た。",
+#else
                 snprintf( info, INFO_SIZE, "Wisps of vapour drift from your %s.",
+#endif
                           your_hand(true));
                 mpr(info);
                 break;
             case 3:
+#ifdef JP
+                mpr("あなたは奇妙なエネルギーの高まりを感じた。");
+#else
                 mpr("You feel a strange surge of energy!");
+#endif
                 break;
             case 4:
+#ifdef JP
+                mpr("あなたは興奮を覚えた！");
+#else
                 mpr("You feel electric!");
+#endif
                 break;
             case 5:
+#ifdef JP
+                snprintf( info, INFO_SIZE, "あなたの%sの間で電気の火花が踊った。",
+#else
                 snprintf( info, INFO_SIZE, "Sparks of electricity dance between your %s.",
+#endif
                           your_hand(true));
                 mpr(info);
                 break;
             case 6:
+#ifdef JP
+                mpr("あなたは突風に吹かれた！");
+#else
                 mpr("You are blasted with air!");
+#endif
                 break;
             case 7:
                 // mummies cannot smell
                 if (!silenced(you.x_pos, you.y_pos))
+#ifdef JP
+                    mpr("あなたはヒュウヒュウいう音を耳にした。");
+#else
                     mpr("You hear a whooshing sound.");
+#endif
                 else if (you.species != SP_MUMMY)
+#ifdef JP
+                    mpr("あなたはオゾン臭を嗅いだ。");
+#else
                     mpr("You smell ozone.");
+#endif
                 break;
             case 8:
                 canned_msg(MSG_NOTHING_HAPPENS);
@@ -3329,9 +4294,17 @@ bool miscast_effect( unsigned int sp_type, int mag_pow, int mag_fail,
             case 9:
                 // mummies cannot smell
                 if (!silenced(you.x_pos, you.y_pos))
+#ifdef JP
+                    mpr("あなたはバチバチいう音を耳にした。");
+#else
                     mpr("You hear a crackling sound.");
+#endif
                 else if (you.species != SP_MUMMY)
+#ifdef JP
+                    mpr("あなたは何かかび臭い臭いを嗅いだ。");
+#else
                     mpr("You smell something musty.");
+#endif
                 break;
             }
             break;
@@ -3340,12 +4313,21 @@ bool miscast_effect( unsigned int sp_type, int mag_pow, int mag_fail,
             switch (random2(2))
             {
             case 0:
+#ifdef JP
+                mpr("短く急激な火花のシャワーが振った。");
+#else
                 mpr("There is a short, sharp shower of sparks.");
+#endif
                 break;
             case 1:
+#ifdef JP
+                snprintf( info, INFO_SIZE, "あなたの周りで風が%s！",
+                         silenced(you.x_pos, you.y_pos) ? "はためいた" : "唸った");
+#else
                 snprintf( info, INFO_SIZE, "The wind %s around you!",
-		 		 		 silenced(you.x_pos, you.y_pos) ? "whips" : "howls");
-		 	    mpr(info);
+                         silenced(you.x_pos, you.y_pos) ? "whips" : "howls");
+#endif
+                mpr(info);
                 break;
             }
             break;
@@ -3354,12 +4336,20 @@ bool miscast_effect( unsigned int sp_type, int mag_pow, int mag_fail,
             switch (random2(2))
             {
             case 0:
+#ifdef JP
+                mpr("電気があなたの体を勢いよく流れた。");
+#else
                 mpr("Electricity courses through your body.");
+#endif
                 ouch(check_your_resists(4 + random2avg(9, 2), 5), 0,
                      KILLED_BY_WILD_MAGIC, cause);
                 break;
             case 1:
+#ifdef JP
+                snprintf( info, INFO_SIZE, "有毒なガスがあなたの%sから流れ出た！",
+#else
                 snprintf( info, INFO_SIZE, "Noxious gasses pour from your %s!",
+#endif
                           your_hand(true));
                 mpr(info);
 
@@ -3373,14 +4363,22 @@ bool miscast_effect( unsigned int sp_type, int mag_pow, int mag_fail,
             switch (random2(2))
             {
             case 0:
+#ifdef JP
+                mpr("あなたは放電の爆発に巻き込まれた！");
+#else
                 mpr("You are caught in an explosion of electrical discharges!");
+#endif
 
                 beam.type = SYM_BURST;
                 beam.damage = dice_def( 3, 8 );
                 beam.flavour = BEAM_ELECTRICITY;
                 beam.target_x = you.x_pos;
                 beam.target_y = you.y_pos;
+#ifdef JP
+                strcpy(beam.beam_name, "爆発");
+#else
                 strcpy(beam.beam_name, "explosion");
+#endif
                 beam.colour = LIGHTBLUE;
                 beam.beam_source = NON_MONSTER;
                 beam.thrower = (cause) ? KILL_MISC : KILL_YOU;
@@ -3390,7 +4388,11 @@ bool miscast_effect( unsigned int sp_type, int mag_pow, int mag_fail,
                 explosion(beam);
                 break;
             case 1:
+#ifdef JP
+                snprintf( info, INFO_SIZE, "有毒なガスがあなたの%sから流れ出た！",
+#else
                 snprintf( info, INFO_SIZE, "Venomous gasses pour from your %s!",
+#endif
                           your_hand(true));
                 mpr(info);
 
@@ -3409,39 +4411,79 @@ bool miscast_effect( unsigned int sp_type, int mag_pow, int mag_fail,
             switch (random2(10))
             {
             case 0:
+#ifdef JP
+                mpr("あなたは少し吐き気を催した。");
+#else
                 mpr("You feel mildly nauseous.");
+#endif
                 break;
             case 1:
+#ifdef JP
+                mpr("あなたは軽い吐き気を催した。");
+#else
                 mpr("You feel slightly ill.");
+#endif
                 break;
             case 2:
+#ifdef JP
+                snprintf( info, INFO_SIZE, "毒ガスがあなたの%sから漂って行った。",
+#else
                 snprintf( info, INFO_SIZE, "Wisps of poison gas drift from your %s.",
+#endif
                           your_hand(true) );
                 mpr(info);
                 break;
             case 3:
+#ifdef JP
+                mpr("あなたは奇妙なエネルギーの高まりを感じた！");
+#else
                 mpr("You feel a strange surge of energy!");
+#endif
                 break;
             case 4:
+#ifdef JP
+                mpr("あなたは一瞬めまいがした。");
+#else
                 mpr("You feel faint for a moment.");
+#endif
                 break;
             case 5:
+#ifdef JP
+                mpr("あなたは吐き気を催した。");
+#else
                 mpr("You feel sick.");
+#endif
                 break;
             case 6:
+#ifdef JP
+                mpr("あなたは奇妙な気分になった。");
+#else
                 mpr("You feel odd.");
+#endif
                 break;
             case 7:
+#ifdef JP
+                mpr("あなたは一瞬、衰弱を感じた。");
+#else
                 mpr("You feel weak for a moment.");
+#endif
                 break;
             case 8:
                 canned_msg(MSG_NOTHING_HAPPENS);
                 break;
             case 9:
                 if (!silenced(you.x_pos, you.y_pos))
+#ifdef JP
+                    mpr("あなたはゴクゴクいう音を耳にした。");
+#else
                     mpr("You hear a slurping sound.");
+#endif
                 else if (you.species != SP_MUMMY)
+#ifdef JP
+                    mpr("あなたはアーモンドの味を感じた。");
+#else
                     mpr("You taste almonds.");
+#endif
                 break;
             }
             break;
@@ -3456,12 +4498,20 @@ bool miscast_effect( unsigned int sp_type, int mag_pow, int mag_fail,
                     return (false);
                 }
 
+#ifdef JP
+                mpr("あなたは具合が悪くなった。");
+#else
                 mpr("You feel sick.");
+#endif
                 poison_player( 2 + random2(3) );
                 break;
 
             case 1:
+#ifdef JP
+                snprintf( info, INFO_SIZE, "有毒なガスがあなたの%sから流れ出た！",
+#else
                 snprintf( info, INFO_SIZE, "Noxious gasses pour from your %s!",
+#endif
                           your_hand(true) );
                 mpr(info);
 
@@ -3481,12 +4531,20 @@ bool miscast_effect( unsigned int sp_type, int mag_pow, int mag_fail,
                     return (false);
                 }
 
+#ifdef JP
+                mpr("あなたはひどく具合がわるくなった。");
+#else
                 mpr("You feel very sick.");
+#endif
                 poison_player( 3 + random2avg(9, 2) );
                 break;
 
             case 1:
+#ifdef JP
+                mpr("有毒なガスがあなたの手から流れ出た！");
+#else
                 mpr("Noxious gasses pour from your hands!");
+#endif
                 big_cloud(CLOUD_STINK, you.x_pos, you.y_pos, 20,
                           8 + random2(5));
                 break;
@@ -3512,11 +4570,19 @@ bool miscast_effect( unsigned int sp_type, int mag_pow, int mag_fail,
                     return (false);
                 }
 
+#ifdef JP
+                mpr("あなたは信じ難いほど体調が悪くなった。");
+#else
                 mpr("You feel incredibly sick.");
+#endif
                 poison_player( 10 + random2avg(19, 2) );
                 break;
             case 1:
+#ifdef JP
+                snprintf( info, INFO_SIZE, "猛毒のガスがあなたの%sから流れ出た！",
+#else
                 snprintf( info, INFO_SIZE, "Venomous gasses pour from your %s!",
+#endif
                           your_hand(true));
                 mpr(info);
 

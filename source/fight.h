@@ -49,4 +49,10 @@ void monster_attack(int monster_attacking);
 bool monsters_fight(int monster_attacking, int monster_attacked);
 
 
+/* ***********************************************************************
+ * called from: acr
+ * *********************************************************************** */
+int check_weapon_speed(void);
+
+
 #endif

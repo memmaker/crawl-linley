@@ -108,4 +108,9 @@ void standard_name_weap(unsigned char item_typ, char glog[ITEMNAME_SIZE]);
  * *********************************************************************** */
 int find_unrandart_index(int item_index);
 
+/* ***********************************************************************
+ * called from: tiles
+ * *********************************************************************** */
+int find_unrandart_index2(const item_def &item);
+
 #endif

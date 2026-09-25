@@ -1,0 +1,92 @@
+###################################################################
+#
+#  makefile.win - Crawl makefile for Borland C++ 5.5 (Win32)
+#   -- Copied from Hengband makefile.bcc
+###################################################################
+
+!include makefile.obj
+#OBJECTS += libwin.o libwt.o libtile.o tiles.o winclass-win.o winclass.o
+###################################################################
+#
+#       Borland specific directives ---
+#
+.AUTODEPEND
+
+###################################################################
+#
+# Set tool and version names:
+
+CPP        = bcc32
+LINKER     = ilink32
+RC         = brc32
+
+###################################################################
+#
+# Name of the *.exe-file
+
+EXE_FILE = crawl.exe
+
+
+###################################################################
+#
+# Debug mode (un-comment for debugging)
+
+# DBGOPT= -v -N -x -xp
+
+
+###################################################################
+#
+#  Change these for English version (or Japanese version)
+#
+
+# Japanese version (comment out for English version)
+JP_OPT= -DJP
+CRAWL_RC = crawl.rc
+
+###################################################################
+#
+# Set any compiler options
+#-Od -jb -j1 -Hc -tW -lGn -e$(EXE_FILE) -w- \
+
+CCOPTS = -O2 -4 -a -k- -Oc -OS -Oi -Ov -H- -P -e$(EXE_FILE) \
+    -DWINDOWS -D_WIN32_WINNT=0x0400 -DWINVER=0x0400 \
+    -DNEED_SPRINTF -DUSE_ASCII_CHARACTERS -DUSE_COLOUR_OPTS \
+    -DUSE_TILE -DV_FIX
+
+
+# Compile flags:
+CPPFLAGS= $(CCOPTS) $(DBGOPT)
+
+
+######################## Targets ##################################
+
+all : $(EXE_FILE)
+
+clean:
+	-@if exist *.o del *.o >nul
+	-@if exist *.exe del *.exe >nul
+	-@if exist *.res del *.res >nul
+	-@if exist *.tds del *.tds >nul
+	-@if exist *.ilc del *.ilc >nul
+	-@if exist *.ild del *.ild >nul
+	-@if exist *.ilf del *.ilf >nul
+	-@if exist *.ils del *.ils >nul
+
+install: 
+
+########################### Explicit Rules ########################
+$(EXE_FILE): $(OBJECTS) libwt.o libtile.o  tiles.o winclass-win.o winclass.o crawl.res
+	$(LINKER) -aa -x $(OBJECTS) libwt.o libtile.o  tiles.o winclass-win.o winclass.o c0w32.obj, $(EXE_FILE),, cw32.lib import32.lib,, crawl.res
+
+crawl.res: $(CRAWL_RC)
+	$(RC) -r -focrawl.res $(CRAWL_RC)
+
+########################### Implicit Rules ########################
+.cc.o:
+        $(CPP) $(CPPFLAGS) -c  -o$*.o $< 
+
+.c.i:
+	$(CPP) $(CPPFLAGS) -c -Sr -Sd {$? }
+
+#.o.exe:
+#	$(CPP) $(CPPFLAGS) $<

@@ -155,6 +155,9 @@ void exercise(char exsk, int deg)
             if (!you.practise_skill[exsk] && !one_chance_in(4))
                 break;
 
+            if (you.skills[exsk] >= 27)
+                break;
+
             exercise2( exsk );
             deg--;
         }
@@ -379,9 +382,17 @@ static void exercise2( char exsk )
                     (skill_exp_needed(you.skills[exsk] + 2) 
                             * species_skills(exsk, you.species) / 100))
     {
+#ifdef JP 
+        strcpy(info, "あなたの");
+#else
         strcpy(info, "Your ");
+#endif
         strcat(info, skill_name(exsk));
+#ifdef JP 
+        strcat(info, "のスキルは上昇した！");
+#else
         strcat(info, " skill increases!");
+#endif
         mpr(info, MSGCH_INTRINSIC_GAIN);
 
         you.skills[exsk]++;
@@ -427,7 +438,11 @@ static void exercise2( char exsk )
         if ((exsk == SK_SPELLCASTING) 
                 && (you.skills[exsk] == 1 && best_spell == SK_SPELLCASTING))
         {
+#ifdef JP 
+            mpr("あなたは魔法を学ぶにあたっての足掛かりを得た。");
+#else
             mpr("You're starting to get the hang of this magic thing.");
+#endif
         }
 
         if (best != old_best_skill || old_best_skill == exsk)

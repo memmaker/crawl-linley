@@ -37,10 +37,29 @@ static int band_member(int band, int power);
 static int choose_band( int mon_type, int power, int &band_size );
 static int place_monster_aux(int mon_type, char behaviour, int target,
     int px, int py, int power, int extra, bool first_band_member);
+bool place_monster(int &id, int mon_type, int power, char behaviour,
+    int target, bool summoned, int px, int py, bool allow_bands,
+    int proximity, int extra, int dur);
+int mons_place( int mon_type, char behaviour, int target, bool summoned,
+                int px, int py, int level_type, int proximity, int extra,
+                int dur);
+static int place_monster_aux( int mon_type, char behaviour, int target,
+                              int px, int py, int power, int extra,
+                              bool first_band_member, int dur );
+
 
 bool place_monster(int &id, int mon_type, int power, char behaviour,
     int target, bool summoned, int px, int py, bool allow_bands,
     int proximity, int extra)
+{
+    return place_monster(id, mon_type, power, behaviour,
+           target, summoned, px, py, allow_bands,
+           proximity, extra, 0);
+}
+
+bool place_monster(int &id, int mon_type, int power, char behaviour,
+    int target, bool summoned, int px, int py, bool allow_bands,
+    int proximity, int extra, int dur)
 {
     int band_size = 0;
     int band_monsters[BIG_BAND];        // band monster types
@@ -304,20 +323,38 @@ bool place_monster(int &id, int mon_type, int power, char behaviour,
         if (player_monster_visible( &menv[id] ))
             strcpy(info, ptr_monam( &menv[id], DESC_CAP_A ));
         else if (shoved)
+#ifdef JP 
+            strcpy(info, "何ものか");
+#else
             strcpy(info, "Something");
+#endif
 
         if (shoved)
         {
+#ifdef JP 
+            strcat(info, "があなたを");
+            strcat(info, (stair_gfx == '>' || stair_gfx == '<') ? "階段の吹き抜け"
+                                                                : "入り口");
+            strcat(info, "から押しやった！");
+
+#else
             strcat(info, " shoves you out of the ");
             strcat(info, (stair_gfx == '>' || stair_gfx == '<') ? "stairwell!"
                                                                 : "gateway!");
+#endif
             mpr(info);
         }
         else if (info[0] != '\0')
         {
+#ifdef JP 
+            strcat(info, (stair_gfx == '>') ? "が階段を昇ってきた。" :
+                         (stair_gfx == '<') ? "が階段を降りてきた。"
+                                            : "が門を通ってきた。");
+#else
             strcat(info, (stair_gfx == '>') ? " comes up the stairs." :
                          (stair_gfx == '<') ? " comes down the stairs."
                                             : " comes through the gate.");
+#endif
             mpr(info);
         }
 
@@ -334,7 +371,7 @@ bool place_monster(int &id, int mon_type, int power, char behaviour,
     for(i = 1; i < band_size; i++)
     {
         place_monster_aux( band_monsters[i], behaviour, target, px, py, 
-                           lev_mons, extra, false );
+                           lev_mons, extra, false, dur );
     }
 
     // placement of first monster, at least, was a success.
@@ -344,6 +381,15 @@ bool place_monster(int &id, int mon_type, int power, char behaviour,
 static int place_monster_aux( int mon_type, char behaviour, int target,
                               int px, int py, int power, int extra,
                               bool first_band_member )
+{
+    return place_monster_aux( mon_type, behaviour, target,
+                                         px, py, power, extra,
+                                         first_band_member, 0 );
+}
+
+static int place_monster_aux( int mon_type, char behaviour, int target,
+                              int px, int py, int power, int extra,
+                              bool first_band_member, int dur )
 {
     int id, i;
     char grid_wanted;
@@ -525,11 +571,28 @@ static int place_monster_aux( int mon_type, char behaviour, int target,
     // attitude is hostile.
     if (behaviour > NUM_BEHAVIOURS)
     {
-        if (behaviour == BEH_FRIENDLY || behaviour == BEH_GOD_GIFT)
-            menv[id].attitude = ATT_FRIENDLY;
-
         menv[id].behaviour = BEH_WANDER;
+#if 1
+        if (behaviour == BEH_FRIENDLY || behaviour == BEH_GOD_GIFT)
+        {
+            menv[id].attitude = ATT_FRIENDLY;
+            menv[id].flags |= MF_CREATED_FRIENDLY;
+        }
+        
+        if (behaviour == BEH_GOD_GIFT)
+            menv[id].flags |= MF_GOD_GIFT;  
+
+        if (behaviour == BEH_CHARMED)
+        {
+            menv[id].attitude = ATT_HOSTILE;
+            mons_add_ench(&menv[id], ENCH_CHARM);
+        }
+#endif
     }
+
+    // dur should always be ENCH_ABJ_xx
+    if (dur >= ENCH_ABJ_I && dur <= ENCH_ABJ_VI)
+        mons_add_ench(&menv[id], dur );
 
     menv[id].foe = target;
 
@@ -1003,9 +1066,16 @@ static int band_member(int band, int power)
 }
 
 // PUBLIC FUNCTION -- mons_place().
+int mons_place( int mon_type, char behaviour, int target, bool summoned,
+                int px, int py, int level_type, int proximity, int extra)
+{
+    return mons_place(mon_type, behaviour, target, summoned,
+                      px, py, level_type, proximity, extra, 0);
+}
 
 int mons_place( int mon_type, char behaviour, int target, bool summoned,
-                int px, int py, int level_type, int proximity, int extra )
+                int px, int py, int level_type, int proximity, int extra,
+                int dur)
 {
     int mon_count = 0;
     int temp_rand;          // probabilty determination {dlb}
@@ -1045,7 +1115,9 @@ int mons_place( int mon_type, char behaviour, int target, bool summoned,
                                    : MONS_PIT_FIEND);                //  5.07%
     }
 
-    if (mon_type == RANDOM_MONSTER || level_type == LEVEL_PANDEMONIUM)
+    if ( (mon_type == RANDOM_MONSTER) 
+       ||( (level_type == LEVEL_PANDEMONIUM)
+         &&(behaviour != BEH_FRIENDLY &&  behaviour != BEH_GOD_GIFT) ) )
         permit_bands = true;
 
     int mid = -1;
@@ -1068,7 +1140,7 @@ int mons_place( int mon_type, char behaviour, int target, bool summoned,
     }
 
     if (place_monster( mid, mon_type, power, behaviour, target, summoned,
-                       px, py, permit_bands, proximity, extra ) == false)
+                       px, py, permit_bands, proximity, extra, dur) == false)
     {
         return (-1);
     }
@@ -1120,7 +1192,7 @@ int create_monster( int cls, int dur, int beha, int cr_x, int cr_y,
     if (empty_surrounds( cr_x, cr_y, spcw, true, empty ))
     {
         summd = mons_place( cls, beha, hitting, true, empty[0], empty[1],
-                            you.level_type, 0, zsec );
+                            you.level_type, 0, zsec, dur);
     }
 
     // determine whether creating a monster is successful (summd != -1) {dlb}:
@@ -1128,7 +1200,11 @@ int create_monster( int cls, int dur, int beha, int cr_x, int cr_y,
     if (summd == -1)
     {
         if (see_grid( cr_x, cr_y ))
+#ifdef JP 
+            mpr("あなたはひと吹きの煙を目撃した。");
+#else
             mpr("You see a puff of smoke.");
+#endif
     }
     else
     {

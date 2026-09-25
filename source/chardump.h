@@ -13,6 +13,7 @@
 #ifndef CHARDUMP_H
 #define CHARDUMP_H
 
+#include <string>
 
 // last updated 12may2000 {dlb}
 /* ***********************************************************************
@@ -20,5 +21,6 @@
  * *********************************************************************** */
 bool dump_char( const char fname[30], bool show_prices );
 
+std::string munge_description(const std::string &inStr);
 
 #endif

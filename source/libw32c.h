@@ -9,6 +9,7 @@
 typedef std::basic_string<char> string;
 #endif
 
+#include <stdlib.h>
 #include <excpt.h>
 #include <stdarg.h>
 
@@ -38,8 +39,16 @@ int kbhit(void);
 void delay(int ms);
 void textbackground(int c);
 
+void w32c_get_input_line(char* buffer, int bufferSize);
+
 inline void srandom(unsigned int seed) { srand(seed); }
 inline int random() { return rand(); }
+#ifdef JP
+void writeWChar(unsigned char *ch);
+#endif
+#if 1 //JP
+#define textcolor_cake(col) textcolor((col)<<4 | (col))
+#endif
 
 #endif
 

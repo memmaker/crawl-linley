@@ -46,6 +46,16 @@
 // intended for cases where things might be really awkward without it. -- bwr
 
 const char *skills[50][6] = {
+#ifdef JP
+    {"êÌì¨", "êÀåÛ", "ï‡ï∫", "óêÌï∫", "êÌém", "ì¢î∞é“"},      // 0
+    {"íZåï", "ìÀÇ´Ç©Ç©ÇÈé“", "êÿÇËÇ©Ç©ÇÈé“", "è¨ìÅÇÃêÌém", "éEÇµâÆ", "ênÇÃíBêl"},
+    {"í∑åï", "éaÇËÇ©Ç©ÇÈé“", "éaÇËçèÇﬁé“", "åïém", "åïÇÃêÌém", "åïÇÃíBêl"},
+    {NULL},                     //  3- was: great swords {dlb}
+    {"ïÄ", "êÿÇËÇ¬ÇØÇÈé“", "êÿÇËçèÇﬁé“", "êÿífé“", "ï™ífé“", "ïÄÇÃã¢éË"},
+    {"ì›äÌ", "ë≈ÇøÇ¬ÇØÇÈé“", "ã≠ë≈Ç∑ÇÈé“", "ï≤ç”é“", "ë≈ì|é“", "ì™äWï≤ç”é“"},   // 5
+    {"í∑ïøïêäÌ", "ëÑÇë—Ç—Çµé“", "%sÇÃÉpÉCÉNï∫", "ÉtÉ@ÉâÉìÉNÉXï∫", "ëÑãRï∫", "ïÄëÑå≠Ç¢"},
+    {"ñ_èp", "êUÇËÇ‹ÇÌÇ∑é“", "ç”Ç≠é“", "åÇç”é“", "ñ_èpÇÃêÌém", "ì™äWîjâÛé“"},
+#else
     {"Fighting", "Skirmisher", "Grunt", "Veteran", "Warrior", "Slayer"},      // 0
     {"Short Blades", "Stabber", "Cutter", "Knifefighter", "Eviscerator", "Blademaster"},
     {"Long Blades", "Slasher", "Slicer", "Fencer", "Swordfighter", "Swordmaster"},
@@ -54,22 +64,44 @@ const char *skills[50][6] = {
     {"Maces & Flails", "Basher", "Cudgeler", "Shatterer", "Bludgeoner", "Skullcrusher"},   // 5
     {"Polearms", "Spear-Bearer", "Pike-%s", "Phalangite", "Lancer", "Halberdier"},
     {"Staves", "Twirler", "Cruncher", "Smasher", "Stickfighter", "Skullbreaker"},
+#endif
 
+#ifdef JP
+    {"ÉXÉäÉìÉO", "ñÏêl", "ìäêŒé“", "ê˘âÒÇÃéË", "%sÇÃã∞ÇÍímÇÁÇ∏", "%sÇÃñΩímÇÁÇ∏"},
+    {"ã|", "éÀéË", "ãΩém", "ã|èpâ∆", "%sÇÃâpåÜ", "%sÇÃâpåÜ"},
+    {"ÉNÉçÉXÉ{ÉE", "éÀéË", "éÀåÇÇÃñºéË", "ã|èpâ∆", "%sÇÃúWñC", "%sÇÃúWñC"},     // 10
+    {"ìäÇ∞ñÓ", "ñÓÇìäÇ∞ÇÈé“", "ñÓÇÃìäÇ∞éË", "è„ãâÇÃìäÇ∞éË", "%sëÊàÍÇÃìäÇ∞éË", "ëÊàÍÇÃìäÇ∞éË"},
+    {"ìäù±", "ï˙Ç¬é“", "ï˙ÇøéË", "âsÇ´ñºéË", "ëÈÇÃñ⁄ÇÃñºéË", "ë_åÇÇÃñºéË"},
+#else
     {"Slings", "Vandal", "Slinger", "Whirler", "Crazy %s", "Very Crazy %s"},
     {"Bows", "Shooter", "Yeoman", "Archer", "Merry %s", "Merry %s"},
     {"Crossbows", "Shooter", "Sharpshooter", "Archer", "%s Ballista", "%s Ballista"},     // 10
     {"Darts", "Dart Thrower", "Hurler", "Hurler, First Class", "%s Darts Champion", "Universal Darts Champion"},
     {"Throwing", "Chucker", "Thrower", "Deadly Accurate", "Hawkeye", "Sniper"},
+#endif
 
+#ifdef JP
+    {"çbôh", "ï¢ÇÌÇÍÇµé“", "åÏÇÁÇÍÇµé“", "ó§ãT", "çUÇﬂìÔÇ´é“", "ìOÇ≥Ç¥ÇÈé“"},
+    {"Á]Çµêg", "îÇØÇÈé“", "Á]Ç∑é“", "ëfëÅÇ´é“", "êgåyÇ´é“", "åyã∆ét"},
+    {"âBñß", "îEÇ—ë´", "îEÇ—äÒÇÈé“", "âBÇÍÇµé“", "å©Ç¶Ç¥ÇÈé“", "ãCîzÇ»Ç´é“"},
+    {"ïsà”ì¢Çø", "à´ì}", "Ç»ÇÁÇ∏é“", "ïsà”Çì¢Ç¬é“", "éEÇµâÆ", "çÙó™â∆"},
+    {"èÇ", "èÇÇë—Ç—Çµé“", "é’ÇÈé“", "%sÇÃñhåÏï«", "èÇÇÃñºéË", "èdëïï‡ï∫"},
+    {"„©âèú", "âèúÇ∑ÇÈé“", "„©ét", "ê›åvé“", "ãZét", "ñ¿ã{ÇÃéÂ"},
+#else
     {"Armour", "Covered", "Protected", "Tortoise", "Impregnable", "Invulnerable"},
     {"Dodging", "Ducker", "Dodger", "Nimble", "Spry", "Acrobat"},
     {"Stealth", "Footpad", "Sneak", "Covert", "Unseen", "Imperceptible"},
     {"Stabbing", "Miscreant", "Blackguard", "Backstabber", "Cutthroat", "Politician"},
     {"Shields", "Shield-Bearer", "Blocker", "%s Barricade", "Peltast", "Hoplite"},
     {"Traps & Doors", "Disarmer", "Trapper", "Architect", "Engineer", "Dungeon Master"},
+#endif
 
     // STR based fighters, for DEX/martial arts titles see below
+#ifdef JP
+    {"ìkéËäiì¨", "ñ\äø", "äiì¨é“", "óêì¨é“", "óÕém", "åùém" },
+#else
     {"Unarmed Combat", "Ruffian", "Grappler", "Brawler", "Wrestler", "Boxer" },
+#endif
 
     {NULL},                     // 20- empty
     {NULL},                     // 21- empty
@@ -77,6 +109,16 @@ const char *skills[50][6] = {
     {NULL},                     // 23- empty
     {NULL},                     // 24- empty
 
+#ifdef JP
+    {"éÙï∂ârè•", "éËïiét", "äÔèpét", "éØé“", "ñÇìπém", "ëÂå´é“"},     // 25
+    {"ódèp", "ëπÇ»Ç§é“", "ódèpét", "îjâÛé“", "âÛñ≈é“", "ürñ≈é“"},
+    {"éÙèp", "Ç‹Ç∂Ç»Ç¢ét", "ñÇóÕÇÃíçÇ¨éË", "Â¡òfÇ∑ÇÈé“", "éÙèpét", "éÙîõÇ∑ÇÈé“"},
+    {"è¢ä∑èp", "åƒÇŒÇÌÇÈé“", "è¢ä∑ét", "èµèWÇ∑ÇÈé“", "à´ñÇèpét", "ínçñÇåƒÇ‘é“"},
+    {"éÄóÏèp", "ïÊçrÇÁÇµ", "ëhê∂ÇÇ»Ç∑é“", "éÄêlégÇ¢", "éÄÇÃñÇèpét", "%sÇÃéÄê_"},
+    {"ì]à èp", "íµñÙé“", "èuä‘à⁄ìÆé“", "ì]à î\óÕé“", "ñÂÇÃå≠Ç¢éË", "éüå≥ìnçqé“"},       // 30
+    {"ïœàŸèp", "ïœâªÇ∑ÇÈé“", "ïœì]Ç∑ÇÈé“", "ïœêgî\óÕé“", "òBã‡èpét", "ïœàŸÇÃéxîzé“"},
+    {"ó\å©èp", "éËëäå©", "êËÇ¢", "êËÇ¢ét", "óaåæé“", "ê_ëıé“"},
+#else
     {"Spellcasting", "Magician", "Thaumaturge", "Eclecticist", "Sorcerer", "Archmage"},     // 25
     {"Conjurations", "Ruinous", "Conjurer", "Destroyer", "Devastator", "Annihilator"},
     {"Enchantments", "Charm-Maker", "Infuser", "Bewitcher", "Enchanter", "Spellbinder"},
@@ -85,15 +127,29 @@ const char *skills[50][6] = {
     {"Translocations", "Jumper", "Blinker", "Shifter", "Portalist", "Plane Walker"},       // 30
     {"Transmigration", "Changer", "Transmogrifier", "Transformer", "Alchemist", "Transmuter"},
     {"Divinations", "Seer", "Soothsayer", "Diviner", "Augur", "Oracle"},
+#endif
 
+#ifdef JP
+    {"âäÇÃñÇèp", "âŒïtÇØ", "ï˙âŒî\óÕé“", "èƒÇ´ï•Ç§é“", "âŒâãÇÃñÇèpét", "çÖâŒÇÃíSÇ¢éË"},
+    {"ïXÇÃñÇèp", "ó‚ãpé“", "ëöÇÃñÇèpét", "ïXÇÃñÇèpét", "ìÄãCÇÃñÇèpét", "ïXâÕÇÃéÂ"},
+    {"ïóÇÃñÇèp", "ïóÇÃñÇèpét", "â_ÇÃñÇèpét", "ëÂãCÇÃñÇèpét", "ëì‚uÇÃñÇèpét", "óíÇÃñÇèpét"}, // 35
+    {"ínÇÃñÇèp", "çÃå@é“", "ínêËèpét", "ëÂínÇÃñÇèpét", "ã‡ëÆÇÃñÇèpét", "î÷êŒÇÃóhÇÁÇµéË"},
+    {"ì≈ÇÃñÇèp", "ì≈ÇÃêj", "ñ`Ç∑é“", "‚qÇ∑é“", "ì≈éEé“", "ñ“ì≈ÇÃï˙ÇøéË"},
+#else
     {"Fire Magic", "Firebug", "Arsonist", "Scorcher", "Pyromancer", "Infernalist"},
     {"Ice Magic", "Chiller", "Frost Mage", "Ice Mage", "Cryomancer", "Englaciator"},
     {"Air Magic", "Wind Mage", "Cloud Mage", "Air Mage", "Sky Mage", "Storm Mage"}, // 35
     {"Earth Magic", "Digger", "Geomancer", "Earth Mage", "Metallomancer", "Petrodigitator"},
     {"Poison Magic", "Stinger", "Tainter", "Polluter", "Poisoner", "Envenomancer"},
+#endif
 
+#ifdef JP
+    {"ãFìò", "êMïÓé“", "ÇµÇ‡Ç◊", "ínè„ÇÃë„óùé“", "äÔê’ÇÃé∑çsé“", "ê_ÇÃâªêg"},  // 38
+    {"î≠ìÆ", "Ç¢Ç©Ç≥Ç‹ét", "äÔèpÇÃå≠Ç¢éË", "éÙï®ÇÃå≠Ç¢éË", "ä´ãNÇÇ»Ç∑é“", "óÏå±ÇÃíSÇ¢éË"}, // 39
+#else
     {"Invocations", "Believer", "Servant", "Worldly Agent", "Theurge", "Avatar"},  // 38
     {"Evocations", "Charlatan", "Prestidigitator", "Fetichist", "Evocator", "Talismancer"}, // 39
+#endif
 
 /*NOTE: If more skills are added, must change ranges in level_change() in player.cc */
 /*{"",             "", "", "", ""}, */
@@ -111,7 +167,11 @@ const char *skills[50][6] = {
 };
 
 const char *martial_arts_titles[6] =
+#ifdef JP
+    {"ìkéËäiì¨", "ñÂíÌ", "óLíié“", "étîÕë„", "íBêl", "ç≈è„étîÕ"};
+#else
     {"Unarmed Combat", "Martial Artist", "Black Belt", "Sensei", "Master", "Grand Master"};
+#endif
 
 
 /* Note that this (humans have 100 for all skills) is assumed in the
@@ -1809,11 +1869,18 @@ void show_skills(void)
     textcolor(LIGHTGREY);
 
 #if DEBUG_DIAGNOSTICS
-    cprintf( "You have %d points of unallocated experience (cost lvl %d; total %d)." EOL EOL, 
+#ifdef JP
+    cprintf( "You have %d points of unallocated experience (cost lvl %d; total %d)." EOL EOL,
+#else
+    cprintf( "You have %d points of unallocated experience (cost lvl %d; total %d)." EOL EOL,
+#endif
              you.exp_available, you.skill_cost_level, you.total_skill_points );
 #else
-    cprintf(" You have %d points of unallocated experience." EOL EOL, 
-            you.exp_available );
+#ifdef JP
+    cprintf("Ç†Ç»ÇΩÇÕ%dÉ|ÉCÉìÉgÇÃñ¢ï™îzÇ»åoå±ílÇéùÇ¡ÇƒÇ¢ÇÈÅB" EOL EOL, you.exp_available );
+#else
+    cprintf(" You have %d points of unallocated experience." EOL EOL, you.exp_available );
+#endif
 #endif
 
     char scrln = 3, scrcol = 1;
@@ -1866,10 +1933,14 @@ void show_skills(void)
                 lcount++;
 #endif
 
-            cprintf( " %c %-14s Skill %2d",
-                     (you.skills[x] == 0)         ? ' ' : 
-                     (you.practise_skill[x] == 0) ? '-' : '+',
-                     skills[x][0], you.skills[x] );
+#ifdef JP
+            cprintf( " %c %-14s ÉXÉLÉã%2d", \
+                        (you.skills[x] == 0) ? ' ' : \
+                        (you.practise_skill[x] == 0) ? '-' : \
+                        '+', skills[x][0], you.skills[x] );
+#else
+            cprintf( " %c %-14s Skill %2d", (you.skills[x] == 0)         ? ' ' : (you.practise_skill[x] == 0) ? '-' : '+', skills[x][0], you.skills[x] );
+#endif
 
             textcolor(BLUE);
 
@@ -1883,7 +1954,7 @@ void show_skills(void)
                 const int prev_needed = skill_exp_needed(you.skills[x] + 1);
                 const int spec_abil = species_skills(x, you.species);
 
-                cprintf( " (%d)", 
+                cprintf( " (%d)",
                      (((needed * spec_abil) / 100 - you.skill_points[x]) * 10) /
                            (((needed - prev_needed) * spec_abil) / 100) );
             }
@@ -1902,7 +1973,11 @@ void show_skills(void)
     // if any more skills added, must adapt letters to go into caps
     gotoxy(1, bottom_line);
     textcolor(LIGHTGREY);
+#ifdef JP
+    cprintf("ãZî\Ç…ëŒâûÇ∑ÇÈï∂éöÇâüÇ∑Ç∆ÅAãZî\ÇêLÇŒÇµÇƒçsÇ≠Ç©î€Ç©ÇêÿÇËë÷Ç¶Ç‹Ç∑ÅB");
+#else
     cprintf("Press the letter of a skill to choose whether you want to practise it.");
+#endif
 
     char get_thing;
 
@@ -1957,14 +2032,18 @@ const char *skill_title( unsigned char best_skill, unsigned char skill_lev,
     unsigned char skill_rank;
     const char *tempstr = NULL;
 
-    static char title_buff[80]; 
+    static char title_buff[80];
 
     // paranoia
-    if (best_skill == SK_UNUSED_1 
+    if (best_skill == SK_UNUSED_1
         || (best_skill > SK_UNARMED_COMBAT && best_skill < SK_SPELLCASTING)
         || best_skill >= NUM_SKILLS)
     {
+#ifdef JP
+        return ("ñ`åØé“");
+#else
         return ("Adventurer");
+#endif
     }
 
     if (species == -1)
@@ -1982,9 +2061,9 @@ const char *skill_title( unsigned char best_skill, unsigned char skill_lev,
     // translate skill level into skill ranking {dlb}:
     // increment rank by one to "skip" skill name in array {dlb}:
     skill_rank = ((skill_lev <= 7)  ? 1 :
-                  (skill_lev <= 14) ? 2 : 
+                  (skill_lev <= 14) ? 2 :
                   (skill_lev <= 20) ? 3 :
-                  (skill_lev <= 26) ? 4 
+                  (skill_lev <= 26) ? 4
                    /* level 27 */   : 5);
 
     if (best_skill < NUM_SKILLS)
@@ -2002,8 +2081,12 @@ const char *skill_title( unsigned char best_skill, unsigned char skill_lev,
 
         case SK_INVOCATIONS:
             if (god == GOD_NO_GOD)
+#ifdef JP
+                tempstr = "ñ≥êMã¬é“";
+#else
                 tempstr = "Godless";
-            else 
+#endif
+            else
                 tempstr = skills[best_skill][skill_rank];
             break;
 
@@ -2012,15 +2095,15 @@ const char *skill_title( unsigned char best_skill, unsigned char skill_lev,
             break;
         }
     }
-    
-    const char *const ptr = strchr( tempstr, '%' );    
+
+    const char *const ptr = strchr( tempstr, '%' );
     const bool species_found = (ptr != NULL);
 
     if (species_found)
     {
         // need species name
-        snprintf( title_buff, sizeof(title_buff), tempstr, 
-                  species_name(species, 0, true, 
+        snprintf( title_buff, sizeof(title_buff), tempstr,
+                  species_name(species, 0, true,
                                 (ptr == tempstr && best_skill != SK_NECROMANCY)) );
                   // The above code only capitalises start-of-string racenames
         tempstr = title_buff;
@@ -2046,7 +2129,7 @@ unsigned char best_skill( unsigned char min_skill, unsigned char max_skill,
     for (int i = min_skill; i <= max_skill; i++)    // careful!!!
     {
         if (i == excl_skill
-            || i == SK_UNUSED_1 
+            || i == SK_UNUSED_1
             || (i > SK_UNARMED_COMBAT && i < SK_SPELLCASTING))
         {
             continue;
@@ -2059,7 +2142,7 @@ unsigned char best_skill( unsigned char min_skill, unsigned char max_skill,
             best_position = you.skill_order[i];
 
         }
-        else if (you.skills[i] == best_skill_level 
+        else if (you.skills[i] == best_skill_level
                 && you.skill_order[i] < best_position)
         {
             ret = i;
@@ -2073,25 +2156,25 @@ unsigned char best_skill( unsigned char min_skill, unsigned char max_skill,
 // Calculate the skill_order array from scratch.
 //
 // The skill order array is used for breaking ties in best_skill.
-// This is done by ranking each skill by the order in which it 
+// This is done by ranking each skill by the order in which it
 // has attained its current level (the values are the number of
-// skills at or above that level when the current skill reached it). 
+// skills at or above that level when the current skill reached it).
 //
 // In this way, the skill which has been at a level for the longest
 // is judged to be the best skill (thus, nicknames are sticky)...
-// other skills will have to attain the next level higher to be 
+// other skills will have to attain the next level higher to be
 // considered a better skill (thus, the first skill to reach level 27
-// becomes the characters final nickname). 
+// becomes the characters final nickname).
 //
 // As for other uses of best_skill:  this method is still appropriate
 // in that there is no additional advantage anywhere else in the game
-// for partial skill levels.  Besides, its probably best if the player 
+// for partial skill levels.  Besides, its probably best if the player
 // isn't able to micromanage at that level.  -- bwr
 void init_skill_order( void )
 {
     for (int i = SK_FIGHTING; i < NUM_SKILLS; i++)
     {
-        if (i == SK_UNUSED_1 
+        if (i == SK_UNUSED_1
             || (i > SK_UNARMED_COMBAT && i < SK_SPELLCASTING))
         {
             you.skill_order[i] = MAX_SKILL_ORDER;
@@ -2106,7 +2189,7 @@ void init_skill_order( void )
         for (int j = SK_FIGHTING; j < NUM_SKILLS; j++)
         {
             if (i == j
-                || j == SK_UNUSED_1 
+                || j == SK_UNUSED_1
                 || (j > SK_UNARMED_COMBAT && j < SK_SPELLCASTING))
             {
                 continue;
@@ -2116,7 +2199,7 @@ void init_skill_order( void )
             const unsigned int j_points = (you.skill_points[j] * 100) / j_diff;
 
             if (you.skills[j] == you.skills[i]
-                && (j_points > i_points 
+                && (j_points > i_points
                     || (j_points == i_points && j > i)))
             {
                 you.skill_order[i]++;
@@ -2179,20 +2262,20 @@ int calc_mp(void)
     int invoc_extra = (you.experience_level * you.skills[SK_INVOCATIONS]) / 6;
     int evoc_extra  = (you.experience_level * you.skills[SK_EVOCATIONS]) / 6;
 
-    if (spell_extra > invoc_extra && spell_extra > evoc_extra) 
+    if (spell_extra > invoc_extra && spell_extra > evoc_extra)
         enp += spell_extra;
     else if (invoc_extra > evoc_extra)
         enp += invoc_extra;
     else
         enp += evoc_extra;
 
-    you.max_magic_points = stepdown_value( enp, 9, 18, 45, 100 ); 
+    you.max_magic_points = stepdown_value( enp, 9, 18, 45, 100 );
 
     // this is our "rotted" base (applied after scaling):
     you.max_magic_points += (you.base_magic_points - 5000);
 
     // Yes, we really do want this duplication... this is so the stepdown
-    // doesn't truncate before we apply the rotted base.  We're doing this 
+    // doesn't truncate before we apply the rotted base.  We're doing this
     // the nice way. -- bwr
     if (you.max_magic_points > 50)
         you.max_magic_points = 50;
@@ -2263,7 +2346,7 @@ int species_skills(char skill, char species)
     // Spellcasting is more expensive, invocations and evocations are cheaper
     if (skill == SK_SPELLCASTING)
         return (spec_skills[species - 1][skill] * 130) / 100;
-    else if (skill == SK_INVOCATIONS || skill == SK_EVOCATIONS) 
+    else if (skill == SK_INVOCATIONS || skill == SK_EVOCATIONS)
         return (spec_skills[species - 1][skill] * 75) / 100;
     else
         return (spec_skills[species - 1][skill]);
@@ -2281,9 +2364,17 @@ void wield_warning(bool newWeapon)
          return;
 
     if (newWeapon)
+#ifdef JP
+        strcpy(wepstr, "Ç±ÇÃ");
+#else
         strcpy(wepstr, "this ");
+#endif
     else
+#ifdef JP
+        strcpy(wepstr, "Ç†Ç»ÇΩÇÃ");
+#else
         strcpy(wepstr, "your ");
+#endif
 
     int wepType  = you.inv[you.equip[EQ_WEAPON]].sub_type;
 
@@ -2306,23 +2397,43 @@ void wield_warning(bool newWeapon)
             if (you.strength < you.dex)
             {
                 if (you.strength < 11)
+#ifdef JP
+                    snprintf( info, INFO_SIZE, "Ç†Ç»ÇΩÇÕ%sÇàµÇ§ÇÃÇ™%sç¢ìÔÇæÅB",
+                        wepstr, (you.strength < 7)?"":"Ç‚Ç‚");
+#else
                     snprintf( info, INFO_SIZE, "You have %strouble swinging %s.",
                         (you.strength < 7)?"":"a little ", wepstr);
+#endif
                 else
+#ifdef JP
+                    snprintf( info, INFO_SIZE, "Ç†Ç»ÇΩÇ…Ç‡Ç¡Ç∆òróÕÇ™Ç†ÇÍÇŒ"
+                        "%sÇÇ‡Ç¡Ç∆è„éËÇ…àµÇ¶ÇÈÇæÇÎÇ§ÅB", wepstr);
+#else
                     snprintf( info, INFO_SIZE, "You'd be more effective with "
                         "%s if you were stronger.", wepstr);
+#endif
             }
             else
             {
                 if (you.dex < 11)
                 {
-                    snprintf( info, INFO_SIZE, "Wielding %s is %s awkward.", 
+#ifdef JP
+                    snprintf( info, INFO_SIZE, "éËÇ…ÇµÇƒÇ¢ÇÈ%sÇÕ%sàµÇ¢Ç…Ç≠Ç¢ÅB",
+                              wepstr, (you.dex < 7) ? "Ç©Ç»ÇË" : "Ç‚Ç‚" );
+#else
+                    snprintf( info, INFO_SIZE, "Wielding %s is %s awkward.",
                               wepstr, (you.dex < 7) ? "fairly" : "a little" );
+#endif
                 }
                 else
                 {
+#ifdef JP
+                    snprintf( info, INFO_SIZE, "Ç†Ç»ÇΩÇ…Ç‡Ç¡Ç∆ïqè∑Ç≥Ç™Ç†ÇÍÇŒ"
+                        "%sÇÇ‡Ç¡Ç∆è„éËÇ…àµÇ¶ÇÈÇæÇÎÇ§ÅB", wepstr );
+#else
                     snprintf( info, INFO_SIZE, "You'd be more effective with "
                         "%s if you were nimbler.", wepstr );
+#endif
                 }
             }
 
@@ -2358,8 +2469,15 @@ void wield_warning(bool newWeapon)
 
     if (shoot_skill > effSkill)
     {
+#ifdef JP
+        strcpy( info, "Ç†Ç»ÇΩÇÕìäù±ÉXÉLÉãÇ™í·Ç∑Ç¨ÇÈÇΩÇﬂÅA ");
+        mpr( info, MSGCH_WARN );
+        strcpy( info, wepstr );
+        strcat( info, "Çè„éËÇ…àµÇ§Ç±Ç∆Ç™Ç≈Ç´Ç»Ç¢ÅB" );
+#else
         strcpy( info, "Your low throwing skill limits the effectiveness of ");
         strcat( info, wepstr );
+#endif
         mpr( info, MSGCH_WARN );
     }
 }

@@ -14,9 +14,10 @@ CXX = g++
 DELETE = rm -f
 COPY = cp
 OS_TYPE = LINUX
+EXTRA_FLAGS = -DJP -DWIZARD
 
 CFLAGS = -Wall -Wwrite-strings -Wstrict-prototypes \
-            -Wmissing-prototypes -Wmissing-declarations \
+            -Wmissing-prototypes \
             -g -D$(OS_TYPE) $(EXTRA_FLAGS)
 
 # LDFLAGS = -static

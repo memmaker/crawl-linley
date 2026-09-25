@@ -53,10 +53,18 @@ static int torment_monsters(int x, int y, int pow, int garbage)
     if (x == you.x_pos && y == you.y_pos)
     {
         if (you.is_undead || you.mutation[MUT_TORMENT_RESISTANCE])
+#ifdef JP
+            mpr("あなたは不浄なエネルギーの高まりを感じた。");
+#else
             mpr("You feel a surge of unholy energy.");
+#endif
         else
         {
+#ifdef JP
+            mpr("あなたの肉体は苦痛に破壊された！");
+#else
             mpr("Your body is wracked with pain!");
+#endif
             dec_hp((you.hp / 2) - 1, false);
         }
 
@@ -78,7 +86,11 @@ static int torment_monsters(int x, int y, int pow, int garbage)
         return 0;
 
     monster->hit_points = 1 + (monster->hit_points / 2);
+#ifdef JP
+    simple_monster_message(monster, "は痙攣を起した！");
+#else
     simple_monster_message(monster, " convulses!");
+#endif
 
     return 1;
 }
@@ -137,7 +149,11 @@ bool lose_stat(unsigned char which_stat, unsigned char stat_loss, bool force)
     char newValue = 0;          // holds new value, for comparison to old {dlb}
 
     // begin outputing message: {dlb}
+#ifdef JP
+    strcpy(info, "あなたは");
+#else
     strcpy(info, "You feel ");
+#endif
 
     // set pointers to appropriate variables: {dlb}
     if (which_stat == STAT_RANDOM)
@@ -146,19 +162,31 @@ bool lose_stat(unsigned char which_stat, unsigned char stat_loss, bool force)
     switch (which_stat)
     {
     case STAT_STRENGTH:
+#ifdef JP
+        strcat(info, "弱くなった");
+#else
         strcat(info, "weakened");
+#endif
         ptr_stat = &you.strength;
         ptr_redraw = &you.redraw_strength;
         break;
 
     case STAT_DEXTERITY:
+#ifdef JP
+        strcat(info, "不器用になった");
+#else
         strcat(info, "clumsy");
+#endif
         ptr_stat = &you.dex;
         ptr_redraw = &you.redraw_dexterity;
         break;
 
     case STAT_INTELLIGENCE:
+#ifdef JP
+        strcat(info, "愚かになった");
+#else
         strcat(info, "dopey");
+#endif
         ptr_stat = &you.intel;
         ptr_redraw = &you.redraw_intelligence;
         break;
@@ -182,7 +210,7 @@ bool lose_stat(unsigned char which_stat, unsigned char stat_loss, bool force)
     // Actually, that code was somewhat flawed.  Several race-class combos
     // can start with a stat lower than three, and this block (which
     // used to say '!=' would actually cause stat gain with the '< 3'
-    // check that used to be above.  Crawl has stat-death code and I 
+    // check that used to be above.  Crawl has stat-death code and I
     // don't see why we shouldn't be using it here.  -- bwr
     if (newValue < *ptr_stat)
     {
@@ -198,10 +226,18 @@ bool lose_stat(unsigned char which_stat, unsigned char stat_loss, bool force)
 
     // a warning to player that s/he cut it close: {dlb}
     if (!statLowered)
+#ifdef JP
+        strcat(info, "ような気分が一瞬だけした");
+#else
         strcat(info, " for a moment");
+#endif
 
     // finish outputting message: {dlb}
+#ifdef JP
+    strcat(info, "。");
+#else
     strcat(info, ".");
+#endif
     mpr(info);
 
     return (statLowered);
@@ -214,8 +250,13 @@ void direct_effect(struct bolt &pbolt)
     switch (pbolt.type)
     {
     case DMNBM_HELLFIRE:
+#ifdef JP
+        mpr( "あなたは地獄の業火の爆発に巻き込まれた！" );
+        strcpy( pbolt.beam_name, "地獄の業火" );
+#else
         mpr( "You are engulfed in a burst of hellfire!" );
         strcpy( pbolt.beam_name, "hellfire" );
+#endif
         pbolt.ex_size = 1;
         pbolt.flavour = BEAM_EXPLOSION;
         pbolt.type = SYM_ZAP;
@@ -226,27 +267,49 @@ void direct_effect(struct bolt &pbolt)
         pbolt.isTracer = false;
         pbolt.hit = 20;
         pbolt.damage = dice_def( 3, 20 );
+#ifdef JP
+        pbolt.aux_source = "地獄の業火の爆発";
+#else
         pbolt.aux_source = "burst of hellfire";
+#endif
         explosion( pbolt );
         break;
 
     case DMNBM_SMITING:
+#ifdef JP
+        mpr( "大いなる存在があなたに一撃を食らわせた！" );
+        strcpy( pbolt.beam_name, "打擲" );    // for ouch
+        pbolt.aux_source = "神罰の一撃";
+#else
         mpr( "Something smites you!" );
         strcpy( pbolt.beam_name, "smiting" );    // for ouch
         pbolt.aux_source = "by divine providence";
+#endif
         damage_taken = 7 + random2avg(11, 2);
         break;
 
     case DMNBM_BRAIN_FEED:
         // lose_stat() must come last {dlb}
         if (one_chance_in(3) && lose_stat(STAT_INTELLIGENCE, 1))
+#ifdef JP
+            mpr("何かがあなたの知性を吸い取った！");
+#else
             mpr("Something feeds on your intellect!");
+#endif
         else
+#ifdef JP
+            mpr("何かがあなたの知性を吸い取ろうとした！");
+#else
             mpr("Something tries to feed on your intellect!");
+#endif
         break;
 
     case DMNBM_MUTATION:
+#ifdef JP
+        mpr("奇怪なエネルギーがあなたの体内を激しく流れた。");
+#else
         mpr("Strange energies course through your body.");
+#endif
         if (one_chance_in(5))
             mutate(100);
         else
@@ -275,8 +338,13 @@ void mons_direct_effect(struct bolt &pbolt, int i)
     switch (pbolt.type)
     {
     case DMNBM_HELLFIRE:
+#ifdef JP
+        simple_monster_message(monster, "は地獄の業火に巻き込まれた。");
+        strcpy(pbolt.beam_name, "地獄の業火");
+#else
         simple_monster_message(monster, " is engulfed in hellfire.");
         strcpy(pbolt.beam_name, "hellfire");
+#endif
         pbolt.flavour = BEAM_LAVA;
 
         damage_taken = 5 + random2(10) + random2(5);
@@ -284,8 +352,13 @@ void mons_direct_effect(struct bolt &pbolt, int i)
         break;
 
     case DMNBM_SMITING:
+#ifdef JP
+        simple_monster_message(monster, "は一撃を食らった。");
+        strcpy(pbolt.beam_name, "打擲");
+#else
         simple_monster_message(monster, " is smitten.");
         strcpy(pbolt.beam_name, "smiting");
+#endif
         pbolt.flavour = BEAM_MISSILE;
 
         damage_taken += 7 + random2avg(11, 2);
@@ -296,9 +369,17 @@ void mons_direct_effect(struct bolt &pbolt, int i)
 
     case DMNBM_MUTATION:
         if (mons_holiness( monster->type ) != MH_NATURAL)
+#ifdef JP
+            simple_monster_message(monster, "は影響を受けなかった。");
+#else
             simple_monster_message(monster, " is unaffected.");
+#endif
         else if (check_mons_resist_magic( monster, pbolt.ench_power ))
+#ifdef JP
+            simple_monster_message(monster, "は呪文に抵抗した。");
+#else
             simple_monster_message(monster, " resists.");
+#endif
         else
             monster_polymorph(monster, RANDOM_MONSTER, 100);
         break;
@@ -324,15 +405,27 @@ void random_uselessness(unsigned char ru, unsigned char sc_read_2)
     switch (ru)
     {
     case 0:
+#ifdef JP
+        strcpy(info, "塵が");
+#else
         strcpy(info, "The dust glows a ");
+#endif
         weird_colours(random2(256), wc);
         strcat(info, wc);
+#ifdef JP
+        strcat(info, "に輝いた！");
+#else
         strcat(info, " colour!");
+#endif
         mpr(info);
         break;
 
     case 1:
+#ifdef JP
+        mpr("巻き物はあなたの手の中に再構成された！");
+#else
         mpr("The scroll reassembles itself in your hand!");
+#endif
         inc_inv_item_quantity( sc_read_2, 1 );
         break;
 
@@ -342,10 +435,18 @@ void random_uselessness(unsigned char ru, unsigned char sc_read_2)
             char str_pass[ ITEMNAME_SIZE ];
             in_name(you.equip[EQ_WEAPON], DESC_CAP_YOUR, str_pass);
             strcpy(info, str_pass);
+#ifdef JP
+            strcat(info, "は一瞬の間、");
+#else
             strcat(info, " glows ");
+#endif
             weird_colours(random2(256), wc);
             strcat(info, wc);
+#ifdef JP
+            strcat(info, "に輝いた。");
+#else
             strcat(info, " for a moment.");
+#endif
             mpr(info);
         }
         else
@@ -355,10 +456,24 @@ void random_uselessness(unsigned char ru, unsigned char sc_read_2)
         break;
 
     case 3:
+#ifdef JP
+        strcpy(info, "あなたは遠くに");
+#else
         strcpy(info, "You hear the distant roaring of an enraged ");
+#endif
 
         temp_rand = random2(8);
 
+#ifdef JP
+        strcat(info, (temp_rand == 0) ? "カエル"          :
+                     (temp_rand == 1) ? "ダンゴ虫"      :
+                     (temp_rand == 2) ? "ヤスデ"     :
+                     (temp_rand == 3) ? "なすび"      :
+                     (temp_rand == 4) ? "アルビノドラゴン" :
+                     (temp_rand == 5) ? "ドラゴン"        :
+                     (temp_rand == 6) ? "人間"
+                                      : "ナメクジ");
+#else
         strcat(info, (temp_rand == 0) ? "frog"          :
                      (temp_rand == 1) ? "pill bug"      :
                      (temp_rand == 2) ? "millipede"     :
@@ -367,8 +482,13 @@ void random_uselessness(unsigned char ru, unsigned char sc_read_2)
                      (temp_rand == 5) ? "dragon"        :
                      (temp_rand == 6) ? "human"
                                       : "slug");
+#endif
 
+#ifdef JP
+        strcat(info, "の激怒する吠え声を耳にした！");
+#else
         strcat(info, "!");
+#endif
         mpr(info);
         break;
 
@@ -376,10 +496,24 @@ void random_uselessness(unsigned char ru, unsigned char sc_read_2)
         // josh declares mummies can't smell {dlb}
         if (you.species != SP_MUMMY)
         {
+#ifdef JP
+            strcpy(info, "あなたは");
+#else
             strcpy(info, "You smell ");
+#endif
 
             temp_rand = random2(8);
 
+#ifdef JP
+            strcat(info, (temp_rand == 0) ? "コーヒーの匂いを嗅いだ。"      :
+                         (temp_rand == 1) ? "塩辛い匂いを嗅いだ。"          :
+                         (temp_rand == 2) ? "髪の燃える匂いを嗅いだ！"      :
+                         (temp_rand == 3) ? "焼き立てのパンの匂いを嗅いだ！":
+                         (temp_rand == 4) ? "何か奇妙な匂いを嗅いだ。"      :
+                         (temp_rand == 5) ? "濡れた羊毛の匂いを嗅いだ。"    :
+                         (temp_rand == 6) ? "硫黄の匂いを嗅いだ。"
+                                          : "火と硫黄の匂いを嗅いだ！");
+#else
             strcat(info, (temp_rand == 0) ? "coffee."          :
                          (temp_rand == 1) ? "salt."            :
                          (temp_rand == 2) ? "burning hair!"    :
@@ -388,35 +522,70 @@ void random_uselessness(unsigned char ru, unsigned char sc_read_2)
                          (temp_rand == 5) ? "wet wool."        :
                          (temp_rand == 6) ? "sulphur."
                                           : "fire and brimstone!");
+#endif
             mpr(info);
         }
         break;
 
     case 5:
+#ifdef JP
+        mpr("あなたは一瞬、逃れえぬ破滅の感覚を経験した！");
+#else
         mpr("You experience a momentary feeling of inescapable doom!");
+#endif
         break;
 
     case 6:
+#ifdef JP
+        strcpy(info, "あなたの");
+#else
         strcpy(info, "Your ");
+#endif
 
         temp_rand = random2(3);
 
+#ifdef JP
+        strcat(info, (temp_rand == 0) ? "耳が痒くなった。"   :
+                     (temp_rand == 1) ? "頭が痛くなった！"
+                                      : "鼻が突然ぴくぴくした！");
+#else
         strcat(info, (temp_rand == 0) ? "ears itch."   :
                      (temp_rand == 1) ? "brain hurts!"
                                       : "nose twitches suddenly!");
+#endif
         mpr(info);
         break;
 
     case 7:
+#ifdef JP
+        mpr("あなたは小さなベルが鳴る音を耳にした。");
+#else
         mpr("You hear the tinkle of a tiny bell.");
+#endif
         cast_summon_butterflies( 100 );
         break;
 
     case 8:
+#ifdef JP
+        strcpy(info, "あなたは");
+#else
         strcpy(info, "You hear ");
+#endif
 
         temp_rand = random2(9);
 
+#ifdef JP
+        strcat(info, (temp_rand == 0) ? "歌の一片を耳にした"                       :
+                     (temp_rand == 1) ? "誰か他の人を呼ぶ声を耳にした"             :
+                     (temp_rand == 2) ? "とても奇妙な騒音を耳にした"               :
+                     (temp_rand == 3) ? "炎の唸る音を耳にした"                     :
+                     (temp_rand == 4) ? "まったくもって奇妙な騒音を耳にした"       :
+                     (temp_rand == 5) ? "遠くで鐘の鳴る音を耳にした"               :
+                     (temp_rand == 6) ? "ヤクが大声でいななくのを耳にした"         :
+                     (temp_rand == 7) ? "ガリガリと食べる音を耳にした"
+                                      : "巨大な鐘がチリンチリンと鳴るのを耳にした");
+        strcat(info, "。");
+#else
         strcat(info, (temp_rand == 0) ? "snatches of song"                 :
                      (temp_rand == 1) ? "a voice call someone else's name" :
                      (temp_rand == 2) ? "a very strange noise"             :
@@ -427,6 +596,7 @@ void random_uselessness(unsigned char ru, unsigned char sc_read_2)
                      (temp_rand == 7) ? "a crunching sound"
                                       : "the tinkle of an enormous bell");
         strcat(info, ".");
+#endif
         mpr(info);
         break;
     }
@@ -462,14 +632,27 @@ bool acquirement(unsigned char force_class)
 
     if (force_class == OBJ_RANDOM)
     {
+#ifdef JP
+        mpr("これは獲得の巻物だ！");
+#else
         mpr("This is a scroll of acquirement!");
+#endif
 
       query:
+#ifdef JP
+        mpr( "[a|A] 武器    [b|B] 防具    [c|C] 装身具         [d|D] 本  " );
+        mpr( "[e|E] 杖      [f|F] 食料    [g|G] 宝物           [h|H] 金貨" );
+#else
         mpr( "[a|A] Weapon  [b|B] Armour  [c|C] Jewellery      [d|D] Book" );
         mpr( "[e|E] Staff   [f|F] Food    [g|G] Miscellaneous  [h|H] Gold" );
+#endif
 
         //mpr("[r|R] - Just give me something good.");
+#ifdef JP
+        mpr("どの種類のアイテムを獲得しますか？", MSGCH_PROMPT);
+#else
         mpr("What kind of item would you like to acquire? ", MSGCH_PROMPT);
+#endif
 
         keyin = get_ch();
 
@@ -512,7 +695,7 @@ bool acquirement(unsigned char force_class)
             type_wanted = one_chance_in(10) ? FOOD_ROYAL_JELLY
                                             : FOOD_CHUNK;
         }
-        else 
+        else
         {
             // Meat is better than bread (except for herbivors), and
             // by choosing it as the default we don't have to worry
@@ -520,12 +703,12 @@ bool acquirement(unsigned char force_class)
             type_wanted = FOOD_MEAT_RATION;
 
             if (you.mutation[MUT_HERBIVOROUS])
-                type_wanted = FOOD_BREAD_RATION; 
+                type_wanted = FOOD_BREAD_RATION;
 
             // If we have some regular rations, then we're probably be more
-            // interested in faster foods (escpecially royal jelly)... 
+            // interested in faster foods (escpecially royal jelly)...
             // otherwise the regular rations should be a good enough offer.
-            if (already_has[FOOD_MEAT_RATION] 
+            if (already_has[FOOD_MEAT_RATION]
                     + already_has[FOOD_BREAD_RATION] >= 2 || coinflip())
             {
                 type_wanted = one_chance_in(5) ? FOOD_HONEYCOMB
@@ -587,8 +770,8 @@ bool acquirement(unsigned char force_class)
                 // "rare" weapons are only considered some of the time...
                 // still, the chance is higher than actual random creation
                 if (weapon_skill( OBJ_WEAPONS, i ) == skill
-                    && (i < WPN_EVENINGSTAR || i > WPN_BROAD_AXE 
-                        || (i >= WPN_HAMMER && i <= WPN_SABRE) 
+                    && (i < WPN_EVENINGSTAR || i > WPN_BROAD_AXE
+                        || (i >= WPN_HAMMER && i <= WPN_SABRE)
                         || one_chance_in(4)))
                 {
                     count++;
@@ -620,6 +803,18 @@ bool acquirement(unsigned char force_class)
         case SP_OGRE:
         case SP_OGRE_MAGE:
         case SP_TROLL:
+        case SP_RED_DRACONIAN:
+        case SP_WHITE_DRACONIAN:
+        case SP_GREEN_DRACONIAN:
+        case SP_GOLDEN_DRACONIAN:
+        case SP_GREY_DRACONIAN:
+        case SP_BLACK_DRACONIAN:
+        case SP_PURPLE_DRACONIAN:
+        case SP_MOTTLED_DRACONIAN:
+        case SP_PALE_DRACONIAN:
+        case SP_UNK0_DRACONIAN:
+        case SP_UNK1_DRACONIAN:
+        case SP_UNK2_DRACONIAN:
         case SP_SPRIGGAN:
             if (type_wanted == ARM_GLOVES || type_wanted == ARM_BOOTS)
             {
@@ -653,9 +848,9 @@ bool acquirement(unsigned char force_class)
         if (type_wanted == OBJ_RANDOM || type_wanted == ARM_ROBE)
         {
             // start with normal base armour
-            if (type_wanted == ARM_ROBE) 
+            if (type_wanted == ARM_ROBE)
                 type_wanted = coinflip() ? ARM_ROBE : ARM_ANIMAL_SKIN;
-            else 
+            else
             {
                 type_wanted = ARM_ROBE + random2(8);
 
@@ -712,14 +907,19 @@ bool acquirement(unsigned char force_class)
                 iteration = 1;
                 type_wanted = NUM_BOOKS;
 
-                best_spell = best_skill( SK_SPELLCASTING, (NUM_SKILLS - 1), 
+                best_spell = best_skill( SK_SPELLCASTING, (NUM_SKILLS - 1),
                                          best_spell );
 
               which_book:
 #if DEBUG_DIAGNOSTICS
-                snprintf( info, INFO_SIZE, 
+                snprintf( info, INFO_SIZE,
+#ifdef JP
                           "acquirement: iteration = %d, best_spell = %d",
                           iteration, best_spell );
+#else
+                          "acquirement: iteration = %d, best_spell = %d",
+                          iteration, best_spell );
+#endif
 
                 mpr( info, MSGCH_DIAGNOSTICS );
 #endif //jmf: debugging
@@ -826,7 +1026,7 @@ bool acquirement(unsigned char force_class)
                         type_wanted = give_first_conjuration_book();
                     else if (!you.had_book[BOOK_TEMPESTS])
                         type_wanted = BOOK_TEMPESTS;
-                    
+
                     // now a Vehumet special -- bwr
                     // else if (!you.had_book[BOOK_ANNIHILATIONS])
                     //     type_wanted = BOOK_ANNIHILATIONS;
@@ -925,7 +1125,7 @@ bool acquirement(unsigned char force_class)
 
                 best_spell = best_skill( SK_SPELLCASTING, (NUM_SKILLS-1), 99 );
 
-                // If we're going to give out an enhancer stave, 
+                // If we're going to give out an enhancer stave,
                 // we should at least bias things towards the
                 // best spell skill. -- bwr
                 switch (best_spell)
@@ -1013,12 +1213,12 @@ bool acquirement(unsigned char force_class)
                             || type_wanted >= STAFF_AIR)
                         && !one_chance_in(4)))
                 {
-                    type_wanted = (coinflip() ? STAFF_STRIKING 
+                    type_wanted = (coinflip() ? STAFF_STRIKING
                                               : STAFF_SMITING + random2(10));
                 }
                 break;
 
-            case OBJ_MISCELLANY: 
+            case OBJ_MISCELLANY:
                 do
                     type_wanted = random2(NUM_MISCELLANY);
                 while (type_wanted == MISC_HORN_OF_GERYON
@@ -1041,17 +1241,25 @@ bool acquirement(unsigned char force_class)
     if (grd[you.x_pos][you.y_pos] == DNGN_LAVA
                         || grd[you.x_pos][you.y_pos] == DNGN_DEEP_WATER)
     {
+#ifdef JP
+        mpr("あなたは水飛沫の音を耳にした。");      // how sad (and stupid)
+#else
         mpr("You hear a splash.");      // how sad (and stupid)
+#endif
     }
     else
     {
         // BCR - unique is now used for food quantity.
-        thing_created = items( unique, class_wanted, type_wanted, true, 
+        thing_created = items( unique, class_wanted, type_wanted, true,
                                MAKE_GOOD_ITEM, 250 );
 
         if (thing_created == NON_ITEM)
         {
+#ifdef JP
+            mpr("無限の虚空に棲まう悪魔があなたに微笑みかけた。");
+#else
             mpr("The demon of the infinite void smiles at you.");
+#endif
             return (false);
         }
 
@@ -1064,19 +1272,19 @@ bool acquirement(unsigned char force_class)
                 || mitm[thing_created].base_type == BOOK_MINOR_MAGIC_II
                 || mitm[thing_created].base_type == BOOK_MINOR_MAGIC_III)
             {
-                you.had_book[ BOOK_MINOR_MAGIC_I ] = 1;    
-                you.had_book[ BOOK_MINOR_MAGIC_II ] = 1;    
-                you.had_book[ BOOK_MINOR_MAGIC_III ] = 1;    
+                you.had_book[ BOOK_MINOR_MAGIC_I ] = 1;
+                you.had_book[ BOOK_MINOR_MAGIC_II ] = 1;
+                you.had_book[ BOOK_MINOR_MAGIC_III ] = 1;
             }
             else if (mitm[thing_created].base_type == BOOK_CONJURATIONS_I
                 || mitm[thing_created].base_type == BOOK_CONJURATIONS_II)
             {
-                you.had_book[ BOOK_CONJURATIONS_I ] = 1;    
-                you.had_book[ BOOK_CONJURATIONS_II ] = 1;    
+                you.had_book[ BOOK_CONJURATIONS_I ] = 1;
+                you.had_book[ BOOK_CONJURATIONS_II ] = 1;
             }
             else
             {
-                you.had_book[ mitm[thing_created].sub_type ] = 1;    
+                you.had_book[ mitm[thing_created].sub_type ] = 1;
             }
         }
         else if (mitm[thing_created].base_type == OBJ_JEWELLERY)
@@ -1088,7 +1296,7 @@ bool acquirement(unsigned char force_class)
                 mitm[thing_created].plus2 = abs( mitm[thing_created].plus2 );
                 if (mitm[thing_created].plus2 == 0)
                     mitm[thing_created].plus2 = 1;
-                // fall through... 
+                // fall through...
 
             case RING_PROTECTION:
             case RING_STRENGTH:
@@ -1115,7 +1323,7 @@ bool acquirement(unsigned char force_class)
         else if (mitm[thing_created].base_type == OBJ_WEAPONS
                     && !is_fixed_artefact( mitm[thing_created] ))
         {
-            // HACK: make unwieldable weapons wieldable 
+            // HACK: make unwieldable weapons wieldable
             // Note: messing with fixed artefacts is probably very bad.
             switch (you.species)
             {
@@ -1124,22 +1332,22 @@ bool acquirement(unsigned char force_class)
             case SP_GHOUL:
                 {
                     int brand = get_weapon_brand( mitm[thing_created] );
-                    if (brand == SPWPN_HOLY_WRATH 
+                    if (brand == SPWPN_HOLY_WRATH
                             || brand == SPWPN_DISRUPTION)
                     {
                         if (!is_random_artefact( mitm[thing_created] ))
                         {
-                            set_item_ego_type( mitm[thing_created], 
+                            set_item_ego_type( mitm[thing_created],
                                                OBJ_WEAPONS, SPWPN_VORPAL );
                         }
                         else
                         {
                             // keep reseting seed until it's good:
-                            for (; brand == SPWPN_HOLY_WRATH 
-                                      || brand == SPWPN_DISRUPTION; 
+                            for (; brand == SPWPN_HOLY_WRATH
+                                      || brand == SPWPN_DISRUPTION;
                                   brand = get_weapon_brand(mitm[thing_created]))
                             {
-                                make_item_randart( mitm[thing_created] );    
+                                make_item_randart( mitm[thing_created] );
                             }
                         }
                     }
@@ -1154,26 +1362,26 @@ bool acquirement(unsigned char force_class)
                 {
                 case WPN_GREAT_SWORD:
                 case WPN_TRIPLE_SWORD:
-                    mitm[thing_created].sub_type = 
+                    mitm[thing_created].sub_type =
                             (coinflip() ? WPN_FALCHION : WPN_LONG_SWORD);
                     break;
 
                 case WPN_GREAT_MACE:
                 case WPN_GREAT_FLAIL:
-                    mitm[thing_created].sub_type = 
+                    mitm[thing_created].sub_type =
                             (coinflip() ? WPN_MACE : WPN_FLAIL);
                     break;
 
                 case WPN_BATTLEAXE:
                 case WPN_EXECUTIONERS_AXE:
-                    mitm[thing_created].sub_type = 
+                    mitm[thing_created].sub_type =
                             (coinflip() ? WPN_HAND_AXE : WPN_WAR_AXE);
                     break;
 
                 case WPN_HALBERD:
                 case WPN_GLAIVE:
                 case WPN_SCYTHE:
-                    mitm[thing_created].sub_type = 
+                    mitm[thing_created].sub_type =
                             (coinflip() ? WPN_SPEAR : WPN_TRIDENT);
                     break;
                 }
@@ -1201,7 +1409,7 @@ bool acquirement(unsigned char force_class)
                         || you.mutation[MUT_HORNS]))
                 {
                     // turn it into a cap or wizard hat
-                    set_helmet_type( mitm[thing_created], 
+                    set_helmet_type( mitm[thing_created],
                                     coinflip() ? THELM_CAP : THELM_WIZARD_HAT );
 
                     mitm[thing_created].colour = random_colour();
@@ -1213,7 +1421,7 @@ bool acquirement(unsigned char force_class)
                     mitm[thing_created].plus2 = TBOOT_NAGA_BARDING;
                 else if (you.species == SP_CENTAUR)
                     mitm[thing_created].plus2 = TBOOT_CENTAUR_BARDING;
-                else 
+                else
                     mitm[thing_created].plus2 = TBOOT_BOOTS;
 
                 // fix illegal barding ego types caused by above hack
@@ -1232,13 +1440,13 @@ bool acquirement(unsigned char force_class)
         move_item_to_grid( &thing_created, you.x_pos, you.y_pos );
 
         // This should never actually be NON_ITEM because of the way
-        // move_item_to_grid works (doesn't create a new item ever), 
+        // move_item_to_grid works (doesn't create a new item ever),
         // but we're checking it anyways. -- bwr
         if (thing_created != NON_ITEM)
             canned_msg(MSG_SOMETHING_APPEARS);
     }
 
-    // Well, the item may have fallen in the drink, but the intent is 
+    // Well, the item may have fallen in the drink, but the intent is
     // that acquirement happened. -- bwr
     return (true);
 }                               // end acquirement()
@@ -1279,7 +1487,11 @@ bool recharge_wand(void)
     char str_pass[ ITEMNAME_SIZE ];
     in_name(you.equip[EQ_WEAPON], DESC_CAP_YOUR, str_pass);
     strcpy(info, str_pass);
+#ifdef JP
+    strcat(info, "は一瞬輝いた。");
+#else
     strcat(info, " glows for a moment.");
+#endif
     mpr(info);
 
     you.inv[you.equip[EQ_WEAPON]].plus +=
@@ -1300,13 +1512,23 @@ void yell(void)
 
     if (silenced(you.x_pos, you.y_pos))
     {
+#ifdef JP
+        mpr("あなたは音を出すことができない！");
+#else
         mpr("You are unable to make a sound!");
+#endif
         return;
     }
 
+#ifdef JP
+    mpr("何を口にしますか？", MSGCH_PROMPT);
+    mpr(" ! - 叫ぶ");
+    mpr(" a - 味方にモンスター攻撃を命じる");
+#else
     mpr("What do you say?", MSGCH_PROMPT);
     mpr(" ! - Yell");
     mpr(" a - Order allies to attack a monster");
+#endif
 
     if (!(you.prev_targ == MHITNOT || you.prev_targ == MHITYOU))
     {
@@ -1314,15 +1536,27 @@ void yell(void)
 
         if (mons_near(target) && player_monster_visible(target))
         {
+#ifdef JP
+            mpr(" p - 味方にあなたと同じ目標を攻撃することを命じる");
+#else
             mpr(" p - Order allies to attack your previous target");
+#endif
             targ_prev = true;
         }
     }
 
+#ifdef JP
+    strcpy(info, " その他の文字 - 沈黙を守る");
+#else
     strcpy(info, " Anything else - Stay silent");
+#endif
 
     if (one_chance_in(20))
+#ifdef JP
+        strcat(info, " (馬鹿のごとく)");
+#else
         strcat(info, " (and be thought a fool)");
+#endif
 
     mpr(info);
 
@@ -1331,13 +1565,21 @@ void yell(void)
     switch (keyn)
     {
     case '!':
+#ifdef JP
+        mpr("あなたは注意を引くために叫んだ！");
+#else
         mpr("You yell for attention!");
+#endif
         you.turn_is_over = 1;
         noisy( 12, you.x_pos, you.y_pos );
         return;
 
     case 'a':
+#ifdef JP
+        mpr("どれを狙いますか？", MSGCH_PROMPT);
+#else
         mpr("Gang up on whom?", MSGCH_PROMPT);
+#endif
         direction( targ, DIR_TARGET, TARG_ENEMY );
 
         if (targ.isCancel)
@@ -1346,9 +1588,14 @@ void yell(void)
             return;
         }
 
-        if (!targ.isValid || mgrd[targ.tx][targ.ty] == NON_MONSTER)
+        if (!targ.isValid || mgrd[targ.tx][targ.ty] == NON_MONSTER
+          ||!player_monster_visible( &menv[ mgrd[targ.tx][targ.ty] ] ) )
         {
+#ifdef JP
+            mpr("はいはい、仰せのままに。");
+#else
             mpr("Yeah, whatever.");
+#endif
             return;
         }
 
@@ -1363,12 +1610,20 @@ void yell(void)
         }
         /* fall through... */
     default:
+#ifdef JP
+        mpr("了解しました。");
+#else
         mpr("Okely-dokely.");
+#endif
         return;
     }
 
     you.pet_target = mons_targd;
 
     noisy( 10, you.x_pos, you.y_pos );
+#ifdef JP
+    mpr("攻撃せよ！");
+#else
     mpr("Attack!");
+#endif
 }                               // end yell()

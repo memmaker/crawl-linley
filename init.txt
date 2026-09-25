@@ -1,4 +1,3 @@
-#
 # Crawl Init file
 #
 # Lines begining with '#' are comments.  The basic syntax is:
@@ -14,19 +13,115 @@
 # White space is stripped from the begining and end of the line, as
 # well as imediately before and after the '='.  All other whitespace
 # is left alone.
-#
 
 
+# Here's a list of show_items types:
 #
+#    )		Weapons
+#    (		Missiles
+#    [		Armour
+#    /		Wands
+#    %		Food
+#    ?		Scrolls
+#    " or =     jewellery
+#    !		Potions
+#    + or :	Books
+#    \ or |	Staves
+#    }		Misc items
+#    X		Corpses
+
+show_items = %!?/
+
+
+# character name defaults to the previous game's
+#
+enter_latest_name = true
+
+
+# offset of assigned letters for picked items
+#
+pick_items_start = a
+
+
+# stash_tracking
+#
+# stash_tracking = explicit
+# stash_tracking = dropped
+# stash_tracking = all
+
+stash_tracking = explicit
+
+
+# Dumping places of each kill. Use 'none' to suppress place display altogether,
+# 'all' to display all known kill places, anything else to default to showing
+# the kill place only for single kills
+dump_kill_places = one
+
+
+# The number of messages to be displayed in character dump files. Defaults to 4
+dump_message_count = 20
+
+
+# Set to false to disable targeting zero exp monsters in hostile targeting mode
+# target_zero_exp = false
+
+
+# travel_delay
+# How long travel waits after each move (milliseconds).
+# -1:off  0-2000:on
+#
+travel_delay = -1
+
+
+# Substrings that will stop travel if they're present in any message the game
+# displays. Substrings can be comma separated, and multiple stop_travel lines 
+# are accepted.
+#
+# Stop travel if Xom grants us a gift suddenly.
+stop_travel = Something appears 
+
+
+# Prevent travel from routing through shallow water.
+# travel_avoid_terrain = shallow water
+
+
+# To use tile or ascii. Minimap and mouse operations are available
+# in both modes.
+#
+
+use_tile = true
+
+
+# Use isometric quasi-3D tile display
+#
+
+use_iso_mode = false
+
+
+# Rotate direction keys (numpad 1-9 and hjklyubn) 45 degrees in iso-mode
+#
+
+rotate_numpad = true
+
+
+# Rotate minimap 45 degrees in iso-mode
+# Note that it takes much larger spaces and may not fit in the screen 
+
+rotate_minimap = true
+
+
 # Player name
 #
 
-# name=kernel
+#name = kernel
 
 
+# crawl_dir
+#
 # Directory for reading macro.txt and init.txt, and dumping characters.
 # It should end with the path delimiter.
-# crawl_dir=/home/bwross/crawl/
+
+#crawl_dir=/home/bwross/crawl/
 
 
 # Here's a list of autopickup types:
@@ -46,38 +141,86 @@
 #    X		Corpses
 #    $		Gold
 
-autopickup = $?!:"/0
+autopickup = $?!:"/0%\}
 
 
+# ban_pickup
+#
+# You can suppress pickup of objects altogether by using ban_pickup lines in
+# init.txt.
+# Any object whose short description matches any substring in a ban_pickup line
+# will not be subject to autopickup.
+#
+# Examples:
+
+ban_pickup = degeneration,decay,confusion
+ban_pickup = inaccuracy
+
+
+# pickup_thrown
+#
+# Autopickup can be used to pick up missiles you've thrown/fired. 
+# Set pickup_thrown = true to activate this.
+
+pickup_thrown = true
+
+
+# pickup_dropped
+#
+# You can suppress autopickup of items you've dropped by setting
+# pickup_dropped = false
+
+pickup_dropped = false
+
+
+# verbose_dump
+#
 # verbose dump causes less important item details to appear in character dumps
-# verbose_dump  = false
+
+#verbose_dump  = false
 
 
+# colour_map
+#
 # Colours out of sight map features on the playing screen
+
 colour_map    = true
 
 
+# clean_map
+#
 # Cleans up out of sight monsters and clouds on the map
+
 clean_map     = false
 
 
+# easy_open
+#
 # Open doors by moving on to them
-# easy_open     = false
+
+#easy_open     = false
 
 
+# easy_butcher
+#
 # Auto-switch to uncursed short blade for butchery (EXPERIMENTAL!)
+
 easy_butcher  = true
 
 
+# easy_armour
+#
 # Allows auto removal of armour when dropping it
-# easy_armour   = false
+#easy_armour   = false
 
 
+# easy_confirm
+#
 # Make confirmation queations easier to answer:
 #       none = force capitals on Y/N questions
 #       safe = force only on questions that will end game
 #       all  = never force capitals
-
+#
 # WARNING TO KEYPAD USERS: The number 7 is mapped to the letter 'y',
 # which can result in accidentally answering yes to questions; it is
 # suggested that you use a value of 'none' or 'safe'
@@ -85,15 +228,25 @@ easy_butcher  = true
 easy_confirm  = safe
 
 
+# easy_quit_item_lists
+#
 # Setting this option to true allows the quitting of item listing with
 # space as well as escape.  These lists are essentially all of those 
 # that are requesting an inventory item and accept '?' and '*'.
 #
 # The identify list will never easy quit.  The default is false.
 
-# easy_quit_item_lists = true
+#easy_quit_item_lists = true
 
 
+# stress_cursed
+# 
+
+stress_cursed = true
+
+
+# show_uncursed
+#
 # This option adds the text "uncursed" to items where the
 # curse status is relevent and known.  Does not bother to
 # show "uncursed" on items that are fully identified (showing pluses),
@@ -102,39 +255,39 @@ easy_confirm  = safe
 show_uncursed = true
 
 
+# weapon
 #
 # The weapon option allows defaulting on the weapon selection screen
 #
 # Valid weapons are short sword, hand axe, spear, mace, and trident...
 # although tridents are restricted to only merfolk and gladiators, so
 # you'll get queries for the illegal cases.
-#
 
-# weapon = hand axe
+#weapon = hand axe
 
 
-#
 # These allow auto-selection of other third-screen options.
 #
 # Select "random" for random choice.
 #
-# chaos_knight => Xom or Makleb
+# chaos_knight => Xom or Makhleb
 # death_knight => necromancy or Yredelemnul
 # priest       => Zin or Yredelemnul
 #
 
-# chaos_knight = xom
-# death_knight = necromancy
-# priest       = random
+#chaos_knight = xom
+#death_knight = necromancy
+#priest       = random
 
 
+# random_pick
 #
 # The random_pick option will randomly generate a character.
 # The above options (weapons and class options) will override where
 # appropriate.
 #
 
-# random_pick = true
+#random_pick = true
 
 
 # Macro colours to other colours
@@ -155,12 +308,13 @@ show_uncursed = true
 #
 # lightgray = lightgrey, darkgray = darkgrey
 
-# colour.lightgray = black
-# colour.white     = black
-# colour.lightcyan = cyan
-# colour.yellow    = brown
+#colour.lightgray = black
+#colour.white     = black
+#colour.lightcyan = cyan
+#colour.yellow    = brown
 
 
+# always_greet
 #
 # always_greet will give the race/class and god messages everytime the
 # game is started.
@@ -169,13 +323,16 @@ show_uncursed = true
 always_greet = true
 
 
+# background
+#
 # Set the default background colour of your window
 # Warning: setting this to a value different than the window's background
 #          colour, will probably result in some very ugly results.
 
-# background = white
+#background = white
 
 
+# friend_brand
 #
 # Brand friendly monsters with a curses attribute... these might not
 # do what you think, it depends on the terminal being used (and won't
@@ -240,15 +397,16 @@ friend_brand = reverse
 #       will be coming later.
 #
 
-# channel.plain = green
-# channel.talk = mute
-# channel.warning = plain
-# channel.diagnostic = mute
-# channel.rotten_meat = yellow
-# channel.god = alternate 
-# channel.mutation = green
+#channel.plain = green
+#channel.talk = mute
+#channel.warning = plain
+#channel.diagnostic = mute
+#channel.rotten_meat = yellow
+#channel.god = alternate 
+#channel.mutation = green
 
 
+# hp_warning
 #
 # hp_warning gives "* * * LOW HITPOINT WARNING * * *" on the danger channel
 # when the player takens damage and their hitpoints are less than this
@@ -265,16 +423,17 @@ hp_warning = 25
 # - two letter abbreviation used on the high score board
 # - a string to match against the full name
 
-# race = human
+#race = human
 
 
 # class 
 #
 # Used to preselect class.  Same format as race option above.
 
-# class = fighter
+#class = fighter
 
 
+# wiz_mode
 #
 # Wizard mode options (available only in WIZARD compiles):
 #
@@ -286,7 +445,6 @@ hp_warning = 25
 wiz_mode = no
 
 
-#
 # Fire command options
 #
 # fire_items_start - sets the first inventory item to consider (default is a)
@@ -304,10 +462,9 @@ wiz_mode = no
 #
 
 fire_items_start = c
-fire_order = launcher, dart, stone
+fire_order =  launcher, dart, stone, spear, handaxe, dagger, club
 
 
-#
 # auto_list
 #
 # Setting this to true if you want to automatically list appropriate 
@@ -317,12 +474,10 @@ fire_order = launcher, dart, stone
 #
 # This option does not apply to spell casting... Conjurers would probably 
 # find that really annoying.
-# 
 
-# auto_list = true
+auto_list = true
 
 
-#
 # Input buffer flushing options (flush.*)
 #
 # These are useful when using macros.  Setting one of these 
@@ -334,12 +489,12 @@ fire_order = launcher, dart, stone
 # failure -- when spells/abilities get miscast (true)
 # command -- whenever the game is aboutn to get the next command (false)
 # message -- whenever the game outputs a non-mute message (false)
-#
-# flush.failure = false
-# flush.command = true
-# flush.message = true
 
-#
+#flush.failure = false
+#flush.command = true
+#flush.message = true
+
+
 # lowercase_invocations
 #
 # Set this option to true if you prefer to have invocations on 'a'-'e'
@@ -349,7 +504,6 @@ fire_order = launcher, dart, stone
 lowercase_invocations = true
 
 
-#
 # terse_hand
 #
 # Set this to false to have the "in hand" description on the main screen
@@ -357,14 +511,20 @@ lowercase_invocations = true
 # newer more terse description that should fit the limited space better
 # (but will be harder for newbies to understand).
 
-# terse_hand = false
+#terse_hand = false
 
 
-#
 # delay_message_clear - experimental (may be ugly at points)
 #
 # Setting this option to true will delay the clearing of messages until 
 # the message space is full (default is false which results in clearing
 # between player actions).
 
-# delay_message_clear = true
+#delay_message_clear = true
+
+
+# use_cake
+#
+
+use_cake = true
+

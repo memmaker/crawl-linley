@@ -3,11 +3,11 @@
  *  Summary:    Definitions for unrandom artifacts.
  *  Written by: Linley Henzell
  *
- *  Change History (most recent first): 
+ *  Change History (most recent first):
  *               <3>     7 Aug 2001      MV             Added many new items
  *               <2>     5/09/99        JDJ             Cekugob no longer has fire and cold
- *                                                                      resistances. 
- *               <1>     -/--/--        LRH             Created 
+ *                                                                      resistances.
+ *               <1>     -/--/--        LRH             Created
  */
 #ifndef UNRAND_H
 #define UNRAND_H
@@ -66,7 +66,7 @@
    and no susceptibility here either.
    Range: 0 or 1.
 
-   res magic: This is cumulative, but no susceptibility. To be meaningful, 
+   res magic: This is cumulative, but no susceptibility. To be meaningful,
    should be set to about 20 - 60.
    Range: 0 to MAXINT probably, but about 100 is a realistic ceiling.
 
@@ -98,7 +98,7 @@
    +/- to-hit/to-dam: Obvious. Affects both melee and missile. Should be left
    at 0 for weapons, which get +s normally.
 
-   cursed: 0 or 1.  Sets the item's initial curse status.  Cursed items 
+   cursed: 0 or 1.  Sets the item's initial curse status.  Cursed items
    will tend to recurse themselves when rewielded.  Maybe this should be
    made to be a value that determines how often it will recurse? -- bwr
 
@@ -160,7 +160,957 @@
 
 
 /* 2 */
-{                               
+#ifdef JP
+{
+    "ロングソード『ブラックベイン』", "黒いロングソード",
+        OBJ_WEAPONS, WPN_LONG_SWORD, +7, +8, DARKGREY,
+    {
+        SPWPN_VORPAL, 0, 0, 0, 0, 0,
+        0, 0, 0, 0, 0, 0,
+        0, 0, 0, 0, 0, 1,       // berserk
+        0, 0, 0, 0, 0,
+        1, 0, 0, 0, 0,          // force berserk
+        0, -20                  // stealth
+    }
+    ,
+        "",
+        "",
+        ""
+}
+,
+
+/* 3 */
+{
+    "影の指輪", "黒い指輪",
+        OBJ_JEWELLERY, RING_INVISIBILITY, 0, 0, DARKGREY,
+    {
+        0, 0, 4, 0, 0, 0,       // EV
+        0, 0, 0, 0, 1, 0,       // life prot
+        1, 0, 0, 0, 0, 0,       // see invis
+        0, 0, 0, 0, 0,
+        0, 0, 0, -3, 0,         // to hit
+        0, 10                   // stealth
+    }
+    ,
+        "",
+        "",
+        ""
+}
+,
+
+/* 4 */
+{
+    "燃え盛る死のロングソード", "煙を上げるロングソード",
+        OBJ_WEAPONS, WPN_LONG_SWORD, +6, +2, RED,
+    {
+        SPWPN_FLAMING, 0, 0, 0, 0, 0,
+        2, -1, 0, 1, 0, 20,     // res fire, cold, poison, magic
+        0, 0, 0, 0, 0, 0,
+        0, 0, 0, 0, 0,
+        0, 0, 0, 0, 0,
+        0, 0
+    }
+    ,
+        "",
+        "",
+        ""
+}
+,
+
+/* 5 */
+{
+    "無知の盾", "くすんだ大盾",
+        OBJ_ARMOUR, ARM_LARGE_SHIELD, +5, 0, BROWN,
+    {
+        0, 2, 2, 0, -6, 0,      // AC, EV, int
+        0, 0, 0, 0, 1, 0,       // life prot
+        0, 0, 0, 0, 0, 0,
+        0, 0, 0, 0, 0,
+        0, 0, 0, 0, 0,
+        1, 0                    // cursed
+    }
+    ,
+        "",
+        "",
+        ""
+}
+,
+
+
+/* 6 */
+{
+    "ジンの聖なる鎧", "輝く黄金のプレートメイル",
+        OBJ_ARMOUR, ARM_PLATE_MAIL, +6, 0, YELLOW,
+    {
+        0, 0, 0, 3, 0, 0,       // str
+        0, 0, 0, 0, 2, 50,      // life prot, magic
+        0, 0, 0, 0, 0, 0,
+        0, 0, 0, 0, 0,
+        0, 0, 0, 0, 0,
+        0, 0
+    }
+    ,
+        "",
+        "広範囲を黄金色の板金で覆った鎧だ。",
+        ""
+}
+,
+
+/* 7 */
+{
+    "増強のローブ", "絹のローブ",
+        OBJ_ARMOUR, ARM_ROBE, +4, 0, LIGHTRED,
+    {
+        0, 0, 0, 2, 2, 2,       // str, int, dex
+        0, 0, 0, 0, 0, 0,
+        0, 0, 0, 0, 0, 0,
+        0, 0, 0, 0, 0,
+        0, 0, 0, 0, 0,
+        0, 0
+    }
+    ,
+        "",
+        "最上級の絹で作られたローブだ。",
+        ""
+}
+,
+
+/* 8 */
+{
+    "輝きのメイス", "明るく輝くメイス",
+        OBJ_WEAPONS, WPN_MACE, +5, +5, WHITE,
+    {
+        SPWPN_HOLY_WRATH, 3, 0, 0, 0, 0,        // AC
+        0, 0, 0, 0, 1, 0,                       // life prot
+        1, 0, 0, 0, 0, 0,                       // see invis
+        0, 0, 0, 0, 0,
+        0, 0, 0, 0, 0,
+        0, -20                                  // stealth
+    }
+    ,
+        "",
+        "",
+        ""
+}
+,
+
+/* 9 */
+{
+    "盗賊の外套", "着古したクローク",
+        OBJ_ARMOUR, ARM_CLOAK, +1, 0, DARKGREY,
+    {
+        0, 0, 2, 0, 0, 2,       // EV, dex
+        0, 0, 0, 0, 0, 0,
+        1, 1, 1, 0, 0, 0,       // see invis, turn invis, levitate
+        0, 0, 0, 0, 0,
+        0, 0, 0, 0, -3,         // to dam
+        0, 60                   // stealth
+    }
+    ,
+        "この外套は着用者を盗みの芸術に於いて卓越した存在とする。",
+        "",
+        ""
+}
+,
+
+
+
+
+/* 10 */
+{
+    "バックラー『ブルズアイ』", "丸いバックラー",
+        OBJ_ARMOUR, ARM_BUCKLER, +10, 0, RED,
+    {
+        0, 0, -3, 0, 0, 0,      // EV
+        0, 0, 0, 0, 0, 0,
+        0, 0, 0, 0, 0, 0,
+        0, 0, 0, 0, 0,
+        0, 0, 0, 0, 0,
+        0, 0
+    }
+    ,
+        "",
+        "",
+        ""
+}
+,
+
+/* 11 */
+{
+    "ダイロヴェプレヴァの王冠", "宝石で飾られた青銅の王冠",
+        OBJ_ARMOUR, ARM_HELMET, +3, THELM_SPECIAL, BROWN,
+    {
+        0, 0, 0, 0, 2, 0,       // int
+        0, 0, 1, 0, 0, 0,       // res elec
+        1, 0, 0, 0, 0, 0,       // see invis
+        0, 0, 0, 0, 0,
+        0, 1, 0, 0, 0,          // speeds metabolism
+        0, 0
+    }
+    ,
+        "",
+        "目が眩むほど多くの宝石に埋め尽された、くすんだ青銅製の大きな王冠だ。",
+        ""
+}
+,
+
+
+/* 12 */
+{
+    "悪魔の刃『蛭』", "ルーンが刻まれた悪魔の刃",
+        OBJ_WEAPONS, WPN_DEMON_BLADE, +13, +4, MAGENTA,
+    {
+        SPWPN_VAMPIRICISM, -1, -1, -1, -1, -1, // AC, EV, str, int, dex
+        0, 0, 0, 0, 1, 0,                      // life prot
+        0, 0, 0, 0, 0, 0,
+        0, 0, 0, 0, 0,
+        0, 0, 0, 0, 0,
+        1, 0                                   // cursed
+    }
+    ,
+        "",
+        "",
+        ""
+}
+,
+
+/* 13 */
+{
+    "セクコブの護符", "水晶の護符",
+        OBJ_JEWELLERY, AMU_WARDING, +0, 0, LIGHTGREY,
+    {
+        0, 1, 1, 0, 0, 0,       // AC, EV
+        0, 0, 1, 1, 1, 0,       // res elec, poison, life prot
+        0, 0, 0, 0, 0, 0,
+        0, 0, 0, 0, 1,          // prevent teleport
+        0, 2, 0, 0, 0,          // speed metabolism
+        0, 0
+    }
+    ,
+        "",
+        "",
+        ""
+}
+,
+
+
+/* 14 */
+{
+    "不運のローブ", "素晴らしく飾り立てられたローブ",
+        OBJ_ARMOUR, ARM_ROBE, -5, 0, MAGENTA,
+    {
+        0, 0, -4, -2, -2, -2,   // EV, str, int, dex
+        0, 0, 0, 0, 0, 0,
+        0, 0, 0, 0, 0, 0,
+        0, 0, 1, 1, 0,          // prevent spellcasting, cause teleport
+        0, 0, 5, 0, 0,          // radiation
+        1, -80                  // cursed, stealth
+    }
+    ,
+        "",
+        "毛皮と絹のたなびく豪華絢爛なローブだ。",
+        ""
+}
+
+#ifdef USE_NEW_UNRANDS
+,
+/* 15 */
+{
+    "冷たき死の短刀", "サファイアのダガー",
+        OBJ_WEAPONS, WPN_DAGGER, +2, +6, LIGHTBLUE,
+    {
+        SPWPN_FREEZING, 0, 0, 0, 0, 0,
+        -1, 2, 0, 1, 0, 20,     // res fire, cold, poison, magic
+        0, 0, 0, 0, 0, 0,
+        0, 0, 0, 0, 0,
+        0, 0, 0, 0, 0,
+        0, 0
+    }
+    ,
+        "",
+        "サファイアでできているダガーだ。",
+        ""
+}
+,
+/* 16 */
+{
+    "四方位の風の護符", "翡翠の護符",
+        OBJ_JEWELLERY, AMU_CLARITY, +0, 0, LIGHTGREEN,
+    {
+        0, 0, 0, 0, 0, 0,
+        0, 0, 0, 0, 1, 60,      // life prot, magic resistance
+        0, 0, 0, 0, 0, 0,
+        0, 0, 0, 0, 0,
+        0, 0, 0, 0, 0,
+        0, 0
+    }
+    ,
+        "",
+        "",
+        ""
+}
+,
+
+/* 17 */
+{
+    "ダガー『モーグ』", "錆びついたダガー",
+        OBJ_WEAPONS, WPN_DAGGER, -1, +4, LIGHTRED,
+    {
+        SPWPN_PAIN, 0, 0, 0, 5, 0,      // int
+        0, 0, 0, 0, 0, 30,              // res magic
+        0, 0, 0, 0, 0, 0,
+        0, 0, 0, 0, 0,
+        0, 0, 0, 0, 0,
+        0, 0
+    }
+    ,
+        "遥か昔、このダガーはボリスという名の力あるメイジの所有物だった。 "
+        "彼はオーブを捜し求めていたが、ダンジョンで行方知れずになった。 ",
+        "醜く錆びついた短剣だ。 ",
+        ""
+}
+,
+
+/* 18 */
+{
+    "大鎌『とどめの一撃』", "黒い大鎌",
+        OBJ_WEAPONS, WPN_SCYTHE, +3, +5, DARKGRAY,
+    {
+        SPWPN_SPEED, 0, 0, 3, 0, 0,       // str
+        0, 0, 0, 0, 0, 0,
+        0, 0, 0, 0, 0, 0,
+        0, 0, 0, 0, 0,
+        0, 0, 0, 0, 0,
+        1, 0                    // cursed
+    }
+    ,
+        "",
+        "戦闘を目的に特別に造られた、長く鋭い大鎌だ。",
+        ""
+}
+,
+
+/* 19 */
+{
+    "スリング『パンク』", "青いスリング",
+        OBJ_WEAPONS, WPN_SLING, +3, +4, LIGHTBLUE,
+    {
+        SPWPN_FROST, 0, 0, 0, 0, 0,
+        0, 1, 0, 0, 0, 0,               // res cold
+        0, 0, 0, 0, 0, 0,
+        0, 0, 0, 0, 0,
+        0, 0, 0, 0, 0,
+        0, 0
+    }
+    ,
+        "",
+        "奇妙な青い皮で作られたスリングだ。",
+        ""
+}
+,
+/* 20 */
+{
+    "クリシュナの弓『シャーランガ』", "黄金の弓",
+        OBJ_WEAPONS, WPN_BOW, +8, +8, YELLOW,
+    {
+        SPWPN_SPEED, 0, 0, 0, 0, 3,       // dex
+        0, 0, 0, 0, 0, 0,
+        1, 0, 0, 0, 0, 0,       // see invis
+        0, 0, 0, 0, 0,
+        0, 0, 0, 0, 0,
+        0, 0
+    }
+    ,
+        "これはかつて、ある異国の神の弓だった。これは通常は使用できない、 "
+        "ある種の特別な矢を射るとき最高の威力を発揮する。 ",
+        "素晴らしい黄金の弓だ。 ",
+        ""
+}
+,
+/* 21 */
+{
+    "閃光のクローク", "振動するクローク",
+        OBJ_ARMOUR, ARM_CLOAK, +2, 0, RED,
+    {
+        0, 0, 4, 0, 0, 0,       // EV
+        0, 0, 0, 0, 0, 0,
+        0, 0, 1, 0, 1, 0,       // levitate, teleport
+        0, 0, 0, 0, 0,
+        0, 0, 0, 0, 0,
+        0, 0
+    }
+    ,
+        "",
+        "振動するクロークだ。",
+        ""
+}
+,
+/* 22 */
+{
+    "巨大棍棒『頭蓋砕き』", "野蛮な巨大棍棒",
+        OBJ_WEAPONS, WPN_GIANT_CLUB, +0, +5, BROWN,
+    {
+        SPWPN_VORPAL, 0, 0, 5, 0, 0,       // str
+        0, 0, 0, 0, 0, 0,
+        0, 0, 0, 0, 0, 0,
+        0, 0, 0, 0, 0,
+        0, 0, 0, 0, 0,
+        0, 0
+    }
+    ,
+        "",
+        "",
+        ""
+}
+,
+/* 23 */
+{
+    "暗殺者のブーツ", "柔らかな靴",
+        OBJ_ARMOUR, ARM_BOOTS, +2, 0, BROWN,
+    {
+        0, 0, 0, 0, 0, 3,       // dex
+        0, 0, 0, 0, 0, 0,
+        0, 1, 0, 0, 0, 0,       // turn invis
+        0, 0, 0, 0, 0,
+        0, 0, 0, 0, 0,
+        0, 80                   // stealth
+    }
+    ,
+        "このブーツは暗殺者ギルドによって特別に作られた。 ",
+        "柔らかなブーツだ。 ",
+        ""
+}
+,
+/* 24 */
+{
+    "番人のグレイブ", "磨き上げられたグレイブ",
+        OBJ_WEAPONS, WPN_GLAIVE, +5, +8, LIGHTCYAN,
+    {
+        SPWPN_PROTECTION, 0, 0, 0, 0, 0,
+        0, 0, 0, 0, 0, 0,
+        1, 0, 0, 0, 0, 1,       // see invis, go berserk
+        0, 0, 0, 0, 0,
+        0, 0, 0, 0, 0,
+        0, 0
+    }
+    ,
+        "この武器はかつて、王の宝物の番人であるガー・ドフのものだった。 "
+        "伝説によれば、彼はダンジョンのどこかで行方知れずになったという。 ",
+        "",
+        ""
+}
+,
+/* 25 */
+{
+    "聖戦の剣", "水晶の剣",
+        OBJ_WEAPONS, WPN_LONG_SWORD, +4, +4, WHITE,
+    {
+        SPWPN_HOLY_WRATH, 0, 3, 0, 0, 0,        // EV
+        0, 0, 0, 0, 1, 20,                      // life prot, res magic
+        0, 0, 0, 0, 0, 0,
+        0, 0, 0, 0, 0,
+        1, 0, 0, 0, 0,                          // force berserk
+        0, -50                                  // stealth (TSO hates backstab)
+    }
+    ,
+        "この剣は『輝けるもの』からとある聖騎士への贈り物だったものだ。 " ,
+        "巨大なクリスタルでできたロングソードだ。 ",
+        ""
+}
+,
+/* 26 */
+{
+    "リア王の鎖かたびら", "黄金の鎖かたびら",
+        OBJ_ARMOUR, ARM_CHAIN_MAIL, -1, 0, YELLOW,
+    {
+        0, 0, 0, 0, 0, -3,      // dex
+        0, 0, 0, 0, 0, 0,
+        0, 0, 0, 0, 0, 0,
+        0, 0, 1, 0, 0,          // prevent spellcasting
+        0, 0, 0, 0, 0,
+        1, 0                    // cursed
+    }
+    ,
+        "",
+        "純金の鎖かたびらだ。",
+        ""
+}
+,
+/* 27 */
+{
+    "ズホルの皮", "きつく臭う皮",
+        OBJ_ARMOUR, ARM_ANIMAL_SKIN, +4, 0, BROWN,
+    {
+        0, 0, 0, 0, 0, 0,
+        0, 2, 0, 0, 0, 0,       // res cold
+        0, 0, 0, 0, 0, 0,
+        0, 0, 0, 0, 0,
+        0, 0, 0, 0, 0,
+        0, 0
+    }
+    ,
+        "",
+        "ある奇妙な動物の皮だ ",
+        ""
+}
+,
+/* 28 */
+{
+    "クロスボウ『燃えたつ悪魔』", "燃えているクロスボウ",
+        OBJ_WEAPONS, WPN_CROSSBOW, +4, +0, LIGHTRED,
+    {
+        SPWPN_FLAME, 0, 0, 0, 0, 0,
+        1, 0, 0, 0, 0, 0,               // res fire
+        0, 0, 0, 0, 0, 0,
+        0, 0, 0, 0, 0,
+        0, 0, 0, 0, 0,
+        0, 0
+    }
+    ,
+        "",
+        "炎をあげるクロスボウだ。",
+        ""
+}
+,
+/* 29 */
+{
+    "火蜥蜴の皮鎧", "赤いレザーアーマー",
+        OBJ_ARMOUR, ARM_LEATHER_ARMOUR, +3, 0, RED,
+    {
+        0, 0, 0, 0, 0, 0,
+        2, 0, 0, 0, 0, 0,       // res fire
+        0, 0, 0, 0, 0, 0,
+        0, 0, 0, 0, 0,
+        0, 0, 0, 0, 0,
+        0, 0
+    }
+    ,
+        "",
+        "サラマンダーの皮でできたレザーアーマーだ。",
+        ""
+}
+,
+/* 30 */
+{
+    "戦の手甲", "重厚な手甲",
+        OBJ_ARMOUR, ARM_GLOVES, +3, 0, BROWN,
+    {
+        0, 0, 0, 0, 0, 0,
+        0, 0, 0, 0, 0, 0,
+        0, 0, 0, 0, 0, 0,
+        0, 0, 0, 0, 0,
+        0, 0, 0, 3, 3,          // to hit, to dam
+        0, 0
+    }
+    ,
+        "",
+        "",
+        ""
+}
+,
+/* 31 */
+{
+    "審判の騎士の剣", "金剛のグレートソード",
+        OBJ_WEAPONS, WPN_GREAT_SWORD, +4, +4, BLUE,
+    {
+        SPWPN_PAIN, 0, 0, 0, 0, 0,
+        0, 0, 0, 0, 0, 50,      // res magic
+        0, 0, 0, 0, 0, 0,
+        0, 0, 1, 0, 0,          // prevent spellcasting
+        0, 0, 0, 0, 0,
+        0, 0
+    }
+    ,
+        "",
+        "金剛のグレートソードだ。 ",
+        ""
+}
+,
+/* 32 */
+{
+    "耐性の盾", "青銅の盾",
+        OBJ_ARMOUR, ARM_SHIELD, +3, 0, LIGHTRED,
+    {
+        0, 0, 0, 0, 0, 0,
+        1, 1, 0, 0, 0, 40,      // res fire, cold, magic
+        0, 0, 0, 0, 0, 0,
+        0, 0, 0, 0, 0,
+        0, 0, 0, 0, 0,
+        0, 0
+    }
+    ,
+        "",
+        "青銅製の盾だ。 ",
+        ""
+}
+,
+/* 33 */
+{
+    "愚劣のローブ", "冴えないローブ",
+        OBJ_ARMOUR, ARM_ROBE, -1, 0, LIGHTGRAY,
+    {
+        0, 0, 0, 0, -5, 0,      // int
+        0, 0, 0, 0, 0, 0,
+        0, 0, 0, 0, 0, 0,
+        0, 0, 1, 0, 0,          // prevent spellcasting
+        0, 0, 0, 0, 0,
+        1, 0                    // cursed
+    }
+    ,
+        "",
+        "冴えない灰色のローブだ ",
+        ""
+}
+,
+/* 34 */
+{
+    "血に飢えた首飾り", "血に染まった首飾り",
+        OBJ_JEWELLERY, AMU_RAGE, +0, 0, RED,
+    {
+        0, 0, 0, 2, -2, 0,      // str, int
+        0, 0, 0, 0, 0, 30,      // res magic
+        0, 0, 0, 0, 0, 0,
+        0, 0, 0, 0, 0,
+        1, 0, 0, 0, 3,          // force berserk, to dam
+        1, -20                  // cursed, stealth
+    }
+    ,
+        "",
+        "",
+        ""
+}
+,
+/* 35 */
+{
+    "『エオス』", "古めかしいモーニングスター",
+        OBJ_WEAPONS, WPN_MORNINGSTAR, +5, +5, LIGHTCYAN,
+    {
+        SPWPN_ELECTROCUTION, 0, 0, 0, 0, 0,  // morning -> bring light/sparks?
+        0, 0, 1, 0, 0, 0,       // res elec
+        1, 0, 0, 0, 0, 0,       // see invis
+        0, 0, 0, 0, 1,          // prevent teleportation
+        0, 0, 0, 0, 0,
+        0, 0
+    }
+    ,
+        "",
+        "",
+        ""
+}
+,
+/* 36 */
+{
+    "少林寺の指輪", "翡翠の指輪",
+        OBJ_JEWELLERY, RING_EVASION, +8, 0, LIGHTGREEN,
+    {
+        0, 0, 0, 0, 0, 0,
+        0, 0, 0, 0, 0, 0,
+        0, 0, 0, 0, 0, 0,
+        0, 0, 0, 0, 0,
+        0, 0, 0, 0, 0,
+        0, 0
+    }
+    ,
+        "",
+        "",
+        ""
+}
+,
+/* 37 */
+{
+    "頑丈の指輪", "鋼の指輪",
+        OBJ_JEWELLERY, RING_PROTECTION, +8, 0, LIGHTGRAY,
+    {
+        0, 0, 0, 0, 0, 0,
+        0, 0, 0, 0, 0, 0,
+        0, 0, 0, 0, 0, 0,
+        0, 0, 0, 0, 0,
+        0, 0, 0, 0, 0,
+        0, 0
+    }
+    ,
+        "",
+        "",
+        ""
+}
+,
+/* 38 */
+{
+    "エジソンの特許甲冑", "奇妙な外見の鎧",
+        OBJ_ARMOUR, ARM_PLATE_MAIL, +10, 0, LIGHTGREEN,
+    {
+        0, 0, 0, 0, 0, 0,
+        0, 0, 0, 0, 0, 0,
+        0, 0, 0, 0, 0, 0,
+        0, 0, 1, 0, 1,          // prevent spellcasting, prevent teleport
+        0, 0, 0, 0, 0,
+        1, 0                    // cursed
+    }
+    ,
+        "",
+        "奇妙な外見の鎧だ。 ",
+        ""
+}
+,
+/* 39 */
+{
+    "ブードゥーの槍", "黒檀の槍",
+        OBJ_WEAPONS, WPN_SPEAR, +2, +10, DARKGRAY,
+    {
+        SPWPN_VAMPIRICISM, 0, 0, 0, 0, 0,
+        0, 0, 0, 1, 1, 0,       // res poison, prot life
+        0, 0, 0, 0, 0, 0,
+        0, 3, 0, 0, 0,          // noise
+        0, 0, 0, 0, 0,
+        0, -30                  // stealth
+    }
+    ,
+        "真に邪悪かつ有害な代物である。賢明な者は手を触れることも避けるだろう。 ",
+        "",
+        ""
+}
+,
+/* 40 */
+{
+    "蛸の王のトライデント", "汚らしいトライデント",
+        OBJ_WEAPONS, WPN_TRIDENT, +10, +4, CYAN,
+    {
+        SPWPN_VENOM, 0, 0, 0, 0, 0,
+        0, 0, 0, 1, 0, 50,              // res poison, res magic
+        0, 0, 0, 0, 0, 0,
+        0, 0, 0, 0, 0,
+        0, 0, 0, 0, 0,
+        0, 0
+    }
+    ,
+        "このトライデントは遥か昔に、ある本当につまらない、 "
+        "今はもう死んでしまった男によって、蛸の王国から盗まれた。 "
+        "蛸の王の怒りには用心せよ！ ",
+        "",
+        ""
+}
+,
+/* 41 */
+{
+    "竜の仮面", "青い仮面",
+        OBJ_ARMOUR, ARM_HELMET, +0, THELM_SPECIAL, BLUE,
+    {
+        0, 0, 0, 0, 0, 0,
+        0, 0, 0, 0, 0, 40,      // res magic
+        1, 0, 0, 0, 0, 0,       // see invis
+        0, 0, 0, 0, 0,
+        0, 0, 0, 2, 2,          // to hit, to dam
+        0, 0
+    }
+    ,
+        "",
+        "青い仮面だ。 ",
+        ""
+}
+,
+/* 42 */
+{
+    "ミスリルの斧『アルガ』", "ミスリルの斧",
+        OBJ_WEAPONS, WPN_WAR_AXE, +10, +6, WHITE,
+    {
+        SPWPN_SPEED, 0, 0, 2, 0, 0,     // str
+        0, 0, 0, 0, 0, 30,              // resist magic
+        0, 0, 0, 0, 0, 0,
+        0, 0, 0, 0, 0,
+        0, 0, 0, 0, 0,
+        0, 0
+    }
+    ,
+        "",
+        "ミスリル製の美しい斧だ。 "
+        "おそらくドワーフの英雄のいずれかが落としたものだろう。 ",
+        ""
+}
+,
+/* 43 */
+{
+    "元素の杖", "黒い杖",
+        OBJ_WEAPONS, WPN_QUARTERSTAFF, +3, +1, DARKGRAY,
+    {
+        SPWPN_PROTECTION, 0, 0, 0, 0, 0,
+        1, 1, 0, 0, 0, 60,      // res fire, cold, magic
+        0, 0, 0, 0, 0, 0,
+        0, 1, 0, 0, 0,          // noise
+        0, 0, 0, 0, 0,
+        0, 0
+    }
+    ,
+        "この強力な杖はかつて五元素のギルドの長が所有していたものだ。",
+        "象形文字が刻まれた黒い杖だ。",
+        ""
+}
+,
+/* 44 */
+{
+    "ハンドクロスボウ『狙撃手』", "黒いクロスボウ",
+        OBJ_WEAPONS, WPN_HAND_CROSSBOW, +10, +0, DARKGRAY,
+    {
+        SPWPN_VENOM, 0, 0, 0, 0, 0,
+        0, 0, 0, 0, 0, 0,
+        1, 0, 0, 0, 0, 0,       // see invis
+        0, 0, 0, 0, 0,
+        0, 0, 0, 0, 0,
+        0, 0
+    }
+    ,
+        "",
+        "何か黒い材質で作られたハンドクロスボウだ。 ",
+        ""
+}
+,
+/* 45 */
+{
+    "弓『エルキデル』", "金属の弓",
+        OBJ_WEAPONS, WPN_BOW, +5, +3, CYAN,
+    {
+        SPWPN_PROTECTION, 0, 0, 3, 0, 0,       // str
+        0, 0, 0, 0, 0, 0,
+        0, 0, 0, 0, 0, 0,
+        0, 0, 0, 0, 0,
+        0, 0, 0, 0, 0,
+        0, 0
+    }
+    ,
+        "",
+        "金属製の弓だ ",
+        ""
+}
+,
+/* 46 */
+{
+    "闇夜のローブ", "漆黒のローブ",
+        OBJ_ARMOUR, ARM_ROBE, +4, 0, DARKGRAY,
+    {
+        0, 0, 0, 0, 0, 0,
+        0, 0, 0, 0, 0, 30,      // res magic
+        1, 1, 0, 0, 0, 0,       // see invis, turn invis
+        0, 0, 0, 0, 0,
+        0, 0, 0, 0, 0,
+        0, 50                   // stealth
+    }
+    ,
+        "伝説によれば、このローブは夜の女神ラートリーからある信徒への贈り物だ。 ",
+        "ふわふわした不思議な材質作られた長くて黒いローブだ。 ",
+        ""
+}
+,
+/* 47 */
+{
+    "プルトニウムの剣", "光るロングソード",
+        OBJ_WEAPONS, WPN_LONG_SWORD, +5, +10, LIGHTGREEN,
+    {
+        0, 0, 0, 0, 0, 0,
+        0, 0, 0, 0, 0, 0,
+        0, 0, 0, 0, 0, 0,
+        0, 0, 0, 0, 0,
+        0, 0, 6, 0, 0,          // radiation
+        1, -20                  // cursed, stealth
+    }
+    ,
+        "",
+        "異様に輝く金属でできたロングソードだ。 ",
+        ""
+}
+,
+/* 48 */
+{
+    "メイス『死者を狩るもの』", "鋼のメイス",
+        OBJ_WEAPONS, WPN_MACE, +4, +6, LIGHTGRAY,
+    {
+        SPWPN_DISRUPTION, 0, 0, 0, 0, 0,
+        0, 0, 0, 0, 1, 0,       // life prot
+        0, 0, 0, 0, 0, 0,
+        0, 0, 0, 0, 0,
+        0, 0, 0, 0, 0,
+        0, 0
+    }
+    ,
+        "",
+        "",
+        ""
+}
+,
+/* 49 */
+{
+    "竜王の鎧", "光るドラゴンの鎧",
+        OBJ_ARMOUR, ARM_GOLD_DRAGON_ARMOUR, +5, 0, YELLOW,
+    {
+        0, 0, 0, 0, 0, 0,
+        0, 0, 0, 0, 0, 50,      // res magic (base gives fire, cold, poison)
+        0, 0, 0, 0, 0, 0,
+        0, 0, 0, 0, 0,
+        0, 0, 0, 0, 0,
+        0, 0
+    }
+    ,
+        "",
+        "",
+        ""
+}
+,
+/* 50 */
+{
+    "錬金術師の帽子", "汚らしい帽子",
+        OBJ_ARMOUR, ARM_HELMET, +2, THELM_SPECIAL, MAGENTA,
+    {
+        0, 0, 0, 0, 0, 0,
+        1, 1, 1, 0, 0, 30,      // res fire, cold, elec, magic
+        0, 0, 0, 0, 0, 0,
+        0, 0, 0, 0, 0,
+        0, 0, 0, 0, 0,
+        0, 0
+    }
+    ,
+        "",
+        "汚らしい帽子だ。 ",
+        ""
+}
+,
+/* 51 */
+{
+    "剣士の手袋", "絹の手袋",
+        OBJ_ARMOUR, ARM_GLOVES, +2, 0, WHITE,
+    {
+        0, 0, 3, 0, 0, 3,       // EV, dex
+        0, 0, 0, 0, 0, 0,
+        0, 0, 0, 0, 0, 0,
+        0, 0, 0, 0, 0,
+        0, 0, 0, 5, 0,          // to hit
+        0, 0
+    }
+    ,
+        "",
+        "白い絹で作られた手袋だ。 ",
+        ""
+}
+,
+/* 52 */
+{
+    "賢者の指輪", "サファイアの指輪",
+        OBJ_JEWELLERY, RING_WIZARDRY, +0, 0, LIGHTBLUE,
+    {
+        0, 0, 0, 0, 3, 0,       // int
+        0, 0, 0, 0, 0, 50,      // res magic
+        0, 0, 0, 0, 0, 0,
+        0, 0, 0, 0, 0,
+        0, 0, 0, 0, 0,
+        0, 0
+    }
+    ,
+        "",
+        "",
+        ""
+}
+#endif // USE_NEW_UNRANDS
+
+
+#else  //JP
+{
     "long sword \"Bloodbane\"", "blackened long sword",
         OBJ_WEAPONS, WPN_LONG_SWORD, +7, +8, DARKGREY,
     {
@@ -179,7 +1129,7 @@
 ,
 
 /* 3 */
-{ 
+{
     "ring of Shadows", "black ring",
         OBJ_JEWELLERY, RING_INVISIBILITY, 0, 0, DARKGREY,
     {
@@ -1107,6 +2057,7 @@
         ""
 }
 #endif // USE_NEW_UNRANDS
+#endif // JP
 ,
 /* This is a dummy */
 /* 1 */

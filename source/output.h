@@ -17,6 +17,7 @@
  * called from: acr - player - stuff
  * *********************************************************************** */
 void print_stats(void);
+void get_full_detail(char* buffer, bool calc_unid);
 
 
 #endif

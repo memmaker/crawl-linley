@@ -160,7 +160,14 @@ void builder(int level_number, char level_type)
     int i;          // generic loop variable
     int x,y;        // generic map loop variables
 
-    srandom(time(NULL));
+    static int time_p = 0;
+    int        time_c = time(NULL);
+
+    //srandom(time(NULL));
+    if (time_p == time_c)
+        time_c++;
+    srandom(time_c); 
+    time_p = time_c; // fixed 05/03/07
 
     // blank level with DNGN_ROCK_WALL
     make_box(0,0,GXM-1,GYM-1,DNGN_ROCK_WALL,DNGN_ROCK_WALL);
@@ -6560,7 +6567,11 @@ static void place_spec_shop( int level_number,
 
     for (j = 0; j < 3; j++)
     {
+#ifdef JP
         env.shop[i].keeper_name[j] = 1 + random2(200);
+#else
+        env.shop[i].keeper_name[j] = 1 + random2(200);
+#endif
     }
 
     env.shop[i].level = level_number * 2;
@@ -8167,7 +8178,11 @@ void define_zombie( int mid, int ztype, int cs, int power )
 
         default:
             // this should NEVER happen.
+#ifdef JP 
             perror("\ncreate_zombie() got passed incorrect zombie type!\n");
+#else
+            perror("\ncreate_zombie() got passed incorrect zombie type!\n");
+#endif
             end(0);
             break;
     }

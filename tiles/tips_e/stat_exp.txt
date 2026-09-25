@@ -1,0 +1,39 @@
+  EXPERIENCE
+  ----------
+When you kill monsters, you gain experience points (xp) (you also 
+receive one half experience for monsters killed by friendly creatures).
+When you get enough xp, you gain an experience level, 
+making your character more powerful. As they gain levels, characters
+gain more hit points, magic points, and spell levels.
+
+Additionally, the experience you gain is used for your experience pool.
+This pool of points is used up whenever you practice a skill.
+
+
+  SKILLS
+  ------
+Your character has a number of skills which affect his or her ability to
+perform certain tasks. You can see your character's skills by pressing the 'm'
+key; the higher the level of a skill, the better you are at it. Every time
+your character gains experience points, those points become available to
+increase skills. You convert experience points into skill levels by practising
+the skill in question (eg fight with a certain type of weapon, cast a certain
+type of spell, or walk around wearing light armour to practise stealth). The
+amount of unassigned experience points is shown next to your experience total
+on the main screen as well as on the skills screen, and the number in blue
+next to each skill counts down from 9 to 0 as you get closer to gaining a
+level in that skill.
+
+You can elect not to practise a particular skill by selecting it in the skill
+screen (making it turn dark grey). This means that you will be less likely to
+increase that skill when you practise it (and will also not spend as many
+experience points on it). This can be useful for skills like stealth which use
+up points whenever you move. It can also be used on a specific weapon skill if
+you want to spend more points on Fighting, and similarly with magic skills and
+Spellcasting.
+
+The species you have chosen for your character has a significant effect on
+your rate of advancement in each skill. Some races are very good at some
+skills and poor at others. If your character is naturally quick to learn a
+skill, they will require less experience and take less time to advance in it;
+being bad at a skill has the opposite result.

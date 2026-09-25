@@ -46,6 +46,10 @@
 // for trim_string:
 #include "initfile.h"
 
+#ifdef JP
+#include "stuff.h"
+#endif
+
 typedef std::deque<int> keyseq;
 typedef std::deque<int> keybuf;
 typedef std::map<keyseq,keyseq> macromap;
@@ -111,8 +115,19 @@ static keyseq parse_keyseq( std::string s )
 		v.push_back(num);
 		state = 0;
 	    } else if (c >= '0' && c <= '9') {
-		num = num * 10 + c - '0';
-	    } 
+                num = (num & KEYFLAG_FMASK)+(num & KEYFLAG_MASK) * 10 + c - '0';
+            } else if (c=='A'){
+                // A is for "Alt+"
+                num = num | KEYFLAG_ALT;
+            } else if (c=='S'){
+                // S is for "Shift+"
+                num = num | KEYFLAG_SHIFT;
+            } else if (c=='C'){
+                // C is for "Ctrl+"
+                num = num | KEYFLAG_CTRL;
+            }
+            // Ignore "lt+", "hift+", "trl+" ,etc
+
 	    // XXX Error handling
             break;
 	}
@@ -132,9 +147,26 @@ static std::string vtostr( keyseq v )
     for (keyseq::iterator i = v.begin(); i != v.end(); i++) 
     {
 	if (*i < 32 || *i > 127) {
-            char buff[10];
+            char buff[20];
+            int k = *i;
 
-            snprintf( buff, sizeof(buff), "\\{%d}", *i );
+            s += std::string("\\{");
+
+            if (k&KEYFLAG_ALT)
+            {
+                s += std::string("Alt+");
+            }
+            if (k&KEYFLAG_SHIFT)
+            {
+                s += std::string( "Shift+");
+            }
+            if (k&KEYFLAG_CTRL)
+            {
+                s += std::string( "Ctrl+");
+            }
+
+            snprintf( buff, sizeof(buff), "%d}", k & KEYFLAG_MASK);
+
             s += std::string( buff );
 
             // Removing the stringstream code because its highly 
@@ -307,8 +339,13 @@ void macro_save( void )
     std::ofstream f;
     f.open( get_macro_file().c_str() );
 
+#ifdef JP 
+    f << "# 注意: このファイルは自動的に生成された。" << std::endl
+      << std::endl << "# Key Mappings:" << std::endl;
+#else
     f << "# WARNING: This file is entirely auto-generated." << std::endl
       << std::endl << "# Key Mappings:" << std::endl;
+#endif
 
     for (macromap::iterator i = Keymaps.begin(); i != Keymaps.end(); i++) 
     {
@@ -321,7 +358,11 @@ void macro_save( void )
 	}
     }
 
+#ifdef JP 
+    f << "# マクロ命令:" << std::endl;
+#else
     f << "# Command Macros:" << std::endl;
+#endif
 
     for (macromap::iterator i = Macros.begin(); i != Macros.end(); i++) 
     {
@@ -353,7 +394,6 @@ static keyseq getch_mul( void )
     while ((kbhit() || a == 0)) {
 	keys.push_back( a = getch() );
     }
-    
     return (keys);
 }
 
@@ -412,7 +452,11 @@ void macro_add_query( void )
     unsigned char input;
     bool keymap = false;
 
+#ifdef JP 
+    mpr( "どちらを設定しますか？  (m)マクロ  (k)キー配置 ", MSGCH_PROMPT );
+#else
     mpr( "Command (m)acro or (k)eymap? ", MSGCH_PROMPT );
+#endif
     input = getch();
     if (input == 0)
         input = getch();
@@ -424,28 +468,53 @@ void macro_add_query( void )
         keymap = false;
     else 
     {
+#ifdef JP 
+        mpr( "中断しました。" );
+#else
         mpr( "Aborting." );
+#endif
         return;
     }
 
     // reference to the appropriate mapping
     macromap &mapref = (keymap ? Keymaps : Macros);
 
+#ifdef JP 
+    snprintf( info, INFO_SIZE, "%sキーを指定してください: ",
+              (keymap ? "配置を変更する" : "マクロを呼び出す") );
+#else
     snprintf( info, INFO_SIZE, "Input %s trigger key: ",
               (keymap ? "keymap" : "macro") );
+#endif
 
     mpr( info, MSGCH_PROMPT );
     keyseq key = getch_mul();
 
-    cprintf( "%s" EOL, (vtostr( key )).c_str() ); // echo key to screen
+#ifdef USE_TILE
+    mpr_on(MODE_MPR);
+#endif
+    cprintf( "%s", (vtostr( key )).c_str() ); // echo key to screen
+
+#ifdef USE_TILE
+    mpr_on(MODE_CRT);
+#endif
+
 
     if (mapref[key].size() > 0) 
     {
+#ifdef JP 
+        snprintf( info, INFO_SIZE, "現在の挙動: %s", 
+#else
         snprintf( info, INFO_SIZE, "Current Action: %s", 
+#endif
                   (vtostr( mapref[key] )).c_str() );
 
         mpr( info, MSGCH_WARN );
+#ifdef JP 
+        mpr( "どうしますか？  (r)再設定  (c)消去  (a)中断", MSGCH_PROMPT );
+#else
         mpr( "Do you wish to (r)edefine, (c)lear, or (a)bort?", MSGCH_PROMPT );
+#endif
 
         input = getch();
         if (input == 0)
@@ -454,18 +523,30 @@ void macro_add_query( void )
         input = tolower( input );
         if (input == 'a' || input == ESCAPE)
         {
+#ifdef JP 
+            mpr( "中断しました。" );
+#else
             mpr( "Aborting." );
+#endif
             return;
         }
         else if (input == 'c')
         {
+#ifdef JP 
+            mpr( "消去しました。" );
+#else
             mpr( "Cleared." );
+#endif
             macro_del( mapref, key );
             return;
         }
     }
 
+#ifdef JP 
+    mpr( "マクロの入力: ", MSGCH_PROMPT );
+#else
     mpr( "Input Macro Action: ", MSGCH_PROMPT );
+#endif
 
     // Using getch_mul() here isn't very useful...  We'd like the 
     // flexibility to define multicharacter macros without having
@@ -474,8 +555,13 @@ void macro_add_query( void )
 
     keyseq  act;
     char    buff[4096]; 
-
+#ifdef USE_TILE
+    mpr_on(MODE_MPR);
+#endif
     get_input_line( buff, sizeof(buff) );
+#ifdef USE_TILE
+    mpr_on(MODE_CRT);
+#endif
     
     // convert c_str to keyseq 
     const int len = strlen( buff );
@@ -483,8 +569,11 @@ void macro_add_query( void )
         act.push_back( buff[i] );
 
     macro_add( mapref, key, act );
-}
+#ifdef JP 
+        redraw_screen();
+#endif
 
+}
 
 /*
  * Initializes the macros.

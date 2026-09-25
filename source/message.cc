@@ -162,7 +162,7 @@ static char channel_to_colour( int channel, int param )
             break;
 
         case MSGCH_DIAGNOSTICS:
-            ret = DARKGREY;     // makes is easier to ignore at times -- bwr
+            ret = DARKGREY;     ///\ makes is easier to ignore at times -- bwr
             break;
 
         case MSGCH_PLAIN:
@@ -218,7 +218,36 @@ void mpr(const char *inf, int channel, int param)
     if (colour == MSGCOL_MUTED)
         return;
 
-    you.running = 0;
+    if (you.running > 0) you.running = 0;
+
+    // If you're travelling, only certain user-specified messages can break 
+    // travel
+    if (you.running < 0)
+    {
+        std::string message = inf;
+        for (unsigned i = 0; i < Options.stop_travel.size(); ++i)
+        {
+            if (message.find(Options.stop_travel[i], 0) != std::string::npos)
+            {
+                you.running = 0;
+                break;
+            }
+        }
+    }
+
+    if (Options.sound_mappings.size() > 0) 
+    {
+        // std::string message = inf;
+        for (unsigned i = 0; i < Options.sound_mappings.size(); i++) 
+        {
+            if (pattern_match(Options.sound_mappings[i][0].c_str(), inf))
+            {
+                play_sound(Options.sound_mappings[i][1].c_str());
+                break;
+            }
+        }
+    }
+
     flush_input_buffer( FLUSH_ON_MESSAGE );
 
 #ifdef DOS_TERM
@@ -230,14 +259,22 @@ void mpr(const char *inf, int channel, int param)
     const int num_lines = get_number_of_lines();
 
     if (Message_Line == num_lines - 18) // ( Message_Line == 8 )
+    {
         more();
-
+    }
     gotoxy( (Options.delay_message_clear) ? 2 : 1, Message_Line + 18 );
+
     strncpy(info2, inf, 78);
     info2[78] = 0;
 
     textcolor( colour );
+#ifdef USE_TILE
+    mpr_on( MODE_MPR );
+#endif
     cprintf(info2);
+#ifdef USE_TILE
+    mpr_on( MODE_CRT );
+#endif
     //
     // reset colour
     textcolor(LIGHTGREY);
@@ -298,22 +335,30 @@ void mesclr( bool force )
 
     gotoxy(1, startLine);
 
-#ifdef LINUX
+#if defined(LINUX) || defined(USE_TILE)
+#ifdef USE_TILE
+    mpr_on( MODE_MPR );
+#endif
     clear_to_end_of_screen();
+#ifdef USE_TILE
+    mpr_on( MODE_CRT );
+#endif
 #else
 
+
     int numLines = get_number_of_lines() - startLine + 1;
+
     for (int i = 0; i < numLines; i++)
     {
         cprintf( "                                                                               " );
-
         if (i < numLines - 1)
         {
             cprintf(EOL);
         }
     }
-#endif
-#endif
+
+#endif //LINUX
+#endif //PLAIN_TERM
 
     // turn cursor back on
     _setcursortype(_NORMALCURSOR);
@@ -339,21 +384,67 @@ void more(void)
 #ifdef DOS
     cprintf(EOL);
 #endif
-    cprintf("--more--");
 
+#ifdef USE_TILE
+        mpr_on( MODE_MPR );
+#endif
+#ifdef JP
+    cprintf("--‘±‚­--");
+#else
+    cprintf("--more--");
+#endif
+
+    set_keyin_mode(KEYIN_MODE_MORE);
     do
     {
         keypress = getch();
     }
     while (keypress != ' ' && keypress != '\r' && keypress != '\n');
+    set_keyin_mode(KEYIN_MODE_NONE);
 
     mesclr( (Message_Line >= get_number_of_lines() - 18) );
+
+#ifdef USE_TILE
+    mpr_on( MODE_CRT );
+#endif
 }                               // end more()
+
+std::string get_last_messages(int mcount)
+{
+    if (mcount <= 0) return std::string();
+    if (mcount > NUM_STORED_MESSAGES) mcount = NUM_STORED_MESSAGES;
+
+    bool full_buffer = Store_Message[ NUM_STORED_MESSAGES - 1 ].text.length() == 0;
+    int start = Next_Message - mcount;
+    if (start < 0)
+        start = full_buffer? start + NUM_STORED_MESSAGES : 0;
+
+    std::string text;
+    int count = 0;
+    for (int i = start; i != Next_Message; ++i)
+    {
+        if (i >= NUM_STORED_MESSAGES)
+            i -= NUM_STORED_MESSAGES;
+
+        if (Store_Message[i].text.length())
+        {
+            text += "> ";
+            text += Store_Message[i].text;
+            text += EOL;
+            count++;
+        }
+    }
+
+    // An extra line of clearance.
+    if (count) text += EOL;
+
+    return text;
+}
 
 void replay_messages(void)
 {
     int            win_start_line = 0;
-    unsigned char  keyin;
+    int            keyin;
 
     bool           full_buffer = true;
     int            num_msgs = NUM_STORED_MESSAGES;
@@ -446,12 +537,24 @@ void replay_messages(void)
 
         cprintf( "-------------------------------------------------------------------------------" );
         cprintf(EOL);
+#ifdef JP 
+        cprintf( "<< ‘S%ds’†‚Ì%d-%ds >>", num_msgs, rel_start, rel_end );
+#else
         cprintf( "<< Lines %d-%d of %d >>", rel_start, rel_end, num_msgs );
+#endif
                  
         // turn cursor back on
         _setcursortype(_NORMALCURSOR);
 
+#ifdef USE_TILE
+        set_keyin_mode(KEYIN_MODE_MSG_REPLAY);
+        keyin = getch();
+        if (keyin == 0)
+            keyin = getch();
+        set_keyin_mode(KEYIN_MODE_NONE);
+#else
         keyin = get_ch();
+#endif
 
         if ((full_buffer && NUM_STORED_MESSAGES > num_lines - 2)
             || (!full_buffer && Next_Message > num_lines - 2))
@@ -459,7 +562,12 @@ void replay_messages(void)
             int new_line;
             int end_mark;
 
+#ifdef USE_TILE
+            if (keyin == 'k' || keyin == '8' || keyin == '-'
+                 || keyin == CMD_MOUSE_WHEEL_UP)
+#else
             if (keyin == 'k' || keyin == '8' || keyin == '-')
+#endif
             {
                 new_line = win_start_line - (num_lines - 2);
                 
@@ -483,7 +591,12 @@ void replay_messages(void)
                         new_line = 0;
                 }
             }
+#ifdef USE_TILE
+            else if (keyin == 'j' || keyin == '2' || keyin == '+'
+                      || keyin == CMD_MOUSE_WHEEL_DOWN)
+#else
             else if (keyin == 'j' || keyin == '2' || keyin == '+')
+#endif
             {
                 new_line = win_start_line + (num_lines - 2);
 
@@ -509,8 +622,15 @@ void replay_messages(void)
         }
         else
         {
+#ifdef USE_TILE
+            if (keyin != 'k' && keyin != '8' && keyin != '-'
+                && keyin != 'j' && keyin != '2' && keyin != '+'
+                && keyin != CMD_MOUSE_WHEEL_UP
+                && keyin != CMD_MOUSE_WHEEL_DOWN)
+#else
             if (keyin != 'k' && keyin != '8' && keyin != '-'
                 && keyin != 'j' && keyin != '2' && keyin != '+')
+#endif
             {
                 break;
             }
@@ -524,3 +644,4 @@ void replay_messages(void)
 
     return;
 }                               // end replay_messages()
+

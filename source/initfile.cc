@@ -18,10 +18,13 @@
 #include <string>
 #include <ctype.h>
 
+#include "Kills.h"
 #include "externs.h"
 #include "defines.h"
 #include "player.h"
+#include "stash.h"
 #include "stuff.h"
+#include "travel.h"
 #include "items.h"
 #include "view.h"
 
@@ -33,7 +36,7 @@ extern unsigned char (*mapch2) (unsigned char);
 extern unsigned char mapchar3(unsigned char ldfk);
 extern unsigned char mapchar4(unsigned char ldfk);
 
-#ifdef LINUX
+#if defined(LINUX) && !defined(USE_X11)
 extern int character_set;       // unices only
 #endif
 
@@ -70,9 +73,15 @@ static short str_to_colour( const std::string &str )
 
     const std::string cols[16] =
     {
+#ifdef JP /* 訳不用？ */
         "black", "blue", "green", "cyan", "red", "magenta", "brown",
         "lightgrey", "darkgrey", "lightblue", "lightgreen", "lightcyan",
         "lightred", "lightmagenta", "yellow", "white"
+#else
+        "black", "blue", "green", "cyan", "red", "magenta", "brown",
+        "lightgrey", "darkgrey", "lightblue", "lightgreen", "lightcyan",
+        "lightred", "lightmagenta", "yellow", "white"
+#endif
     };
 
     for (ret = 0; ret < 16; ret++)
@@ -84,9 +93,17 @@ static short str_to_colour( const std::string &str )
     // check for alternate spellings
     if (ret == 16)
     {
+#ifdef JP /* 訳不用？ */
         if (str == "lightgray")
+#else
+        if (str == "lightgray")
+#endif
             ret = 7;
+#ifdef JP /* 訳不用？ */
         else if (str == "darkgray")
+#else
+        else if (str == "darkgray")
+#endif
             ret = 8;
     }
 
@@ -100,13 +117,29 @@ static short str_to_channel_colour( const std::string &str )
 
     if (ret == -1)
     {
+#ifdef JP /* 訳不用？ */
         if (str == "mute")
+#else
+        if (str == "mute")
+#endif
             ret = MSGCOL_MUTED;
+#ifdef JP /* 訳不用？ */
         else if (str == "plain" || str == "off")
+#else
+        else if (str == "plain" || str == "off")
+#endif
             ret = MSGCOL_PLAIN;
+#ifdef JP /* 訳不用？ */
         else if (str == "default" || str == "on")
+#else
+        else if (str == "default" || str == "on")
+#endif
             ret = MSGCOL_DEFAULT;
+#ifdef JP /* 訳不用？ */
         else if (str == "alternate")
+#else
+        else if (str == "alternate")
+#endif
             ret = MSGCOL_ALTERNATE;
     }
 
@@ -120,10 +153,17 @@ static short str_to_channel( const std::string &str )
 
     const std::string cols[ NUM_MESSAGE_CHANNELS ] =
     {
+#ifdef JP /* 訳不用？ */
         "plain", "prompt", "god", "duration", "danger", "warning", "food",
         "recovery", "talk", "intrinsic_gain", "mutation", "monster_spell",
         "monster_enchant", "monster_damage", "rotten_meat", "equipment",
         "diagnostic",
+#else
+        "plain", "prompt", "god", "duration", "danger", "warning", "food",
+        "recovery", "talk", "intrinsic_gain", "mutation", "monster_spell",
+        "monster_enchant", "monster_damage", "rotten_meat", "equipment",
+        "diagnostic",
+#endif
     };
 
     for (ret = 0; ret < NUM_MESSAGE_CHANNELS; ret++)
@@ -137,17 +177,41 @@ static short str_to_channel( const std::string &str )
 
 static int str_to_weapon( const std::string &str )
 {
+#ifdef JP /* 訳不用？ */
     if (str == "shortsword" || str == "short sword")
+#else
+    if (str == "shortsword" || str == "short sword")
+#endif
         return (WPN_SHORT_SWORD);
+#ifdef JP /* 訳不用？ */
     else if (str == "mace")
+#else
+    else if (str == "mace")
+#endif
         return (WPN_MACE);
+#ifdef JP /* 訳不用？ */
     else if (str == "spear")
+#else
+    else if (str == "spear")
+#endif
         return (WPN_SPEAR);
+#ifdef JP /* 訳不用？ */
     else if (str == "trident")
+#else
+    else if (str == "trident")
+#endif
         return (WPN_TRIDENT);
+#ifdef JP /* 訳不用？ */
     else if (str == "hand axe" || str == "handaxe")
+#else
+    else if (str == "hand axe" || str == "handaxe")
+#endif
         return (WPN_HAND_AXE);
+#ifdef JP /* 訳不用？ */
     else if (str == "random")
+#else
+    else if (str == "random")
+#endif
         return (WPN_RANDOM);
 
     return (WPN_UNKNOWN);
@@ -155,25 +219,53 @@ static int str_to_weapon( const std::string &str )
 
 static unsigned int str_to_fire_types( const std::string &str )
 {
+#ifdef JP /* 訳不用？ */
     if (str == "launcher")
+#else
+    if (str == "launcher")
+#endif
         return (FIRE_LAUNCHER);
+#ifdef JP /* 訳不用？ */
     else if (str == "dart")
+#else
+    else if (str == "dart")
+#endif
         return (FIRE_DART);
+#ifdef JP /* 訳不用？ */
     else if (str == "stone")
+#else
+    else if (str == "stone")
+#endif
         return (FIRE_STONE);
+#ifdef JP /* 訳不用？ */
     else if (str == "dagger")
+#else
+    else if (str == "dagger")
+#endif
         return (FIRE_DAGGER);
+#ifdef JP /* 訳不用？ */
     else if (str == "spear")
+#else
+    else if (str == "spear")
+#endif
         return (FIRE_SPEAR);
+#ifdef JP /* 訳不用？ */
     else if (str == "hand axe" || str == "handaxe")
+#else
+    else if (str == "hand axe" || str == "handaxe")
+#endif
         return (FIRE_HAND_AXE);
+#ifdef JP /* 訳不用？ */
     else if (str == "club")
+#else
+    else if (str == "club")
+#endif
         return (FIRE_CLUB);
 
     return (FIRE_NONE);
 }
 
-static void str_to_fire_order( const std::string &str, 
+static void str_to_fire_order( const std::string &str,
                                FixedVector< int, NUM_FIRE_TYPES > &list )
 {
     int i;
@@ -214,7 +306,7 @@ static char str_to_race( const std::string &str )
         index -= (SP_CENTAUR - SP_RED_DRACONIAN - 1);
 
     // SP_HUMAN is at 1, therefore we must subtract one.
-    return ((index != -1) ? index_to_letter( index - 1 ) : '\0'); 
+    return ((index != -1) ? index_to_letter( index - 1 ) : '\0');
 }
 
 static char str_to_class( const std::string &str )
@@ -230,14 +322,14 @@ static char str_to_class( const std::string &str )
     if (index == -1)
         index = get_class_index_by_name( str.c_str() );
 
-    return ((index != -1) ? index_to_letter( index ) : '\0'); 
+    return ((index != -1) ? index_to_letter( index ) : '\0');
 }
 
 static std::string & tolower_string( std::string &str )
 {
-    if (str.length()) 
+    if (str.length())
     {
-        for (std::string::iterator cp = str.begin(); cp != str.end(); cp++) 
+        for (std::string::iterator cp = str.begin(); cp != str.end(); cp++)
         {
             *cp = tolower( *cp );
         }
@@ -250,10 +342,18 @@ static bool read_bool( const std::string &field, bool def_value )
 {
     bool ret = def_value;
 
+#ifdef JP /* 訳不用？ */
     if (field == "true" || field == "1")
+#else
+    if (field == "true" || field == "1")
+#endif
         ret = true;
 
+#ifdef JP /* 訳不用？ */
     if (field == "false" || field == "0")
+#else
+    if (field == "false" || field == "0")
+#endif
         ret = false;
 
     return (ret);
@@ -287,12 +387,24 @@ void read_init_file(void)
     Options.terse_hand             = true;
     Options.auto_list              = false;
     Options.delay_message_clear    = false;
+    Options.pickup_dropped         = true;
+    Options.travel_colour          = true;
+    Options.travel_delay           = -1;
+    Options.travel_stair_cost      = 500;
+
+#ifdef STASH_TRACKING
+    Options.stash_tracking         = STM_NONE;
+#endif
+    Options.explore_item_stop      = true;
+    Options.target_zero_exp        = true;
+    Options.dump_kill_places       = KDO_ONE_PLACE;
+    Options.dump_message_count     = 4;
 
     Options.flush_input[ FLUSH_ON_FAILURE ]     = true;
     Options.flush_input[ FLUSH_BEFORE_COMMAND ] = false;
     Options.flush_input[ FLUSH_ON_MESSAGE ]     = false;
 
-    Options.lowercase_invocations  = false; 
+    Options.lowercase_invocations  = false;
 
     // Note: These fire options currently match the old behaviour. -- bwr
     Options.fire_items_start       = 0;           // start at slot 'a'
@@ -318,6 +430,25 @@ void read_init_file(void)
     Options.wiz_mode      = WIZ_NO;
 #endif
 
+#ifdef JP
+    Options.use_zenkaku   = false;
+#endif
+
+#if 1 //JP
+    Options.use_cake      = false;
+#endif
+
+#ifdef USE_TILE
+    Options.use_tile      = true;
+    Options.use_qv_mode   = false;
+    Options.rotate_numpad = true;
+    Options.rotate_minimap = false;
+
+#if 1 //Slot
+    Options.show_items[0] = '0';
+#endif
+#endif
+
     // map each colour to itself as default
 #ifdef USE_8_COLOUR_TERM_MAP
     for (i = 0; i < 16; i++)
@@ -328,6 +459,12 @@ void read_init_file(void)
     for (i = 0; i < 16; i++)
         Options.colour[i] = i;
 #endif
+
+    Options.pick_items_start  = 0; // start at slot 'a'
+    Options.enter_latest_name = true;
+
+    // Setup travel information. What's a better place to do this?
+    initialise_travel();
 
     // map each channel to plain (well, default for now since I'm testing)
     for (int i = 0; i < NUM_MESSAGE_CHANNELS; i++)
@@ -377,9 +514,13 @@ void read_init_file(void)
     if (f == NULL)
         return;
 
-    while (!feof(f))
+    while ( !feof(f) )
+    //while (fgets(s, 255, f) != NULL)
     {
-        fgets(s, 255, f);
+        s[0] = '\0';
+
+        if ( fgets(s, 255, f) == NULL )
+            break;
 
         line++;
 
@@ -421,8 +562,9 @@ void read_init_file(void)
 
         // some fields want capitals... none care about external spaces
         trim_string( field );
-        if (key != "name" && key != "crawl_dir" 
-            && key != "race" && key != "class")
+        if (key != "name" && key != "crawl_dir"
+            && key != "race" && key != "class" && key != "ban_pickup"
+            && key != "stop_travel" && key != "sound")
         {
             tolower_string( field );
         }
@@ -465,7 +607,11 @@ void read_init_file(void)
                     Options.autopickups |= (1L << j);
                 else
                 {
+#ifdef JP /* 訳不用？ */
                     fprintf( stderr, "Bad object type '%c' for autopickup.\n",
+#else
+                    fprintf( stderr, "Bad object type '%c' for autopickup.\n",
+#endif
                              type );
                 }
             }
@@ -504,7 +650,7 @@ void read_init_file(void)
         else if (key == "easy_quit_item_lists")
         {
             // allow aborting of item lists with space
-            Options.easy_quit_item_prompts = read_bool( field, 
+            Options.easy_quit_item_prompts = read_bool( field,
                                             Options.easy_quit_item_prompts );
         }
         else if (key == "easy_open")
@@ -578,7 +724,11 @@ void read_init_file(void)
             else if (field == "dim")
                 Options.friend_brand = CHATTR_DIM;
             else
+#ifdef JP /* 訳不用？ */
                 fprintf( stderr, "Bad colour -- %s\n", field.c_str() );
+#else
+                fprintf( stderr, "Bad colour -- %s\n", field.c_str() );
+#endif
         }
         else if (key == "no_dark_brand")
         {
@@ -635,10 +785,14 @@ void read_init_file(void)
         else if (key == "fire_items_start")
         {
             if (isalpha( field[0] ))
-                Options.fire_items_start = letter_to_index( field[0] ); 
+                Options.fire_items_start = letter_to_index( field[0] );
             else
             {
+#ifdef JP /* 訳不用？ */
                 fprintf( stderr, "Bad fire item start index -- %s\n",
+#else
+                fprintf( stderr, "Bad fire item start index -- %s\n",
+#endif
                          field.c_str() );
             }
         }
@@ -657,7 +811,11 @@ void read_init_file(void)
             if (Options.hp_warning < 0 || Options.hp_warning > 100)
             {
                 Options.hp_warning = 0;
+#ifdef JP /* 訳不用？ */
                 fprintf( stderr, "Bad HP warning percentage -- %s\n",
+#else
+                fprintf( stderr, "Bad HP warning percentage -- %s\n",
+#endif
                          field.c_str() );
             }
         }
@@ -667,7 +825,11 @@ void read_init_file(void)
             if (Options.hp_attention < 0 || Options.hp_attention > 100)
             {
                 Options.hp_attention = 0;
+#ifdef JP /* 訳不用？ */
                 fprintf( stderr, "Bad HP attention percentage -- %s\n",
+#else
+                fprintf( stderr, "Bad HP attention percentage -- %s\n",
+#endif
                          field.c_str() );
             }
         }
@@ -689,15 +851,163 @@ void read_init_file(void)
             Options.race = str_to_race( field );
 
             if (Options.race == '\0')
+#ifdef JP /* 訳不用？ */
                 fprintf( stderr, "Unknown race choice: %s\n", field.c_str() );
+#else
+                fprintf( stderr, "Unknown race choice: %s\n", field.c_str() );
+#endif
         }
         else if (key == "class")
         {
             Options.cls = str_to_class( field );
 
             if (Options.cls == '\0')
+#ifdef JP /* 訳不用？ */
                 fprintf( stderr, "Unknown class choice: %s\n", field.c_str() );
+#else
+                fprintf( stderr, "Unknown class choice: %s\n", field.c_str() );
+#endif
         }
+        else if (key == "ban_pickup")
+        {
+            std::string::size_type pos;
+            while ((pos = field.find(",", 0)) != std::string::npos)
+            {
+                if (pos > 0)
+                    Options.banned_objects.push_back(field.substr(0, pos));
+                field.erase(0, pos + 1);
+            }
+            if (field.length() > 0)
+                Options.banned_objects.push_back(field);
+        }
+        else if (key == "pickup_thrown")
+        {
+            Options.pickup_thrown = read_bool(field, Options.pickup_thrown);
+        }
+        else if (key == "pickup_dropped")
+        {
+            Options.pickup_dropped = read_bool(field, Options.pickup_dropped);
+        }
+        else if (key == "travel_delay")
+        {
+            // Read travel delay in milliseconds.
+            Options.travel_delay = atoi( field.c_str() );
+            if (Options.travel_delay < -1)
+                Options.travel_delay = -1;
+            if (Options.travel_delay > 2000)
+                Options.travel_delay = 2000;
+        }
+        else if (key == "travel_stair_cost")
+        {
+            Options.travel_stair_cost = atoi( field.c_str() );
+            if (Options.travel_stair_cost < 1)
+                Options.travel_stair_cost = 1;
+            else if (Options.travel_stair_cost > 1000)
+                Options.travel_stair_cost = 1000;
+        }
+        else if (key == "stop_travel")
+        {
+            std::string::size_type pos;
+            while ((pos = field.find(",", 0)) != std::string::npos)
+            {
+                if (pos > 0)
+                    Options.stop_travel.push_back(field.substr(0, pos));
+                field.erase(0, pos + 1);
+            }
+            if (field.length() > 0)
+                Options.stop_travel.push_back(field);
+        }
+#if 1 //MONOLITH
+        else if (key == "travel_avoid_terrain")
+        {
+            std::string::size_type pos;
+            while ((pos = field.find(",", 0)) != std::string::npos) {
+                if (pos > 0)
+                    prevent_travel_to(field.substr(0, pos));
+                field.erase(0, pos + 1);
+            }
+            if (field.length() > 0)
+                prevent_travel_to(field);
+        }
+        else if (key == "travel_colour")
+        {
+            Options.travel_colour = read_bool(field, Options.travel_colour);
+        }
+        else if (key == "explore_item_stop")
+        {
+            Options.explore_item_stop = read_bool(field, Options.explore_item_stop);
+        }
+#ifdef STASH_TRACKING
+        else if (key == "stash_tracking")
+        {
+            Options.stash_tracking =
+                 field == "explicit"? STM_EXPLICIT :
+                 field == "dropped" ? STM_DROPPED  :
+                 field == "all"     ? STM_ALL      :
+                                      STM_NONE;
+        }
+        else if (key == "stash_filter")
+        {
+            std::string::size_type pos;
+            while ((pos = field.find(",", 0)) != std::string::npos) {
+                if (pos > 0)
+                    Stash::filter(field.substr(0, pos));
+                field.erase(0, pos + 1);
+            }
+            if (field.length() > 0)
+                Stash::filter(field);
+        }
+#endif
+        else if (key == "sound")
+        {
+            std::string::size_type pos = field.find(",", 0);
+            while (pos != std::string::npos)
+            {
+                if (pos > 0)
+                {
+                    std::string sub = field.substr(0, pos);
+                    std::string::size_type cpos = sub.find(":", 0);
+                    if (cpos != std::string::npos)
+                    {
+                        FixedVector<std::string, 2> mapping;
+                        mapping[0] = sub.substr(0, cpos);
+                        mapping[1] = sub.substr(cpos + 1);
+                        Options.sound_mappings.push_back(mapping);
+                    }
+                }
+                field.erase(0, pos + 1);
+            }
+            if (field.length() > 0)
+            {
+                std::string::size_type cpos = field.find(":", 0);
+                if (cpos != std::string::npos)
+                {
+                    FixedVector<std::string, 2> mapping;
+                    mapping[0] = field.substr(0, cpos);
+                    mapping[1] = field.substr(cpos + 1);
+                    Options.sound_mappings.push_back(mapping);
+                }
+            }
+        }
+        else if (key == "dump_kill_places")
+        {
+            Options.dump_kill_places =
+                field == "none"? KDO_NO_PLACES :
+                field == "all" ? KDO_ALL_PLACES :
+                                 KDO_ONE_PLACE;
+        }
+        else if (key == "dump_message_count")
+        {
+            // Capping is implicit
+            Options.dump_message_count = atoi( field.c_str() );
+            if (Options.dump_message_count > 50)
+                Options.dump_message_count = 50;
+        }
+        else if (key == "target_zero_exp")
+        {
+            Options.target_zero_exp = read_bool(field, Options.target_zero_exp);
+        }
+#endif //MONOLITH
         else if (key == "auto_list")
         {
             Options.auto_list = read_bool( field, Options.auto_list );
@@ -714,23 +1024,23 @@ void read_init_file(void)
         {
             if (subkey == "failure")
             {
-                Options.flush_input[FLUSH_ON_FAILURE] 
+                Options.flush_input[FLUSH_ON_FAILURE]
                     = read_bool(field, Options.flush_input[FLUSH_ON_FAILURE]);
             }
             else if (subkey == "command")
             {
-                Options.flush_input[FLUSH_BEFORE_COMMAND] 
+                Options.flush_input[FLUSH_BEFORE_COMMAND]
                     = read_bool(field, Options.flush_input[FLUSH_BEFORE_COMMAND]);
             }
             else if (subkey == "message")
             {
-                Options.flush_input[FLUSH_ON_MESSAGE] 
+                Options.flush_input[FLUSH_ON_MESSAGE]
                     = read_bool(field, Options.flush_input[FLUSH_ON_MESSAGE]);
             }
         }
         else if (key == "lowercase_invocations")
         {
-            Options.lowercase_invocations 
+            Options.lowercase_invocations
                     = read_bool(field, Options.lowercase_invocations);
         }
         else if (key == "wiz_mode")
@@ -744,12 +1054,90 @@ void read_init_file(void)
             else if (field == "yes")
                 Options.wiz_mode = WIZ_YES;
             else
+#ifdef JP /* 訳不用？ */
+                fprintf(stderr, "Unknown wiz_mode option: %s\n", field.c_str());
+#else
                 fprintf(stderr, "Unknown wiz_mode option: %s\n", field.c_str());
 #endif
+#endif
+        }
+
+#ifdef JP
+        //!!!!全角か半角か
+        else if (key == "use_zenkaku" )
+        {
+            Options.use_zenkaku = read_bool( field, Options.use_zenkaku );
+        }
+        //!!!!トウフを使用するか否か
+#endif
+#if 1 //JP
+        else if (key == "use_cake" )
+        {
+            Options.use_cake = read_bool( field, Options.use_cake );
+        }
+#endif
+
+#ifdef USE_TILE
+        else if (key == "use_tile" )
+        {
+            Options.use_tile = read_bool( field, Options.use_tile );
+        }
+
+        else if (key == "use_qv_mode" )
+        {
+            Options.use_qv_mode = read_bool( field, Options.use_qv_mode );
+        }
+
+        else if (key == "use_iso_mode" )
+        {
+            Options.use_qv_mode = read_bool( field, Options.use_qv_mode );
+        }
+
+        else if (key == "rotate_numpad" )
+        {
+            Options.rotate_numpad = read_bool( field, Options.rotate_numpad );
+        }
+        else if (key == "rotate_minimap" )
+        {
+            Options.rotate_minimap = read_bool( field, Options.rotate_minimap );
+        }
+
+#if 1 //Slot
+        else if (key == "show_items" )
+        {
+            strncpy(Options.show_items, field.c_str(), 18);
+        }
+#endif
+#endif
+
+        else if (key == "stress_cursed" )
+        {
+            Options.stress_cursed = read_bool( field, Options.stress_cursed );
+        }
+        else if (key == "enter_latest_name")
+        {
+            Options.enter_latest_name = read_bool( field, Options.enter_latest_name );
+        }
+        else if (key == "pick_items_start")
+        {
+            if (isalpha( field[0] ))
+                Options.pick_items_start = letter_to_index( field[0] );
+            else
+            {
+#ifdef JP
+                fprintf( stderr, "Bad pick item start index -- %s\n",
+#else
+                fprintf( stderr, "Bad pick item start index -- %s\n",
+#endif
+                         field.c_str() );
+            }
         }
     }
 
+    std::string str(255, ' '); //caract
+
     fclose(f);
+    return;
 }                               // end read_init_file()
 
 void get_system_environment(void)
@@ -780,9 +1168,15 @@ void get_system_environment(void)
 // parse args, filling in Options and game environment as we go.
 // returns true if no unknown or malformed arguments were found.
 
+#ifdef JP /* 訳不用？ */
 static const char *cmd_ops[] = { "scores", "name", "race", "class",
                                  "pizza", "plain", "dir", "rc", "tscores",
                                  "vscores" };
+#else
+static const char *cmd_ops[] = { "scores", "name", "race", "class",
+                                 "pizza", "plain", "dir", "rc", "tscores",
+                                 "vscores" };
+#endif
 
 const int num_cmd_ops = 10;
 bool arg_seen[num_cmd_ops];
@@ -856,7 +1250,7 @@ bool parse_args( int argc, char **argv, bool rc_only )
         case 0:             // scores
         case 8:             // tscores
         case 9:             // vscores
-            if (!next_is_param)      
+            if (!next_is_param)
                 ecount = SCORE_FILE_ENTRIES;            // default
             else // optional number given
             {
@@ -933,7 +1327,8 @@ bool parse_args( int argc, char **argv, bool rc_only )
                 viewwindow = &viewwindow3;
                 mapch = &mapchar3;
                 mapch2 = &mapchar4;
-#ifdef LINUX
+
+#if defined(LINUX) && !defined(USE_X11)
                 character_set = 0;
 #endif
             }

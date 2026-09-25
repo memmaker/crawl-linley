@@ -1,0 +1,14 @@
+Armour Class (AC): When something injures you, your AC reduces the amount of
+damage you suffer. The number next to your AC is a measure of how good your
+shield (if any) is at blocking attacks. In both cases, more is better.
+
+Evasion (EV): Your EV helps you to avoid being hit by unpleasant things.
+
+Ex.
+--
+The giant newt misses you.                         (EV)
+You block the giant newt's attack.                 (Shield)
+The giant newt hits you but doesn't do any damage. (AC)
+Your armour prevents you from hitting.             (Heavy armour penalty)
+
+Summary:  Evasion (EV) -> Blocking (Shield) -> Damage reduction (AC)

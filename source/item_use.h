@@ -93,12 +93,18 @@ void wear_armour( void );
  * *********************************************************************** */
 bool do_wear_armour( int item, bool quiet );
 
+struct item_def;
+// last updated 30May2003 {ds}
+/* ***********************************************************************
+ * called from: food
+ * *********************************************************************** */
+bool can_wield(const item_def& weapon);
 
 // last updated 12may2000 {dlb}
 /* ***********************************************************************
  * called from: acr
  * *********************************************************************** */
-void wield_weapon(bool auto_wield);
+void wield_weapon(bool auto_wield, int slot = -1);
 
 
 // last updated 12may2000 {dlb}

@@ -25,9 +25,9 @@
 #include <conio.h>
 #endif
 
-#ifdef LINUX
-#include "liblinux.h"
-#endif
+//#ifdef LINUX
+//#include "liblinux.h"
+//#endif
 
 #include "externs.h"
 
@@ -41,205 +41,496 @@
 #include "transfor.h"
 #include "view.h"
 
-
 int how_mutated(void);
 char body_covered(void);
 bool perma_mutate(int which_mut, char how_much);
 
 const char *mutation_descrip[][3] = {
+#ifdef JP 
+    {"あなたは強靭な皮膚を持っている。(AC +1)", "あなたは非常に強靭な皮膚を持っている。(AC +2)",
+     "あなたは極めて強靭な皮膚を持っている。(AC +3)"},
+#else
     {"You have tough skin (AC +1).", "You have very tough skin (AC +2).",
      "You have extremely tough skin (AC +3)."},
+#endif
 
+#ifdef JP 
+    {"あなたの筋肉は強い。(STR +", "", ""},
+    {"あなたの精神は鋭い。(INT +", "", ""},
+    {"あなたは敏捷だ。(DEX +", "", ""},
+#else
     {"Your muscles are strong (Str +", "", ""},
     {"Your mind is acute (Int +", "", ""},
     {"You are agile (Dex +", "", ""},
+#endif
 
+#ifdef JP 
+    {"あなたは緑色の鱗で部分的に覆われている。(AC +1)",
+     "あなたは緑色の鎧で大部分を覆われている。(AC +3)",
+     "あなたが緑色の鎧で完全に覆われている。(AC +5)"},
+#else
     {"You are partially covered in green scales (AC + 1).",
      "You are mostly covered in green scales (AC + 3).",
      "You are covered in green scales (AC + 5)."},
+#endif
 
+#ifdef JP 
+    {"あなたは厚みのある黒い鱗で部分的に覆われている。(AC +3, DEX -1)",
+     "あなたは厚みのある黒い鱗で大部分を覆われている。(AC +6, DEX -2)",
+     "あなたは厚みのある黒い鱗で完全に覆われている。(AC +9, DEX -3)"},
+#else
     {"You are partially covered in thick black scales (AC + 3, dex - 1).",
      "You are mostly covered in thick black scales (AC + 6, dex - 2).",
      "You are completely covered in thick black scales (AC + 9, dex - 3)."},
+#endif
 
+#ifdef JP 
+    {"あなたは柔軟な灰色の鱗で部分的に覆われている。(AC +1)",
+     "あなたは柔軟な灰色の鱗で大部分を覆われている。(AC +2)",
+     "あなたは柔軟な灰色の鱗で完全に覆われている。(AC +3)"},
+#else
     {"You are partially covered in supple grey scales (AC + 1).",
      "You are mostly covered in supple grey scales (AC + 2).",
      "You are completely covered in supple grey scales (AC + 3)."},
+#endif
 
+#ifdef JP 
+    {"あなたは骨の装甲で護られている。(AC +2, DEX -1)",
+     "あなたは骨の装甲で護られている。(AC +3, DEX -2)",
+     "あなたは骨の装甲で護られている。(AC +4, DEX -3)"},
+#else
     {"You are protected by plates of bone (AC + 2, dex - 1).",
      "You are protected by plates of bone (AC + 3, dex - 2).",
      "You are protected by plates of bone (AC + 4, dex - 3)."},
+#endif
 
+#ifdef JP 
+    {"あなたは緩やかな斥力フィールドに覆われている。(EV +1)",
+     "あなたは斥力フィールドに覆われている。(EV +3)",
+     "あなたは強力な斥力フィールドに覆われている。(EV +5, 飛来物防御)"},
+    {"あなたの肉体は毒に免疫がある。", "あなたの肉体は毒に免疫がある。",
+     "あなたの肉体は毒に免疫がある。"},
+#else
     {"You are surrounded by a mild repulsion field (ev + 1).",
      "You are surrounded by a moderate repulsion field (ev + 3).",
      "You are surrounded by a strong repulsion field (ev + 5; repel missiles)."},
     {"Your system is immune to poisons.", "Your system is immune to poisons.",
      "Your system is immune to poisons."},
+#endif
 // 10
 
+#ifdef JP 
+    {"あなたの消化器系統は肉の消化に特化している。",
+     "あなたの消化器系統は肉の消化に特化している。",
+     "あなたは本質的に肉食性だ。"},
+#else
     {"Your digestive system is specialised to digest meat.",
      "Your digestive system is specialised to digest meat.",
      "You are primarily a carnivore."},
+#endif
 
+#ifdef JP 
+    {"あなたは肉をうまく消化できない。", "あなたは肉をうまく消化できない。",
+     "あなたは本質的に草食性だ。"},
+#else
     {"You digest meat inefficiently.", "You digest meat inefficiently.",
      "You are primarily a herbivore."},
+#endif
 
+#ifdef JP 
+    {"あなたの皮膚は熱に耐性がある。", "あなたの皮膚は熱にかなりの耐性がある。",
+     "あなたの皮膚は熱の影響に対しほぼ免疫である。"},
+#else
     {"Your flesh is heat resistant.", "Your flesh is very heat resistant.",
      "Your flesh is almost immune to the effects of heat."},
+#endif
 
+#ifdef JP 
+    {"あなたの皮膚は冷気に耐性がある。", "あなたの皮膚は冷気にかなりの耐性がある。",
+     "あなたの皮膚は冷気の影響に対しほぼ免疫である。"},
+#else
     {"Your flesh is cold resistant.", "Your flesh is very cold resistant.",
      "Your flesh is almost immune to the effects of cold."},
+#endif
 
+#ifdef JP 
+    {"あなたは電気ショックに免疫がある。", "あなたは電気ショックに免疫がある。",
+     "あなたは電気ショックに免疫がある。"},
+#else
     {"You are immune to electric shocks.", "You are immune to electric shocks.",
      "You are immune to electric shocks."},
+#endif
 
+#ifdef JP 
+    {"あなたの自然治癒の速度は著しく速い。",
+     "あなたは非常に速く治癒する。",
+     "あなたは再生能力がある。"},
+#else
     {"Your natural rate of healing is unusually fast.",
      "You heal very quickly.",
      "You regenerate."},
+#endif
 
+#ifdef JP 
+    {"あなたの新陳代謝は速い。", "あなたの新陳代謝は非常に速い。",
+     "あなたの新陳代謝はとてつもなく速い。"},
+#else
     {"You have a fast metabolism.", "You have a very fast metabolism.",
      "Your metabolism is lightning-fast."},
+#endif
 
+#ifdef JP 
+    {"あなたの新陳代謝は遅い。", "あなたの新陳代謝は遅い。",
+     "あなたは食料を食べる必要がほとんどない。"},
+#else
     {"You have a slow metabolism.", "You have a slow metabolism.",
      "You need consume almost no food."},
+#endif
 
+#ifdef JP 
+    {"あなたは弱い。(STR -", "", ""},
+    {"あなたは愚かだ。(INT -", "", ""},
+#else
     {"You are weak (Str -", "", ""},
     {"You are dopey (Int -", "", ""},
+#endif
 // 20
+#ifdef JP 
+    {"あなたは不器用だ。(DEX -", "", ""},
+#else
     {"You are clumsy (Dex -", "", ""},
+#endif
 
+#ifdef JP 
+    {"あなたは空間転位を制御することができる。", "あなたは空間転位を制御することができる。",
+     "あなたは空間転位を制御することができる。"},
+#else
     {"You can control translocations.", "You can control translocations.",
      "You can control translocations."},
+#endif
 
+#ifdef JP 
+    {"あなたの近くでたまに空間が歪む。",
+     "あなたの近くで時々空間が歪む。",
+     "あなたの近くで頻繁に空間が歪む。"},
+#else
     {"Space occasionally distorts in your vicinity.",
      "Space sometimes distorts in your vicinity.",
      "Space frequently distorts in your vicinity."},
+#endif
 
+#ifdef JP 
+    {"あなたは魔法に対して抵抗力がある。", "あなたは魔法に対して高い抵抗力がある。",
+     "あなたは魔法の影響に対して強力な抵抗力がある。"},
+#else
     {"You are resistant to magic.", "You are highly resistant to magic.",
      "You are extremely resistant to the effects of magic."},
+#endif
 
+#ifdef JP 
+    {"あなたは素早く地面を動く。", "あなたは非常に素早く地面を動く。",
+     "あなたは極めて素早く地面を動く。"},
+#else
     {"You cover the ground quickly.", "You cover the ground very quickly.",
      "You cover the ground extremely quickly."},
+#endif
 
+#ifdef JP 
+    {"あなたは超自然的に鋭い視力を持っている。",
+     "あなたは超自然的に鋭い視力を持っている。",
+     "あなたは超自然的に鋭い視力を持っている。"},
+#else
     {"You have supernaturally acute eyesight.",
      "You have supernaturally acute eyesight.",
      "You have supernaturally acute eyesight."},
+#endif
 
+#ifdef JP 
+    {"あなたの奇形の体には、鎧がうまく合わない。",
+     "あなたのひどい奇形の体には、鎧がうまく合わない。",
+     "あなたの恐ろしい奇形の体には、鎧がうまく合わない。"},
+#else
     {"Armour fits poorly on your deformed body.",
      "Armour fits poorly on your badly deformed body.",
      "Armour fits poorly on your hideously deformed body."},
+#endif
 
+#ifdef JP 
+    {"あなたは自分の意思でテレポートできる。", "あなたは自分の意思で上手にテレポートできる。",
+     "あなたは自分の意思で即時のテレポートできる。"},
+#else
     {"You can teleport at will.", "You are good at teleporting at will.",
      "You can teleport instantly at will."},
+#endif
 
+#ifdef JP 
+    {"あなたは毒を吐き出すことができる。", "あなたは毒を吐き出すことができる。", "あなたは毒を吐き出すことができる。"},
+#else
     {"You can spit poison.", "You can spit poison.", "You can spit poison."},
+#endif
 
+#ifdef JP 
+    {"あなたはごく近くの周辺を感知することができる。",
+     "あなたは周辺を感知することができる。",
+     "あなたは広域に渡る周辺を感知できる。"},
+#else
     {"You can sense your immediate surroundings.",
      "You can sense your surroundings.",
      "You can sense a large area of your surroundings."},
+#endif
 
 // 30
 
+#ifdef JP 
+    {"あなたは火のブレスを吐くことができる。", "あなたは火炎のブレスを吐くことができる。",
+     "あなたは強烈な火炎のブレスを吐くことができる。"},
+#else
     {"You can breathe flames.", "You can breathe fire.",
      "You can breathe blasts of fire."},
+#endif
 
+#ifdef JP 
+    {"あなたは短い距離を瞬間移動することができる。",
+     "あなたは短い距離を瞬間移動することができる。",
+     "あなたは短い距離を瞬間移動することができる。"},
+#else
     {"You can translocate small distances instantaneously.",
      "You can translocate small distances instantaneously.",
      "You can translocate small distances instantaneously."},
+#endif
 
+#ifdef JP 
+    {"あなたの頭には一対の小さな角がある。",
+     "あなたの頭には一対の角がある。",
+     "あなたの頭には一対の大きな角がある。"},
+#else
     {"You have a pair of small horns on your head.",
      "You have a pair of horns on your head.",
      "You have a pair of large horns on your head."},
+#endif
 
+#ifdef JP 
+    {"あなたの筋肉は強い。(STR +1) しかし硬すぎる。(DEX -1)",
+     "あなたの筋肉は非常に強い。(STR +2) しかし硬すぎる。(DEX -2)",
+     "あなたの筋肉は極めて強い。(STR +3) しかし硬すぎる。(DEX -3)"},
+#else
     {"Your muscles are strong (Str +1), but stiff (Dex -1).",
      "Your muscles are very strong (Str +2), but stiff (Dex -2).",
      "Your muscles are extremely strong (Str +3), but stiff (Dex -3)."},
+#endif
 
+#ifdef JP 
+    {"あなたの筋肉は柔軟だ。(DEX +1) しかし弱々しい。(STR -1)",
+     "あなたの筋肉は非常に柔軟だ。(DEX +2) しかし弱々しい。(STR -2)",
+     "あなたの筋肉は極めて柔軟だ。(DEX +3) しかし弱々しい。(STR -3)"},
+#else
     {"Your muscles are flexible (Dex +1), but weak (Str -1).",
      "Your muscles are very flexible (Dex +2), but weak (Str -2).",
      "Your muscles are extremely flexible (Dex +3), but weak (Str -3)."},
+#endif
 
+#ifdef JP 
+    {"あなたはごくたまに自分のいる場所が分からなくなる。",
+     "あなたはたまに自分のいる場所が分からなくなる。",
+     "あなたは頻繁に自分のいる場所が分からなくなる。"},
+#else
     {"You occasionally forget where you are.",
      "You sometimes forget where you are.",
      "You frequently forget where you are."},
+#endif
 
+#ifdef JP 
+    {"あなたの意思は非常に明瞭だ。",
+     "あなたの意思は不自然なほどに明瞭だ。",
+     "あなたの意思は超自然的に明瞭だ。"},
+#else
     {"You possess an exceptional clarity of mind.",
      "You possess an unnatural clarity of mind.",
      "You possess a supernatural clarity of mind."},
+#endif
 
+#ifdef JP 
+    {"あなたは戦闘中に逆上する傾向がある。",
+     "あなたはしばしば戦闘中に逆上する。",
+     "あなたは逆上を抑えることができない。"},
+#else
     {"You tend to lose your temper in combat.",
      "You often lose your temper in combat.",
      "You have an uncontrollable temper."},
+#endif
 
+#ifdef JP 
+    {"あなたの肉体はゆっくりと能力を低下していく。", "あなたの肉体は能力を低下していく。",
+     "あなたの肉体は急速に能力を低下していく。"},
+#else
     {"Your body is slowly deteriorating.", "Your body is deteriorating.",
      "Your body is rapidly deteriorating."},
+#endif
 
+#ifdef JP 
+    {"あなたの視界はぼんやりとしている。", "あなたの視界は非常にぼんやりしている。",
+     "あなたの視界は極めてぼんやりしている。"},
+#else
     {"Your vision is a little blurry.", "Your vision is quite blurry.",
      "Your vision is extremely blurry."},
+#endif
 // 40
 
+#ifdef JP 
+    {"あなたは突然変異の進行に幾らかの抵抗力がある。",
+     "あなたは突然変異の進行と除去の両方に幾らかの抵抗力がある。",
+     "あなたの突然変異は決定的に定着していて、これ以上変異することはない。"},
+#else
     {"You are somewhat resistant to further mutation.",
      "You are somewhat resistant to both further mutation and mutation removal.",
      "Your current mutations are irrevocably fixed, and you can mutate no more."},
+#endif
 
+#ifdef JP 
+    {"あなたは虚弱だ。(-10% HP)", "あなたは非常に虚弱だ。(-20% HP)",
+     "あなたは極めて虚弱だ。(-30% HP)"},
+#else
     {"You are frail (-10 percent hp).", "You are very frail (-20 percent hp).",
      "You are extremely frail (-30 percent hp)."},
+#endif
 
+#ifdef JP 
+    {"あなたは強健だ。(+10% HP)",
+     "あなたは非常に強健だ。(+20% HP)",
+     "あなたは極めて強健だ。(+30% HP)"},
+#else
     {"You are robust (+10 percent hp).",
      "You are very robust (+20 percent hp).",
      "You are extremely robust (+30 percent hp)."},
+#endif
 
+#ifdef JP 
+    {"あなたは邪悪な苦痛に免疫がある。", "", ""},
+#else
     {"You are immune to unholy pain and torment.", "", ""},
+#endif
 
+#ifdef JP 
+    {"あなたは負のエネルギーに耐性がある。",
+     "あなたは負のエネルギーに非常に耐性がある。",
+     "あなたは負のエネルギーに免疫だ。"},
+#else
     {"You resist negative energy.",
      "You are quite resistant to negative energy.",
      "You are immune to negative energy."},
+#endif
 
     /* Use player_has_spell() to avoid duplication */
+#ifdef JP 
+    {"あなたは援軍として下級悪魔を召換できる。", "", ""},
+    {"あなたは援軍として悪魔を召換できる。", "", ""},
+    {"あなたは地獄の業火を放つことができる。", "", ""},
+    {"あなたは地獄の苦悶を呼び起こすことができる。", "", ""},
+    {"あなたは死体を従者として蘇生することができる。", "", ""},
+#else
     {"You can summon minor demons to your aid.", "", ""},
     {"You can summon demons to your aid.", "", ""},
     {"You can hurl blasts of hellfire.", "", ""},
     {"You can call on the torments of Hell.", "", ""},
     {"You can raise the dead to walk for you.", "", ""},
+#endif
 // 50
+#ifdef JP 
+    {"あなたは悪魔を支配することができる。", "", ""},
+    {"あなたはパンデモニウムに(片道だが)行くことができる。", "", ""},
+    {"あなたは死と破壊から力を引き出すことができる。", "", ""},
+#else
     {"You can control demons.", "", ""},
     {"You can travel to (but not from) Pandemonium at will.", "", ""},
     {"You can draw strength from death and destruction.", "", ""},
+#endif
 
     /* Not worshippers of Vehumet */
+#ifdef JP 
+    {"あなたは地獄から魔法のエネルギーを引き出すことができる。", "", ""},
+#else
     {"You can channel magical energy from Hell.", "", ""},
+#endif
 
+#ifdef JP 
+    {"あなたは徒手での格闘で生命を衰弱させることができる。", "", ""},
+#else
     {"You can drain life in unarmed combat.", "", ""},
+#endif
 
     /* Not conjurers/worshippers of Makhleb */
+#ifdef JP 
+    {"あなたはゲヘナの炎を放射することができる。", "", ""},
+#else
     {"You can throw forth the flames of Gehenna.", "", ""},
+#endif
 
+#ifdef JP 
+    {"あなたはコキュートスの冷気を放射することができる。", "", ""},
+#else
     {"You can throw forth the frost of Cocytus.", "", ""},
+#endif
 
+#ifdef JP 
+    {"あなたはタルタロスの力を呼び起こし、生ける敵に一撃を加えることができる。", "", ""},
+    {"あなたの爪は鋭い。", "あなたの爪は非常に鋭い。",
+     "あなたは手に鉤爪が生えている。"},
+#else
     {"You can invoke the powers of Tartarus to smite your living foes.", "", ""},
     {"You have sharp fingernails.", "Your fingernails are very sharp.",
      "You have claws for hands."},
+#endif
 
+#ifdef JP 
+    {"あなたは足の替わりに蹄が生えている。", "", ""},
+#else
     {"You have hooves in place of feet.", "", ""},
+#endif
     // 60 - leave some space for more demonic powers...
+#ifdef JP 
+    {"あなたは毒の雲を吐き出すことができる。", "", ""},
+#else
     {"You can exhale a cloud of poison.", "", ""},
+#endif
 
+#ifdef JP 
+    {"あなたの尻尾の先には毒のある棘が生えている。",
+     "あなたの尻尾の先には毒のある鋭い棘が生えている。",
+     "あなたの尻尾の先には毒のある凶悪な棘が生えている。"}, //jmf: nagas & dracos
+#else
     {"Your tail ends in a poisonous barb.",
      "Your tail ends in a sharp poisonous barb.",
      "Your tail ends in a wicked poisonous barb."}, //jmf: nagas & dracos
+#endif
 
+#ifdef JP 
+    {"あなたの翼は大きくて力強い。", "", ""},       //jmf: dracos only
+#else
     {"Your wings are large and strong.", "", ""},       //jmf: dracos only
+#endif
 
     //jmf: these next two are for evil gods to mark their followers; good gods
     //     will never accept a 'marked' worhsipper
 
+#ifdef JP 
+    {"あなたの両手には青い印章が刻まれている。",
+     "あなたの手から腕には幾つか青い印章が刻まれている。",
+     "あなたは手から肩にかけて、複雑で神秘的な青い印章で覆われている。"},
+#else
     {"There is a blue sigil on each of your hands.",
      "There are several blue sigils on your hands and arms.",
      "Your hands, arms and shoulders are covered in intricate, arcane blue writing."},
+#endif
 
+#ifdef JP 
+    {"あなたの胸には緑の印章が刻まれている。",
+     "あなたの胸から腹には幾つか緑の印章が刻まれている。",
+     "あなたは首から腹にかけて、複雑で神秘的な緑の印章で覆われている。"},
+#else
     {"There is a green sigil on your chest.",
      "There are several green sigils on your chest and abdomen.",
      "Your chest, abdomen and neck are covered in intricate, arcane green writing."},
+#endif
 
     {"", "", ""},
     {"", "", ""},
@@ -248,71 +539,167 @@ const char *mutation_descrip[][3] = {
     {"", "", ""},
     // 70
 
+#ifdef JP 
+    {"あなたは赤色の鱗で部分的に覆われている。(AC +1)",
+     "あなたは赤色の鱗で大部分を覆われている。(AC +2)",
+     "あなたは赤色の鱗で完全に覆われている。(AC +4)"},
+#else
     {"You are partially covered in red scales (AC + 1).",
      "You are mostly covered in red scales (AC + 2).",
      "You are covered in red scales (AC + 4)."},
+#endif
 
+#ifdef JP 
+    {"あなたはなめらかな真珠色の鱗で部分的に覆われている。(AC +1)",
+     "あなたはなめらかな真珠色の鱗で大部分を覆われている。(AC +3)",
+     "あなたはなめらかな真珠色の鱗で完全に覆われている。(AC +5)"},
+#else
     {"You are partially covered in smooth nacreous scales (AC + 1).",
      "You are mostly covered in smooth nacreous scales (AC + 3).",
      "You are completely covered in smooth nacreous scales (AC + 5)."},
+#endif
 
+#ifdef JP 
+    {"あなたは隆起した灰色の鱗で部分的に覆われている。(AC +2, DEX -1)",
+     "あなたは隆起した灰色の鱗で大部分を覆われている。(AC +4, DEX -1)",
+     "あなたは隆起した灰色の鱗で完全に覆われている。(AC +6, DEX -2)"},
+#else
     {"You are partially covered in ridged grey scales (AC + 2, dex - 1).",
      "You are mostly covered in ridged grey scales (AC + 4, dex - 1).",
      "You are completely covered in ridged grey scales (AC + 6, dex - 2)."},
+#endif
 
+#ifdef JP 
+    {"あなたは金属性の鱗で部分的に覆われている。(AC +3, DEX -2)",
+     "あなたは金属性の鱗で大部分を覆われている。(AC +7, DEX -3)",
+     "あなたは金属性の鱗で完全に覆われている。(AC +10, DEX -4)"},
+#else
     {"You are partially covered in metallic scales (AC + 3, dex - 2).",
      "You are mostly covered in metallic scales (AC + 7, dex - 3).",
      "You are completely covered in metallic scales (AC + 10, dex - 4)."},
+#endif
 
+#ifdef JP 
+    {"あなたは黒い鱗で部分的に覆われている。(AC +1)",
+     "あなたは黒い鱗で大部分を覆われている。(AC +3)",
+     "あなたは黒い鱗で完全に覆われている。(AC +5)"},
+#else
     {"You are partially covered in black scales (AC + 1).",
      "You are mostly covered in black scales (AC + 3).",
      "You are completely covered in black scales (AC + 5)."},
+#endif
 
+#ifdef JP 
+    {"あなたは白い鱗で部分的に覆われている。(AC +1)",
+     "あなたは白い鱗で大部分を覆われている。(AC +3)",
+     "あなたは白い鱗で完全に覆われている。(AC +5)"},
+#else
     {"You are partially covered in white scales (AC + 1).",
      "You are mostly covered in white scales (AC + 3).",
      "You are completely covered in white scales (AC + 5)."},
+#endif
 
+#ifdef JP 
+    {"あなたは黄色の鱗で部分的に覆われている。(AC +2)",
+     "あなたは黄色の鱗で大部分を覆われている。(AC +4, DEX -1)",
+     "あなたは黄色の鱗で完全に覆われている。(AC +6, DEX -2)"},
+#else
     {"You are partially covered in yellow scales (AC + 2).",
      "You are mostly covered in yellow scales (AC + 4, dex - 1).",
      "You are completely covered in yellow scales (AC + 6, dex - 2)."},
+#endif
 
+#ifdef JP 
+    {"あなたは茶色の鱗で部分的に覆われている。(AC +2)",
+     "あなたは茶色の鱗で大部分を覆われている。(AC +4)",
+     "あなたは茶色の鱗で完全に覆われている。(AC +5)"},
+#else
     {"You are partially covered in brown scales (AC + 2).",
      "You are mostly covered in brown scales (AC + 4).",
      "You are completely covered in brown scales (AC + 5)."},
+#endif
 
+#ifdef JP 
+    {"あなたは青い鱗で部分的に覆われている。(AC +1)",
+     "あなたは青い鱗で大部分を覆われている。(AC +2)",
+     "あなたは青い鱗で完全に覆われている。(AC +3)"},
+#else
     {"You are partially covered in blue scales (AC + 1).",
      "You are mostly covered in blue scales (AC + 2).",
      "You are completely covered in blue scales (AC + 3)."},
+#endif
 
+#ifdef JP 
+    {"あなたは紫色の鱗で部分的に覆われている。(AC +2)",
+     "あなたは紫色の鱗で大部分を覆われている。(AC +4)",
+     "あなたは紫色の鱗で完全に覆われている。(AC +6)"},
+#else
     {"You are partially covered in purple scales (AC + 2).",
      "You are mostly covered in purple scales (AC + 4).",
      "You are completely covered in purple scales (AC + 6)."},
+#endif
 
 // 80
 
+#ifdef JP 
+    {"あなたはまだら模様の鱗で部分的に覆われている。(AC +1)",
+     "あなたはまだら模様の鱗で大部分を覆われている。(AC +2)",
+     "あなたはまだら模様の鱗で完全に覆われている。(AC +3)"},
+#else
     {"You are partially covered in speckled scales (AC + 1).",
      "You are mostly covered in speckled scales (AC + 2).",
      "You are covered in speckled scales (AC + 3)."},
+#endif
 
+#ifdef JP 
+    {"あなたはオレンジ色の鱗で部分的に覆われている。(AC +1)",
+     "あなたはオレンジ色の鱗で大部分を覆われている。(AC +3)",
+     "あなたはオレンジ色の鱗で完全に覆われている。(AC +4)"},
+#else
     {"You are partially covered in orange scales (AC + 1).",
      "You are mostly covered in orange scales (AC + 3).",
      "You are completely covered in orange scales (AC + 4)."},
+#endif
 
+#ifdef JP 
+    {"あなたは藍色の鱗で部分的に覆われている。(AC +2)",
+     "あなたは藍色の鱗で大部分を覆われている。(AC +3)",
+     "あなたは藍色の鱗で完全に覆われている。(AC +5)"},
+#else
     {"You are partially covered in indigo scales (AC + 2).",
      "You are mostly covered in indigo scales (AC + 3).",
      "You are completely covered in indigo scales (AC + 5)."},
+#endif
 
+#ifdef JP 
+    {"あなたは節くれ立った赤い鱗で部分的に覆われている。(AC +2)",
+     "あなたは節くれ立った赤い鱗で大部分を覆われている。(AC +5, DEX -1)",
+     "あなたは節くれ立った赤い鱗で完全に覆われている。(AC +7, DEX -2)"},
+#else
     {"You are partially covered in knobbly red scales (AC + 2).",
      "You are mostly covered in knobbly red scales (AC + 5, dex - 1).",
      "You are completely covered in knobbly red scales (AC + 7, dex - 2)."},
+#endif
 
+#ifdef JP 
+    {"あなたは玉虫色の鱗で部分的に覆われている。(AC +1)",
+     "あなたは玉虫色の鱗で大部分を覆われている。(AC +2)",
+     "あなたは玉虫色の鱗で完全に覆われている。(AC +3)"},
+#else
     {"You are partially covered in iridescent scales (AC + 1).",
      "You are mostly covered in iridescent scales (AC + 2).",
      "You are completely covered in iridescent scales (AC + 3)."},
+#endif
 
+#ifdef JP 
+    {"あなたは模様の浮き出した鱗で部分的に覆われている。(AC +1)",
+     "あなたは模様の浮き出した鱗で大部分を覆われている。(AC +2)",
+     "あなたは模様の浮き出した鱗で完全に覆われている。(AC +3)"},
+#else
     {"You are partially covered in patterned scales (AC + 1).",
      "You are mostly covered in patterned scales (AC + 2).",
      "You are completely covered in patterned scales (AC + 3)."},
+#endif
 };
 
 /*
@@ -321,128 +708,331 @@ const char *mutation_descrip[][3] = {
  */
 
 const char *gain_mutation[][3] = {
+#ifdef JP 
+    {"あなたの皮膚は強靭になった。", "あなたの皮膚は強靭になった。", "あなたの皮膚は強靭になった。"},
+#else
     {"Your skin toughens.", "Your skin toughens.", "Your skin toughens."},
+#endif
 
     {"", "", ""},  // replaced with player::modify_stat() handling {dlb}
     {"", "", ""},  // replaced with player::modify_stat() handling {dlb}
     {"", "", ""},  // replaced with player::modify_stat() handling {dlb}
 
+#ifdef JP 
+    {"緑色の鱗があなたの体の一部に生えてきた。",
+     "緑色の鱗があなたの体を更に覆った。",
+     "緑色の鱗があなたの体を完全に覆った。"},
+#else
     {"Green scales grow over part of your body.",
      "Green scales spread over more of your body.",
      "Green scales cover you completely."},
+#endif
 
+#ifdef JP 
+    {"厚みのある黒い鱗があなたの体の一部に生えてきた。",
+     "厚みのある黒い鱗があなたの体を更に覆った。",
+     "厚みのある黒い鱗があなたの体を完全に覆った。"},
+#else
     {"Thick black scales grow over part of your body.",
      "Thick black scales spread over more of your body.",
      "Thick black scales cover you completely."},
+#endif
 
+#ifdef JP 
+    {"柔軟な灰色の鱗があなたの体の一部に生えてきた。",
+     "柔軟な灰色の鱗があなたの体を更に覆った。",
+     "柔軟な灰色の鱗があなたの体を完全に覆った。"},
+#else
     {"Supple grey scales grow over part of your body.",
      "Supple grey scales spread over more of your body.",
      "Supple grey scales cover you completely."},
+#endif
 
+#ifdef JP 
+    {"あなたの体に骨の装甲が生えてきた。",
+     "あなたの骨の装甲が更に成長した。",
+     "あなたの骨の装甲が更に成長した。"},
+#else
     {"You grow protective plates of bone.",
      "You grow more protective plates of bone.",
      "You grow more protective plates of bone."},
+#endif
 
+#ifdef JP 
+    {"あなたは斥力を放射しはじめた。",
+     "あなたの斥力が更に強くなった。",
+     "あなたの斥力が更に強くなった。"},
+#else
     {"You begin to radiate repulsive energy.",
      "Your repulsive radiation grows stronger.",
      "Your repulsive radiation grows stronger."},
+#endif
 
+#ifdef JP 
+    {"あなたはより健全になったようだ。", "あなたはより健全になったようだ。",  "あなたはより健全になったようだ。"},
+#else
     {"You feel healthy.", "You feel healthy.",  "You feel healthy."},
+#endif
 // 10
+#ifdef JP 
+    {"あなたは肉に飢えている。", "あなたは肉に飢えている。", "あなたは肉に飢えている。"},
+#else
     {"You hunger for flesh.", "You hunger for flesh.", "You hunger for flesh."},
+#endif
 
+#ifdef JP 
+    {"あなたは野菜に飢えている。", "あなたは野菜に飢えている。",
+     "あなたは野菜に飢えている。"},
+#else
     {"You hunger for vegetation.", "You hunger for vegetation.",
      "You hunger for vegetation."},
+#endif
 
+#ifdef JP 
+    {"あなたは突然に肌寒さを感じた。", "あなたは突然に肌寒さを感じた。",
+     "あなたは突然に肌寒さを感じた。"},
+#else
     {"You feel a sudden chill.", "You feel a sudden chill.",
      "You feel a sudden chill."},
+#endif
 
+#ifdef JP 
+    {"あなたは突然に暑さを感じた。", "あなたは突然に暑さを感じた。",
+     "あなたは突然に暑さを感じた。"},
+#else
     {"You feel hot for a moment.", "You feel hot for a moment.",
      "You feel hot for a moment."},
+#endif
 
+#ifdef JP 
+    {"あなたは不電導体になったようだ。", "あなたは不電導体になったようだ。", "あなたは不電導体になったようだ。"},
+#else
     {"You feel insulated.", "You feel insulated.", "You feel insulated."},
+#endif
 
+#ifdef JP 
+    {"あなたはより速く傷が癒えるようになった。",
+     "あなたはより速く傷が癒えるようになった。",
+     "あなたは再生能力を身につけた。"},
+#else
     {"You begin to heal more quickly.",
      "You begin to heal more quickly.",
      "You begin to regenerate."},
+#endif
 
+#ifdef JP 
+    {"あなたは少し空腹を感じた。", "あなたは少し空腹を感じた。",
+     "あなたは少し空腹を感じた。"},
+#else
     {"You feel a little hungry.", "You feel a little hungry.",
      "You feel a little hungry."},
+#endif
 
+#ifdef JP 
+    {"あなたの新陳代謝は遅くなった。", "あなたの新陳代謝は遅くなった。",
+     "あなたの新陳代謝は遅くなった。"},
+#else
     {"Your metabolism slows.", "Your metabolism slows.",
      "Your metabolism slows."},
+#endif
 
+#ifdef JP 
+    {"あなたは弱くなったようだ。", "あなたは弱くなったようだ。", "あなたは弱くなったようだ。"},
+#else
     {"You feel weaker.", "You feel weaker.", "You feel weaker."},
+#endif
 
+#ifdef JP 
+    {"あなたは知力の衰えを感じた。", "あなたは知力の衰えを感じた。",
+     "あなたは知力の衰えを感じた。"},
+#else
     {"You feel less intelligent.", "You feel less intelligent",
      "You feel less intelligent"},
+#endif
 // 20
+#ifdef JP 
+    {"あなたは不器用になったようだ。", "あなたは不器用になったようだ。",
+     "あなたは不器用になったようだ。"},
+#else
     {"You feel clumsy.", "You feel clumsy.",
      "You feel clumsy."},
+#endif
 
+#ifdef JP 
+    {"あなたは制御の力を感じた。", "あなたは制御の力を感じた。",
+     "あなたは制御の力を感じた。"},
+#else
     {"You feel controlled.", "You feel controlled.",
      "You feel controlled."},
+#endif
 
+#ifdef JP 
+    {"あなたは奇妙な不確定性を意識した。",
+     "あなたは更に、奇妙な不確定性を意識した。",
+     "あなたは更に、奇妙な不確定性を意識した。"},
+#else
     {"You feel weirdly uncertain.",
      "You feel even more weirdly uncertain.",
      "You feel even more weirdly uncertain."},
+#endif
 
+#ifdef JP 
+    {"あなたは魔法への抵抗力を得た。",
+     "あなたは更に魔法への抵抗力を得た。",
+     "あなたは魔法の効果にほとんど影響を受けなくなった。"},
+#else
     {"You feel resistant to magic.",
      "You feel more resistant to magic.",
      "You feel almost impervious to the effects of magic."},
+#endif
 
+#ifdef JP 
+    {"あなたは素早くなった。", "あなたは素早くなった。", "あなたは素早くなった。"},
+#else
     {"You feel quick.", "You feel quick.", "You feel quick."},
+#endif
 
+#ifdef JP 
+    {"あなたの視力は鋭くなった。", "あなたの視力は鋭くなった。", "あなたの視力は鋭くなった。"},
+#else
     {"Your vision sharpens.", "Your vision sharpens.", "Your vision sharpens."},
+#endif
 
+#ifdef JP 
+    {"あなたの体は捩くれて奇形になった。", "あなたの体は捩くれて奇形になった。",
+     "あなたの体は捩くれて奇形になった。"},
+#else
     {"Your body twists and deforms.", "Your body twists and deforms.",
      "Your body twists and deforms."},
+#endif
 
+#ifdef JP 
+    {"あなたは躍動感を感じた。", "あなたは躍動感を感じた。", "あなたは躍動感を感じた。"},
+#else
     {"You feel jumpy.", "You feel more jumpy.", "You feel even more jumpy."},
+#endif
 
+#ifdef JP 
+    {"一瞬あなた口の中で不快な味がした。",
+     "一瞬あなた口の中で不快な味がした。",
+     "一瞬あなた口の中で不快な味がした。"},
+#else
     {"There is a nasty taste in your mouth for a moment.",
      "There is a nasty taste in your mouth for a moment.",
      "There is a nasty taste in your mouth for a moment."},
+#endif
 
+#ifdef JP 
+    {"あなたは周囲の状況がわかるようになった。",
+     "あなたは周囲の状況が更にわかるようになった。",
+     "あなたは周囲の状況がより一層わかるようになった。"},
+#else
     {"You feel aware of your surroundings.",
      "You feel more aware of your surroundings.",
      "You feel even more aware of your surroundings."},
+#endif
 // 30
 
+#ifdef JP 
+    {"あなたは喉が熱くなった。", "あなたは喉が熱くなった。",
+     "あなたは喉が熱くなった。"},
+#else
     {"Your throat feels hot.", "Your throat feels hot.",
      "Your throat feels hot."},
+#endif
 
+#ifdef JP 
+    {"あなたは少し躍動感を感じた。", "あなたはさらに躍動感を感じた。",
+     "あなたはより一層の躍動感を感じた。"},
+#else
     {"You feel a little jumpy.", "You feel more jumpy.",
      "You feel even more jumpy."},
+#endif
 
+#ifdef JP 
+    {"あなたの頭に一対の角が生えてきた！",
+     "あなたの角が幾らか成長した。",
+     "あなたの角が幾らか成長した。"},
+#else
     {"A pair of horns grows on your head!",
      "The horns on your head grow some more.",
      "The horns on your head grow some more."},
+#endif
 
+#ifdef JP 
+    {"あなたは筋肉痛を覚えた。", "あなたは筋肉痛を覚えた。",
+     "あなたは筋肉痛を覚えた。"},
+#else
     {"Your muscles feel sore.", "Your muscles feel sore.",
      "Your muscles feel sore."},
+#endif
 
+#ifdef JP 
+    {"あなたの筋肉は柔軟になった。", "あなたの筋肉は柔軟になった。",
+     "あなたの筋肉は柔軟になった。"},
+#else
     {"Your muscles feel loose.", "Your muscles feel loose.",
      "Your muscles feel loose."},
+#endif
 
+#ifdef JP 
+    {"あなたは軽い見当識喪失を覚えた。", "あなたは軽い見当識喪失を覚えた。",
+     "あなたはどこにいるのだろう？"},
+#else
     {"You feel a little disoriented.", "You feel a little disoriented.",
      "Where the Hells are you?"},
+#endif
 
+#ifdef JP 
+    {"あなたは思考が明瞭になった。", "あなたは思考が明瞭になった。",
+     "あなたは思考が明瞭になった。"},
+#else
     {"Your thoughts seem clearer.", "Your thoughts seem clearer.",
      "Your thoughts seem clearer."},
+#endif
 
+#ifdef JP 
+    {"あなたは少し腹立ちを覚えた。", "あなたは腹立ちを覚えた。",
+     "あなたは全てに対して非常に怒りを覚えた！"},
+#else
     {"You feel a little pissed off.", "You feel angry.",
      "You feel extremely angry at everything!"},
+#endif
 
+#ifdef JP 
+    {"あなたは体が消耗していくのを感じた。", "あなたは体が消耗していくのを感じた。",
+     "あなたは体がボロボロになっていくのを感じた。"},
+#else
     {"You feel yourself wasting away.", "You feel yourself wasting away.",
      "You feel your body start to fall apart."},
+#endif
 
+#ifdef JP 
+    {"あなたの視界はぼやけた。", "あなたの視界はぼやけた。", "あなたの視界はぼやけた。"},
+#else
     {"Your vision blurs.", "Your vision blurs.", "Your vision blurs."},
+#endif
 // 40
 
+#ifdef JP 
+    {"あなたは遺伝子的に安定した。", "あなたは遺伝子的に安定した。",
+     "あなたは遺伝子的に変化しなくなった。"},
+#else
     {"You feel genetically stable.", "You feel genetically stable.",
      "You feel genetically immutable."},
+#endif
 
+#ifdef JP 
+    {"あなたは虚弱になった。", "あなたは虚弱になった。",  "あなたは虚弱になった。"},
+    {"あなたは強健になった。", "あなたは強健になった。", "あなたは強健になった。"},
+    {"あなたは奇妙に無感覚になった。", "", ""},
+    {"あなたは負の耐性を得た。", "あなたは負の耐性を得た。", "あなたは負の耐性を得た。"},
+    {"千もの喋り声があなたに呼びかけてきた。", "", ""},
+    {"助けがそう遠くないところにいる！", "", ""},
+    {"あなたは火と硫黄の匂いを嗅いだ。", "", ""},
+    {"あなたは恐怖すべき力を呼び起こすことができるようになった。", "", ""},
+    {"あなたは死者に親近感をおぼえるようになった。", "", ""},
+#else
     {"You feel frail.", "You feel frail.",  "You feel frail."},
     {"You feel robust.", "You feel robust.", "You feel robust."},
     {"You feel a strange anaesthesia.", "", ""},
@@ -452,7 +1042,18 @@ const char *gain_mutation[][3] = {
     {"You smell fire and brimstone.", "", ""},
     {"You feel a terrifying power at your call.", "", ""},
     {"You feel an affinity for the dead.", "", ""},
+#endif
 // 50
+#ifdef JP 
+    {"あなたは悪魔全般に親近感をおぼえるようになった。", "", ""},
+    {"あなたは何者かに奇怪で恐ろしい場所に呼び寄せられている。", "", ""},
+    {"あなたは死に飢えている。", "", ""},
+    {"あなたは魔法のエネルギーが流れ込むのを感じた。", "", ""},
+    {"あなたの皮膚は奇妙で不愉快な感覚に疼く。", "", ""},
+    {"あなたはゲヘナの火の匂いを嗅いだ。", "", ""},
+    {"あなたはコキュートスの凍てつく冷気に魂の凍えを覚えた。", "", ""},
+    {"あなたの周囲の世界を影が駆け抜けた。", "", ""},
+#else
     {"You feel an affinity for all demonkind.", "", ""},
     {"You feel something pulling you to a strange and terrible place.", "", ""},
     {"You feel hungry for death.", "", ""},
@@ -461,27 +1062,62 @@ const char *gain_mutation[][3] = {
     {"You smell the fires of Gehenna.", "", ""},
     {"You feel the icy cold of Cocytus chill your soul.", "", ""},
     {"A shadow passes over the world around you.", "", ""},
+#endif
 
+#ifdef JP 
+    {"あなたの爪は伸びていった。", "あなたの爪は鋭くなった。",
+     "あなたの手は鉤爪に変化した。"},
+#else
     {"Your fingernails lengthen.", "Your fingernails sharpen.",
      "Your hands twist into claws."},
+#endif
 
+#ifdef JP 
+    {"あなたの足は先の割れた蹄に変化した。", "", ""},
+#else
     {"Your feet shrivel into cloven hooves.", "", ""},
+#endif
     // 60
 
+#ifdef JP 
+    {"あなたの口の中に不快な味がした。", "あなたの口の中に非常に不快な味がした。",
+     "あなたの口の中に極めて不快な味がした。"},
+#else
     {"You taste something nasty.", "You taste something very nasty.",
      "You taste something extremely nasty."},
+#endif
 
+#ifdef JP 
+    {"あなたの尻尾の先に毒のある棘が生えてた。",
+     "あなたの尻尾の棘は鋭くなった。",
+     "あなたの尻尾の棘は非常に鋭くなった。"},
+#else
     {"A poisonous barb forms on the end of your tail.",
      "The barb on your tail looks sharper.",
      "The barb on your tail looks very sharp."},
+#endif
 
+#ifdef JP 
+    {"あなたの翼は大きく力強く成長した。", "", ""},
+#else
     {"Your wings grow larger and stronger.", "", ""},
+#endif
 
+#ifdef JP 
+    {"あなたは手がむず痒くなった。", "あなたは手から腕にかけてむず痒くなった。",
+     "あなたは手から肩にかけてむず痒くなった。"},
+#else
     {"Your hands itch.", "Your hands and forearms itch.",
      "Your arms, hands and shoulders itch."},
+#endif
 
+#ifdef JP 
+    {"あなたは胸がむず痒くなった。", "あなたは胸から腹にかけてむず痒くなった。",
+     "あなたは首から腹にかけてむず痒くなった。"},
+#else
     {"Your chest itches.", "Your chest and abdomen itch.",
      "Your chest, abdomen and neck itch."},
+#endif
 
     {"", "", ""},
     {"", "", ""},
@@ -490,6 +1126,38 @@ const char *gain_mutation[][3] = {
     {"", "", ""},
     // 70
 
+#ifdef JP 
+    {"赤色の鱗があなたの体の一部に生えてきた。",
+     "赤色の鱗があなたの体を更に覆った。",
+     "赤色の鱗があなたの体を完全に覆った。"},
+    {"なめらかな真珠色の鱗があなたの体の一部に生えてきた。",
+     "なめらかな真珠色の鱗があなたの体を更に覆った。",
+     "なめらかな真珠色の鱗があなたの体を完全に覆った。"},
+    {"隆起した灰色の鱗があなたの体の一部に生えてきた。",
+     "隆起した灰色の鱗があなたの体を更に覆った。",
+     "隆起した灰色の鱗があなたの体を完全に覆った。"},
+    {"金属性の鱗があなたの体の一部に生えてきた。",
+     "金属性の鱗があなたの体を更に覆った。",
+     "金属性の鱗があなたの体を完全に覆った。"},
+    {"黒い鱗があなたの体の一部に生えてきた。",
+     "黒い鱗があなたの体を更に覆った。",
+     "黒い鱗があなたの体を完全に覆った。"},
+    {"白い鱗があなたの体の一部に生えてきた。",
+     "白い鱗があなたの体を更に覆った。",
+     "白い鱗があなたの体を完全に覆った。"},
+    {"黄色の鱗があなたの体の一部に生えてきた。",
+     "黄色の鱗があなたの体を更に覆った。",
+     "黄色の鱗があなたの体を完全に覆った。"},
+    {"茶色の鱗があなたの体の一部に生えてきた。",
+     "茶色の鱗があなたの体を更に覆った。",
+     "茶色の鱗があなたの体を完全に覆った。"},
+    {"青い鱗があなたの体の一部に生えてきた。",
+     "青い鱗があなたの体を更に覆った。",
+     "青い鱗があなたの体を完全に覆った。"},
+    {"紫色の鱗があなたの体の一部に生えてきた。",
+     "紫色の鱗があなたの体を更に覆った。",
+     "紫色の鱗があなたの体を完全に覆った。"},
+#else
     {"Red scales grow over part of your body.",
      "Red scales spread over more of your body.",
      "Red scales cover you completely."},
@@ -520,8 +1188,29 @@ const char *gain_mutation[][3] = {
     {"Purple scales grow over part of your body.",
      "Purple scales spread over more of your body.",
      "Purple scales cover you completely."},
+#endif
     // 80
 
+#ifdef JP 
+    {"まだら模様の鱗があなたの体の一部に生えてきた。",
+     "まだら模様の鱗があなたの体を更に覆った。",
+     "まだら模様の鱗があなたの体を完全に覆った。"},
+    {"オレンジ色の鱗があなたの体の一部に生えてきた。",
+     "オレンジ色の鱗があなたの体を更に覆った。",
+     "オレンジ色の鱗があなたの体を完全に覆った。"},
+    {"藍色の鱗があなたの体の一部に生えてきた。",
+     "藍色の鱗があなたの体を更に覆った。",
+     "藍色の鱗があなたの体を完全に覆った。"},
+    {"節くれ立った赤い鱗があなたの体の一部に生えてきた。",
+     "節くれ立った赤い鱗があなたの体を更に覆った。",
+     "節くれ立った赤い鱗があなたの体を完全に覆った。"},
+    {"玉虫色の鱗があなたの体の一部に生えてきた。",
+     "玉虫色の鱗があなたの体を更に覆った。",
+     "玉虫色の鱗があなたの体を完全に覆った。"},
+    {"模様の浮き出した鱗があなたの体の一部に生えてきた。",
+     "模様の浮き出した鱗があなたの体を更に覆った。",
+     "模様の浮き出した鱗があなたの体を完全に覆った。"},
+#else
     {"Speckled scales grow over part of your body.",
      "Speckled scales spread over more of your body.",
      "Speckled scales cover you completely."},
@@ -540,130 +1229,321 @@ const char *gain_mutation[][3] = {
     {"Patterned scales grow over part of your body.",
      "Patterned scales spread over more of your body.",
      "Patterned scales cover you completely."},
+#endif
 };
 
 const char *lose_mutation[][3] = {
 
+#ifdef JP 
+    {"あなたの皮膚は柔らかくなった。", "あなたの皮膚は柔らかくなった。",
+     "あなたの皮膚は柔らかくなった。"},
+#else
     {"Your skin feels delicate.", "Your skin feels delicate.",
      "Your skin feels delicate."},
+#endif
 
+#ifdef JP 
+    {"あなたは弱々しくなった。", "あなたは弱々しくなった。", "あなたは弱々しくなった。"},
+#else
     {"You feel weaker.", "You feel weaker.", "You feel weaker."},
+#endif
 
+#ifdef JP 
+    {"あなたは知力が衰えた。", "あなたは知力が衰えた。",
+     "あなたは知力が衰えた。"},
+#else
     {"You feel less intelligent.", "You feel less intelligent",
      "You feel less intelligent"},
+#endif
 
+#ifdef JP 
+    {"あなたは不器用になった。", "あなたは不器用になった。", "あなたは不器用になった。"},
+#else
     {"You feel clumsy.", "You feel clumsy.", "You feel clumsy."},
+#endif
 
+#ifdef JP 
+    {"あなたの緑色の鱗が消えてしまった。",
+     "あなたの緑色の鱗が幾らか減少した。",
+     "あなたの緑色の鱗が幾らか減少した。"},
+#else
     {"Your green scales disappear.",
      "Your green scales recede somewhat.",
      "Your green scales recede somewhat."},
+#endif
 
+#ifdef JP 
+    {"あなたの黒い鱗が消えてしまった。", "あなたの黒い鱗が幾らか減少した。",
+     "あなたの黒い鱗が幾らか減少した。"},
+#else
     {"Your black scales disappear.", "Your black scales recede somewhat.",
      "Your black scales recede somewhat."},
+#endif
 
+#ifdef JP 
+    {"あなたの灰色の鱗が消えてしまった。", "あなたの灰色の鱗が幾らか減少した。",
+     "あなたの灰色の鱗が幾らか減少した。"},
+#else
     {"Your grey scales disappear.", "Your grey scales recede somewhat.",
      "Your grey scales recede somewhat."},
+#endif
 
+#ifdef JP 
+    {"あなたの骨の装甲は収縮してなくなった。", "あなたの骨の装甲は収縮した。",
+     "あなたの骨の装甲は収縮した。"},
+#else
     {"Your bony plates shrink away.", "Your bony plates shrink.",
      "Your bony plates shrink."},
+#endif
 
+#ifdef JP 
+    {"あなたの引力が強くなった。", "あなたの引力が強くなった。", "あなたの引力が強くなった。"},
+#else
     {"You feel attractive.", "You feel attractive.", "You feel attractive."},
+#endif
 
+#ifdef JP 
+    {"あなたは少し健康が衰えたのを感じた。", "あなたは少し健康が衰えたのを感じた。",
+     "あなたは少し健康が衰えたのを感じた。"},
+#else
     {"You feel a little less healthy.", "You feel a little less healthy.",
      "You feel a little less healthy."},
+#endif
 
+#ifdef JP 
+    {"あなたはよりバランス良い食事を取ることができるようになった。",
+     "あなたはよりバランス良い食事を取ることができるようになった。",
+     "あなたはよりバランス良い食事を取ることができるようになった。"},
+#else
     {"You feel able to eat a more balanced diet.",
      "You feel able to eat a more balanced diet.",
      "You feel able to eat a more balanced diet."},
+#endif
 
+#ifdef JP 
+    {"あなたはよりバランス良い食事を取ることができるようになった。",
+     "あなたはよりバランス良い食事を取ることができるようになった。",
+     "あなたはよりバランス良い食事を取ることができるようになった。"},
+#else
     {"You feel able to eat a more balanced diet.",
      "You feel able to eat a more balanced diet.",
      "You feel able to eat a more balanced diet."},
+#endif
 
+#ifdef JP 
+    {"あなたは一瞬の暑さを感じた。", "あなたは一瞬の暑さを感じた。",
+     "あなたは一瞬の暑さを感じた。"},
+#else
     {"You feel hot for a moment.", "You feel hot for a moment.",
      "You feel hot for a moment."},
+#endif
 
+#ifdef JP 
+    {"あなたは突然に寒気を感じた。", "あなたは突然に寒気を感じた。",
+     "あなたは突然に寒気を感じた。"},
+#else
     {"You feel a sudden chill.", "You feel a sudden chill.",
      "You feel a sudden chill."},
+#endif
 
+#ifdef JP 
+    {"あなたは導電性を意識した。", "あなたは導電性を意識した。", "あなたは導電性を意識した。"},
+#else
     {"You feel conductive.", "You feel conductive.", "You feel conductive."},
+#endif
 
+#ifdef JP 
+    {"あなたの治癒速度は遅くなった。", "あなたの治癒速度は遅くなった。",
+     "あなたの治癒速度は遅くなった。"},
+#else
     {"Your rate of healing slows.", "Your rate of healing slows.",
      "Your rate of healing slows."},
+#endif
 
+#ifdef JP 
+    {"あなたの新陳代謝は遅くなった。", "あなたの新陳代謝は遅くなった。",
+     "あなたの新陳代謝は遅くなった。"},
+#else
     {"Your metabolism slows.", "Your metabolism slows.",
      "Your metabolism slows."},
+#endif
 
+#ifdef JP 
+    {"あなたは少し空腹を感じた。", "あなたは少し空腹を感じた。",
+     "あなたは少し空腹を感じた。"},
+#else
     {"You feel a little hungry.", "You feel a little hungry.",
      "You feel a little hungry."},
+#endif
 
     {"", "", ""},  // replaced with player::modify_stat() handling {dlb}
     {"", "", ""},  // replaced with player::modify_stat() handling {dlb}
 // 20
     {"", "", ""},  // replaced with player::modify_stat() handling {dlb}
 
+#ifdef JP 
+    {"あなたは制御の衰えを感じた。", "あなたは制御の衰えを感じた。", "あなたは制御の衰えを感じた。"},
+    {"あなたは安定性を感じた。", "あなたは安定性を感じた。", "あなたは安定性を感じた。"},
+#else
     {"You feel random.", "You feel uncontrolled.", "You feel uncontrolled."},
     {"You feel stable.", "You feel stable.", "You feel stable."},
+#endif
 
+#ifdef JP 
+    {"あなたは魔法への抵抗力が衰えたのを感じた。", "あなたは魔法への抵抗力が衰えたのを感じた。",
+     "あなたは再び魔法からの影響を受けるようになった。"},
+#else
     {"You feel less resistant to magic.", "You feel less resistant to magic.",
      "You feel vulnerable to magic again."},
+#endif
 
+#ifdef JP 
+    {"あなたは動きが緩慢になった。", "あなたは動きが緩慢になった。", "あなたは動きが緩慢になった。"},
+#else
     {"You feel sluggish.", "You feel sluggish.", "You feel sluggish."},
+#endif
 
+#ifdef JP 
+    {"あなたの視力は鈍くなった。", "あなたの視力は鈍くなった。",
+     "あなたの視力は鈍くなった。"},
+#else
     {"Your vision seems duller.", "Your vision seems duller.",
      "Your vision seems duller."},
+#endif
 
+#ifdef JP 
+    {"あなたの肉体は奇形的でなくなった。",
+     "あなたの肉体は幾らか奇形的でなくなった。",
+     "あなたの肉体は幾らか奇形的でなくなった。"},
+#else
     {"Your body's shape seems more normal.",
      "Your body's shape seems slightly more normal.",
      "Your body's shape seems slightly more normal."},
+#endif
 
+#ifdef JP 
+    {"あなたは停滞を感じた。", "あなたの躍動感は減少した。", "あなたの躍動感は減少した。"},
+#else
     {"You feel static.", "You feel less jumpy.", "You feel less jumpy."},
+#endif
 
+#ifdef JP 
+    {"あなたは喉の奥が痛むのを感じた。",
+     "あなたは喉の奥が痛むのを感じた。", "あなたは喉の奥が痛むのを感じた。"},
+#else
     {"You feel an ache in your throat.",
      "You feel an ache in your throat.", "You feel an ache in your throat."},
+#endif
 
+#ifdef JP 
+    {"あなたは少し見当識を失った。", "あなたは少し見当識を失った。",
+     "あなたは少し見当識を失った。"},
+#else
     {"You feel slightly disorientated.", "You feel slightly disorientated.",
      "You feel slightly disorientated."},
+#endif
 // 30
 
+#ifdef JP 
+    {"あなたの喉の奥は冷たくなった。",
+     "あなたの喉の奥は冷たくなった。",
+     "あなたの喉の奥は冷たくなった。"},
+#else
     {"A chill runs up and down your throat.",
      "A chill runs up and down your throat.",
      "A chill runs up and down your throat."},
+#endif
 
+#ifdef JP 
+    {"あなたは躍動感をなくした。", "あなたは躍動感が減じた。",
+     "あなたは躍動感が減じた。"},
+#else
     {"You feel a little less jumpy.", "You feel less jumpy.",
      "You feel less jumpy."},
+#endif
 
+#ifdef JP 
+    {"あなたの頭にある角が収縮して消えた。",
+     "あなたの頭にある角が少し小さくなった。",
+     "あなたの頭にある角が少し小さくなった。"},
+#else
     {"The horns on your head shrink away.",
      "The horns on your head shrink a bit.",
      "The horns on your head shrink a bit."},
+#endif
 
+#ifdef JP 
+    {"あなたの筋肉は柔らかくなったようだ。", "あなたの筋肉は柔らかくなったようだ。",
+     "あなたの筋肉は柔らかくなったようだ。"},
+#else
     {"Your muscles feel loose.", "Your muscles feel loose.",
      "Your muscles feel loose."},
+#endif
 
+#ifdef JP 
+    {"あなたは筋肉痛を感じた。", "あなたは筋肉痛を感じた。",
+     "あなたは筋肉痛を感じた。"},
+#else
     {"Your muscles feel sore.", "Your muscles feel sore.",
      "Your muscles feel sore."},
+#endif
 
+#ifdef JP 
+    {"あなたの見当識は幾分良くなった。", "あなたの見当識は幾分良くなった。",
+     "あなたの見当識は幾分良くなった。"},
+#else
     {"You feel less disoriented.", "You feel less disoriented.",
      "You feel less disoriented."},
+#endif
 
+#ifdef JP 
+    {"あなたの思考は混濁した。", "あなたの思考は混濁した。",
+     "あなたの思考は混濁した。"},
+#else
     {"Your thinking seems confused.", "Your thinking seems confused.",
      "Your thinking seems confused."},
+#endif
 
+#ifdef JP 
+    {"あなたは少し穏やかになった。", "あなたは少し苛立ちが減じた。",
+     "あなたは少し苛立ちが減じた。"},
+#else
     {"You feel a little more calm.", "You feel a little less angry.",
      "You feel a little less angry."},
+#endif
 
+#ifdef JP 
+    {"あなたは健康体になった。", "あなたは少し健康体に近づいた。",
+     "あなたは少し健康体に近づいた。"},
+#else
     {"You feel healthier.", "You feel a little healthier.",
      "You feel a little healthier."},
+#endif
 
+#ifdef JP 
+    {"あなたの視力は鋭くなった。", "あなたの視力は少し鋭くなった。",
+     "あなたの視力は少し鋭くなった。"},
+#else
     {"Your vision sharpens.", "Your vision sharpens a little.",
      "Your vision sharpens a little."},
+#endif
 // 40
 
+#ifdef JP 
+    {"あなたは遺伝子的に不安定になった。", "あなたは遺伝子的に不安定になった。",
+     "あなたは遺伝子的に不安定になった。"},
+#else
     {"You feel genetically unstable.", "You feel genetically unstable.",
      "You feel genetically unstable."},
+#endif
 
+#ifdef JP 
+    {"あなたは頑丈になった。", "あなたは頑丈になった。", "あなたは頑丈になった。"},
+    {"あなたは脆弱になった。", "あなたは脆弱になった。", "あなたは脆弱になった。"},
+#else
     {"You feel robust.", "You feel robust.", "You feel robust."},
     {"You feel frail.", "You feel frail.", "You feel frail."},
+#endif
 
 /* Some demonic powers (which can't be lost) start here... */
     {"", "", ""},
@@ -683,10 +1563,19 @@ const char *lose_mutation[][3] = {
     {"", "", ""},
     {"", "", ""},
 
+#ifdef JP 
+    {"あなたの爪は普通の大きさに縮んでしまった。",
+     "あなたの爪は鋭さを失った。", "あなたの鉤爪は指に変化した。"},
+#else
     {"Your fingernails shrink to normal size.",
      "Your fingernails look duller.", "Your hands feel fleshier."},
+#endif
 
+#ifdef JP 
+    {"あなたの蹄が普通の足に変化した！", "", ""},
+#else
     {"Your hooves expand and flesh out into feet!", "", ""},
+#endif
     // 60
     {"", "", ""},
     {"", "", ""},
@@ -700,61 +1589,156 @@ const char *lose_mutation[][3] = {
     {"", "", ""},
 // 70
 
+#ifdef JP 
+    {"あなたの赤色の鱗が消えてしまった。", "あなたの赤色の鱗が幾らか減少した。",
+     "あなたの赤色の鱗が幾らか減少した。"},
+#else
     {"Your red scales disappear.", "Your red scales recede somewhat.",
      "Your red scales recede somewhat."},
+#endif
 
+#ifdef JP 
+    {"あなたのなめらかな真珠色の鱗が消えてしまった。",
+     "あなたのなめらかな真珠色の鱗が幾らか減少した。",
+     "あなたのなめらかな真珠色の鱗が幾らか減少した。"},
+#else
     {"Your smooth nacreous scales disappear.",
      "Your smooth nacreous scales recede somewhat.",
      "Your smooth nacreous scales recede somewhat."},
+#endif
 
+#ifdef JP 
+    {"あなたの隆起した灰色の鱗が消えてしまった。",
+     "あなたの隆起した灰色の鱗が幾らか減少した。",
+     "あなたの隆起した灰色の鱗が幾らか減少した。"},
+#else
     {"Your ridged grey scales disappear.",
      "Your ridged grey scales recede somewhat.",
      "Your ridged grey scales recede somewhat."},
+#endif
 
+#ifdef JP 
+    {"あなたの金属性の鱗が消えてしまった。",
+     "あなたの金属性の鱗が幾らか減少した。",
+     "あなたの金属性の鱗が幾らか減少した。"},
+#else
     {"Your metallic scales disappear.",
      "Your metallic scales recede somewhat.",
      "Your metallic scales recede somewhat."},
+#endif
 
+#ifdef JP 
+    {"あなたの黒い鱗が消えてしまった。",
+     "あなたの黒い鱗が幾らか減少した。",
+     "あなたの黒い鱗が幾らか減少した。"},
+#else
     {"Your black scales disappear.", "Your black scales recede somewhat.",
      "Your black scales recede somewhat."},
+#endif
 
+#ifdef JP 
+    {"あなたの白い鱗が消えてしまった。",
+     "あなたの白い鱗が幾らか減少した。",
+     "あなたの白い鱗が幾らか減少した。"},
+#else
     {"Your white scales disappear.", "Your white scales recede somewhat.",
      "Your white scales recede somewhat."},
+#endif
 
+#ifdef JP 
+    {"あなたの黄色の鱗が消えてしまった。",
+     "あなたの黄色の鱗が幾らか減少した。",
+     "あなたの黄色の鱗が幾らか減少した。"},
+#else
     {"Your yellow scales disappear.", "Your yellow scales recede somewhat.",
      "Your yellow scales recede somewhat."},
+#endif
 
+#ifdef JP 
+    {"あなたの茶色の鱗が消えてしまった。",
+     "あなたの茶色の鱗が幾らか減少した。",
+     "あなたの茶色の鱗が幾らか減少した。"},
+#else
     {"Your brown scales disappear.", "Your brown scales recede somewhat.",
      "Your brown scales recede somewhat."},
+#endif
 
+#ifdef JP 
+    {"あなたの青い鱗が消えてしまった。",
+     "あなたの青い鱗が幾らか減少した。",
+     "あなたの青い鱗が幾らか減少した。"},
+#else
     {"Your blue scales disappear.", "Your blue scales recede somewhat.",
      "Your blue scales recede somewhat."},
+#endif
 
+#ifdef JP 
+    {"あなたの紫色の鱗が消えてしまった。",
+     "あなたの紫色の鱗が幾らか減少した。",
+     "あなたの紫色の鱗が幾らか減少した。"},
+#else
     {"Your purple scales disappear.", "Your purple scales recede somewhat.",
      "Your purple scales recede somewhat."},
+#endif
 // 80
 
+#ifdef JP 
+    {"あなたのまだら模様の鱗が消えてしまった。",
+     "あなたのまだら模様の鱗が幾らか減少した。",
+     "あなたのまだら模様の鱗が幾らか減少した。"},
+#else
     {"Your speckled scales disappear.",
      "Your speckled scales recede somewhat.",
      "Your speckled scales recede somewhat."},
+#endif
 
+#ifdef JP 
+    {"あなたのオレンジ色の鱗が消えてしまった。",
+     "あなたのオレンジ色の鱗が幾らか減少した。",
+     "あなたのオレンジ色の鱗が幾らか減少した。"},
+#else
     {"Your orange scales disappear.", "Your orange scales recede somewhat.",
      "Your orange scales recede somewhat."},
+#endif
 
+#ifdef JP 
+    {"あなたの藍色の鱗が消えてしまった。",
+     "あなたの藍色の鱗が幾らか減少した。",
+     "あなたの藍色の鱗が幾らか減少した。"},
+#else
     {"Your indigo scales disappear.", "Your indigo scales recede somewhat.",
      "Your indigo scales recede somewhat."},
+#endif
 
+#ifdef JP 
+    {"あなたの節くれ立った赤い鱗が消えてしまった。",
+     "あなたの節くれ立った赤い鱗が幾らか減少した。",
+     "あなたの節くれ立った赤い鱗が幾らか減少した。"},
+#else
     {"Your knobbly red scales disappear.",
      "Your knobbly red scales recede somewhat.",
      "Your knobbly red scales recede somewhat."},
+#endif
 
+#ifdef JP 
+    {"あなたの玉虫色の鱗が消えてしまった。",
+     "あなたの玉虫色の鱗が幾らか減少した。",
+     "あなたの玉虫色の鱗が幾らか減少した。"},
+#else
     {"Your iridescent scales disappear.",
      "Your iridescent scales recede somewhat.",
      "Your iridescent scales recede somewhat."},
+#endif
 
+#ifdef JP 
+    {"あなたの模様の浮き出した鱗が消えてしまった。",
+     "あなたの模様の浮き出した鱗が幾らか減少した。",
+     "あなたの模様の浮き出した鱗が幾らか減少した。"},
+#else
     {"Your patterned scales disappear.",
      "Your patterned scales recede somewhat.",
      "Your patterned scales recede somewhat."},
+#endif
 };
 
 /*
@@ -866,7 +1850,11 @@ void display_mutations(void)
 {
     int i;
     int j = 0;
+#ifdef JP  
+    const char *mut_title = "先天的/超自然的/もしくは突然変異の能力";
+#else
     const char *mut_title = "Innate abilities, Weirdness & Mutations";
+#endif
     const int num_lines = get_number_of_lines(); 
 
 #ifdef DOS_TERM
@@ -890,47 +1878,85 @@ void display_mutations(void)
     switch (you.species)   //mv: following code shows innate abilities - if any
     {
     case SP_MERFOLK:
+#ifdef JP 
+        cprintf("あなたは水中では本来の形態に戻る。" EOL);
+#else
         cprintf("You revert to your normal form in water." EOL);
+#endif
         j++;
         break;
 
     case SP_NAGA:
         // breathe poison replaces spit poison:
         if (!you.mutation[MUT_BREATHE_POISON])
+#ifdef JP 
+            cprintf("あなたは毒液を吐くことができる。" EOL);
+#else
             cprintf("You can spit poison." EOL);
+#endif
         else
+#ifdef JP 
+            cprintf("あなたは毒の雲を吐き出すことができる。" EOL);
+#else
             cprintf("You can exhale a cloud of poison." EOL);
+#endif
 
+#ifdef JP 
+        cprintf("あなたの肉体は毒に耐性がある。" EOL);
+        cprintf("あなたは見えざるものを見ることができる。" EOL);
+#else
         cprintf("Your system is immune to poisons." EOL);
         cprintf("You can see invisible." EOL);
+#endif
         j += 3;
         break;
 
     case SP_GNOME:
+#ifdef JP 
+        cprintf("あなたは周辺を感知することができる。" EOL);
+#else
         cprintf("You can sense your surroundings." EOL);
+#endif
         j++;
         break;
 
     case SP_TROLL:
+#ifdef JP 
+        cprintf("あなたの肉体は高速に再生する。" EOL);
+#else
         cprintf("Your body regenerates quickly." EOL);
+#endif
         j++;
         break;
 
     case SP_GHOUL:
+#ifdef JP 
+        cprintf("あなたの体は腐り落ちていく。" EOL);
+        cprintf("あなたは肉食性だ。" EOL);
+#else
         cprintf("Your body is rotting away." EOL);
         cprintf("You are carnivorous." EOL);
+#endif
         j += 2;
         break;
 
     case SP_KOBOLD:
+#ifdef JP 
+        cprintf("あなたは肉食性だ。" EOL);
+#else
         cprintf("You are carnivorous." EOL);
+#endif
         j++;
         break;
 
     case SP_GREY_ELF:
         if (you.experience_level > 4)
         {
+#ifdef JP 
+            cprintf("あなたはとても魅力的だ。" EOL);
+#else
             cprintf("You are very charming." EOL);
+#endif
             j++;
         }
         break;
@@ -938,23 +1964,40 @@ void display_mutations(void)
     case SP_KENKU:
         if (you.experience_level > 4)
         {
+#ifdef JP 
+            cprintf("あなたは");
+            cprintf((you.experience_level > 14) ? "絶え間なく飛ぶことができる。" EOL : "飛ぶことができる。"
+                    EOL);
+#else
             cprintf("You can fly");
             cprintf((you.experience_level > 14) ? " continuously." EOL : "."
                     EOL);
+#endif
             j++;
         }
         break;
 
     case SP_MUMMY:
+#ifdef JP 
+        cprintf("あなたは");
+        cprintf((you.experience_level > 25) ? "非常に強く" :
+                ((you.experience_level > 12) ? "強く" : ""));
+        cprintf("死の力との接触を持っている。" EOL);
+#else
         cprintf("You are");
         cprintf((you.experience_level > 25) ? " very strongly" :
                 ((you.experience_level > 12) ? " strongly" : ""));
         cprintf(" in touch with the powers of death." EOL);
+#endif
         j++;
 
         if (you.experience_level >= 12)
         {
+#ifdef JP 
+            cprintf("あなたは腐敗した肉体を回復するために肉体に魔力を充填できる。" EOL);
+#else
             cprintf("You can restore your body by infusing magical energy." EOL);
+#endif
             j++;
         }
         break;
@@ -962,8 +2005,13 @@ void display_mutations(void)
     case SP_GREEN_DRACONIAN:
         if (you.experience_level > 6)
         {
+#ifdef JP 
+            cprintf("あなたは毒に耐性がある。" EOL);
+            cprintf("あなたは毒のブレスを吐くことができる。" EOL);
+#else
             cprintf("You are resistant to poison." EOL);
             cprintf("You can breathe poison." EOL);
+#endif
             j += 2;
         }
         break;
@@ -971,12 +2019,20 @@ void display_mutations(void)
     case SP_RED_DRACONIAN:
         if (you.experience_level > 6)
         {
+#ifdef JP 
+            cprintf("あなたは火のブレスを吐くことができる。" EOL);
+#else
             cprintf("You can breathe fire." EOL);
+#endif
             j++;
         }
         if (you.experience_level > 17)
         {
+#ifdef JP 
+            cprintf("あなたは火に耐性がある。" EOL);
+#else
             cprintf("You are resistant to fire." EOL);
+#endif
             j++;
         }
         break;
@@ -984,12 +2040,20 @@ void display_mutations(void)
     case SP_WHITE_DRACONIAN:
         if (you.experience_level > 6)
         {
+#ifdef JP 
+            cprintf("あなたは冷気のブレスを吐くことができる。" EOL);
+#else
             cprintf("You can breathe frost." EOL);
+#endif
             j++;
         }
         if (you.experience_level > 17)
         {
+#ifdef JP 
+            cprintf("あなたは冷気に耐性がある。" EOL);
+#else
             cprintf("You are resistant to cold." EOL);
+#endif
             j++;
         }
         break;
@@ -997,12 +2061,20 @@ void display_mutations(void)
     case SP_BLACK_DRACONIAN:
         if (you.experience_level > 6)
         {
+#ifdef JP 
+            cprintf("あなたは稲妻のブレスを吐くことができる。" EOL);
+#else
             cprintf("You can breathe lightning." EOL);
+#endif
             j++;
         }
         if (you.experience_level > 17)
         {
+#ifdef JP 
+            cprintf("あなたは稲妻に耐性がある。" EOL);
+#else
             cprintf("You are resistant to lightning." EOL);
+#endif
             j++;
         }
         break;
@@ -1010,7 +2082,11 @@ void display_mutations(void)
     case SP_GOLDEN_DRACONIAN:
         if (you.experience_level > 6)
         {
+#ifdef JP 
+            cprintf("あなたは強酸を吐くことができる。" EOL);
+#else
             cprintf("You can spit acid." EOL);
+#endif
             j++;
         }
         break;
@@ -1018,7 +2094,11 @@ void display_mutations(void)
     case SP_PURPLE_DRACONIAN:
         if (you.experience_level > 6)
         {
+#ifdef JP 
+            cprintf("あなたは力のブレスを吐くことができる。" EOL);
+#else
             cprintf("You can breathe power." EOL);
+#endif
             j++;
         }
         break;
@@ -1026,7 +2106,11 @@ void display_mutations(void)
     case SP_MOTTLED_DRACONIAN:
         if (you.experience_level > 6)
         {
+#ifdef JP 
+            cprintf("あなたは焼夷の炎のブレスを吐くことができる。" EOL);
+#else
             cprintf("You can breathe sticky flames." EOL);
+#endif
             j++;
         }
         break;
@@ -1034,7 +2118,11 @@ void display_mutations(void)
     case SP_PALE_DRACONIAN:
         if (you.experience_level > 6)
         {
+#ifdef JP 
+            cprintf("あなたは蒸気のブレスを吐くことができる。" EOL);
+#else
             cprintf("You can breathe steam." EOL);
+#endif
             j++;
         }
         break;
@@ -1056,7 +2144,11 @@ void display_mutations(void)
             if (j > num_lines - 4)
             {
                 gotoxy( 1, num_lines - 1 );
+#ifdef JP 
+                cprintf("-続く-");
+#else
                 cprintf("-more-");
+#endif
 
                 if (getch() == 0)
                     getch();
@@ -1090,10 +2182,17 @@ void display_mutations(void)
     }
 
     if (j == 0)
+#ifdef JP 
+        cprintf( "あなたは変異を蒙っていない。" EOL );
+#else
         cprintf( "You are not a mutant." EOL );
+#endif
 
+#ifndef USE_MULTIWIN // skip getch
     if (getch() == 0)
         getch();
+#endif
+
 #ifdef DOS_TERM
     puttext(1, 1, 80, 25, buffer);
 #endif
@@ -1121,9 +2220,13 @@ bool mutate(int which_mutation, bool failMsg)
     if (you.is_undead) 
     {
         if (force_mutation 
-            || (wearing_amulet(AMU_RESIST_MUTATION) && coinflip()))
+            || (!wearing_amulet(AMU_RESIST_MUTATION) && coinflip()))
         {
+#ifdef JP 
+            mpr( "あなたの肉体は腐敗した！" );
+#else
             mpr( "Your body decomposes!" );
+#endif
 
             if (coinflip())
                 lose_stat( STAT_RANDOM, 1 );
@@ -1137,7 +2240,11 @@ bool mutate(int which_mutation, bool failMsg)
         }
 
         if (failMsg)
+#ifdef JP 
+            mpr("あなたは一瞬だけ奇妙な感覚になった。");
+#else
             mpr("You feel odd for a moment.");
+#endif
 
         return (false);
     }
@@ -1146,7 +2253,11 @@ bool mutate(int which_mutation, bool failMsg)
         && !force_mutation && !one_chance_in(10))
     {
         if (failMsg)
+#ifdef JP 
+            mpr("あなたは一瞬だけ奇妙な感覚になった。");
+#else
             mpr("You feel odd for a moment.");
+#endif
 
         return (false);
     }
@@ -1156,7 +2267,11 @@ bool mutate(int which_mutation, bool failMsg)
         && (you.mutation[MUT_MUTATION_RESISTANCE] == 3 || !one_chance_in(3)))
     {
         if (failMsg)
+#ifdef JP 
+            mpr("あなたは一瞬だけ奇妙な感覚になった。");
+#else
             mpr("You feel odd for a moment.");
+#endif
 
         return (false);
     }
@@ -1287,7 +2402,11 @@ bool mutate(int which_mutation, bool failMsg)
         return false;
 
     //jmf: added some checks for new mutations
+#ifdef JP 
+    mpr("あなたは突然変異した。", MSGCH_MUTATION);
+#else
     mpr("You mutate.", MSGCH_MUTATION);
+#endif
 
     // find where these things are actually changed
     // -- do not globally force redraw {dlb}
@@ -1591,7 +2710,11 @@ int how_mutated(void)
     }
 
 #if DEBUG_DIAGNOSTICS
+#ifdef JP 
     snprintf( info, INFO_SIZE, "levels: %d", j );
+#else
+    snprintf( info, INFO_SIZE, "levels: %d", j );
+#endif
     mpr( info, MSGCH_DIAGNOSTICS );
 #endif
 
@@ -1606,7 +2729,11 @@ bool delete_mutation(char which_mutation)
     if (you.mutation[MUT_MUTATION_RESISTANCE] > 1
         && (you.mutation[MUT_MUTATION_RESISTANCE] == 3 || coinflip()))
     {
+#ifdef JP 
+        mpr("あなたは一瞬、どうにも奇妙な感覚を覚えた。");
+#else
         mpr("You feel rather odd for a moment.");
+#endif
         return false;
     }
 
@@ -1631,7 +2758,11 @@ bool delete_mutation(char which_mutation)
     if (you.demon_pow[mutat] >= you.mutation[mutat])
         return false;
 
+#ifdef JP 
+    mpr("あなたは突然変異した。", MSGCH_MUTATION);
+#else
     mpr("You mutate.", MSGCH_MUTATION);
+#endif
 
     switch (mutat)
     {
@@ -1815,7 +2946,11 @@ const char *mutation_name( char which_mutat, int level )
         || which_mutat == MUT_AGILE || which_mutat == MUT_WEAK
         || which_mutat == MUT_DOPEY || which_mutat == MUT_CLUMSY)
     {
+#ifdef JP 
+        snprintf( mut_string, sizeof( mut_string ), "%s%d)", 
+#else
         snprintf( mut_string, sizeof( mut_string ), "%s%d).", 
+#endif
                   mutation_descrip[ which_mutat ][0], level );
 
         return (mut_string);
@@ -1840,7 +2975,11 @@ void demonspawn(void)
 
     you.attribute[ATTR_NUM_DEMONIC_POWERS]++;
 
+#ifdef JP 
+    mpr("あなたの悪魔的な血統が顕在化した……。", MSGCH_INTRINSIC_GAIN);
+#else
     mpr("Your demonic ancestry asserts itself...", MSGCH_INTRINSIC_GAIN);
+#endif
 
     // Merged the demonspawn lists into a single loop.  Now a high level
     // character can potentially get mutations from the low level list if 
@@ -2138,7 +3277,11 @@ void demonspawn(void)
         modify_stat(STAT_STRENGTH, 1, true);
         modify_stat(STAT_INTELLIGENCE, 1, true);
         modify_stat(STAT_DEXTERITY, 1, true);
+#ifdef JP 
+        mpr("あなたは非常に体調が良くなった。", MSGCH_INTRINSIC_GAIN);
+#else
         mpr("You feel much better now.", MSGCH_INTRINSIC_GAIN);
+#endif
     }
 }                               // end demonspawn()
 

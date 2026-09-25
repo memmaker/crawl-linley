@@ -127,7 +127,7 @@ static void tag_construct_ghost(struct tagHeader &th);
 static void tag_read_ghost(struct tagHeader &th, char minorVersion);
 
 // provide a wrapper for file writing, just in case.
-int write2(FILE * file, char *buffer, unsigned int count)
+int write2(FILE * file, const char *buffer, unsigned int count)
 {
     return fwrite(buffer, 1, count, file);
 }
@@ -290,11 +290,19 @@ void make_date_string( time_t in_date, char buff[20] )
 
     struct tm *date = localtime( &in_date );
 
+#ifdef JP 
     snprintf( buff, 20, 
               "%4d%02d%02d%02d%02d%02d%s",
               date->tm_year + 1900, date->tm_mon, date->tm_mday,
               date->tm_hour, date->tm_min, date->tm_sec,
               ((date->tm_isdst > 0) ? "D" : "S") );
+#else
+    snprintf( buff, 20, 
+              "%4d%02d%02d%02d%02d%02d%s",
+              date->tm_year + 1900, date->tm_mon, date->tm_mday,
+              date->tm_hour, date->tm_min, date->tm_sec,
+              ((date->tm_isdst > 0) ? "D" : "S") );
+#endif
 }
 
 static int get_val_from_string( const char *ptr, int len )
@@ -494,7 +502,11 @@ void tag_missing(int tag, char minorVersion)
             tag_missing_level_attitude();
             break;
         default:
+#ifdef JP 
             perror("Tag %d is missing;  file is likely corrupt.");
+#else
+            perror("Tag %d is missing;  file is likely corrupt.");
+#endif
             end(-1);
     }
 }
@@ -520,6 +532,7 @@ void tag_set_expected(char tags[], int fileType)
             case TAGTYPE_GHOST:
                 if (i == TAG_GHOST)
                     tags[i] = 1;
+                break;
             default:
                 // I don't know what kind of file that is!
                 break;
@@ -713,6 +726,9 @@ static void tag_construct_you(struct tagHeader &th)
 
     marshallLong( th, you.real_time );
     marshallLong( th, you.num_turns );
+
+    // you.magic_contamination 05/03/05
+    marshallShort(th, you.magic_contamination);
 }
 
 static void tag_construct_you_items(struct tagHeader &th)
@@ -1011,6 +1027,12 @@ static void tag_read_you(struct tagHeader &th, char minorVersion)
     {
         you.real_time = -1;
         you.num_turns = -1;
+    }
+
+    // you.magic_contamination 05/03/05
+    if (minorVersion >= 3)
+    {
+        you.magic_contamination = unmarshallShort(th);
     }
 }
 
@@ -1801,7 +1823,11 @@ static void tag_read_ghost(struct tagHeader &th, char minorVersion)
 {
     int i, count_c;
 
+#ifdef JP 
     snprintf( info, INFO_SIZE, "minor version = %d", minorVersion );
+#else
+    snprintf( info, INFO_SIZE, "minor version = %d", minorVersion );
+#endif
 
     unmarshallString(th, ghost.name, 20);
 

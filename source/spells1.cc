@@ -48,14 +48,26 @@ void blink(void)
 
     // yes, there is a logic to this ordering {dlb}:
     if (scan_randarts(RAP_PREVENT_TELEPORTATION))
+#ifdef JP
+        mpr("あなたは奇妙な停滞感を覚えた。");
+#else
         mpr("You feel a weird sense of stasis.");
+#endif
     else if (you.level_type == LEVEL_ABYSS && !one_chance_in(3))
+#ifdef JP
+        mpr("アビスの力があなたをその場から離さない！");
+#else
         mpr("The power of the Abyss keeps you in your place!");
+#endif
     else if (you.conf)
         random_blink(false);
     else if (!allow_control_teleport(true))
     {
+#ifdef JP
+        mpr("強力な魔法が、あなたの瞬間移動の制御を妨害した。");
+#else
         mpr("A powerful magic interferes with your control of the blink.");
+#endif
         random_blink(false);
     }
     else
@@ -63,7 +75,11 @@ void blink(void)
         // query for location {dlb}:
         for (;;)
         {
+#ifdef JP
+            mpr("どこに瞬間移動しますか？", MSGCH_PROMPT);
+#else
             mpr("Blink to where?", MSGCH_PROMPT);
+#endif
 
             direction( beam, DIR_TARGET );
 
@@ -73,19 +89,29 @@ void blink(void)
                 return;         // early return {dlb}
             }
 
-            if (see_grid(beam.tx, beam.ty))
+            if (see_grid(beam.tx, beam.ty)
+                && ( (grd[beam.tx][beam.ty] <= DNGN_LAST_SOLID_TILE)
+                    || (grd[beam.tx][beam.ty] >= DNGN_SHALLOW_WATER) ) )
                 break;
             else
             {
                 mesclr();
+#ifdef JP
+                mpr("あなたはそこには瞬間移動できない！");
+#else
                 mpr("You can't blink there!");
+#endif
             }
         }
 
         if (grd[beam.tx][beam.ty] <= DNGN_LAST_SOLID_TILE
             || mgrd[beam.tx][beam.ty] != NON_MONSTER)
         {
+#ifdef JP
+            mpr("うわ！どうやらそこには何かがあるようだ。");
+#else
             mpr("Oops! Maybe something was there already.");
+#endif
             random_blink(false);
         }
         else if (you.level_type == LEVEL_ABYSS)
@@ -107,6 +133,27 @@ void blink(void)
             you.duration[DUR_CONDENSATION_SHIELD] = 0;
             you.redraw_armour_class = 1;
         }
+
+        // swimming
+        if (!player_is_levitating()
+            && (grd[you.x_pos][you.y_pos] == DNGN_LAVA
+                || grd[you.x_pos][you.y_pos] == DNGN_DEEP_WATER
+                || grd[you.x_pos][you.y_pos] == DNGN_SHALLOW_WATER))
+        {
+            if (you.species == SP_MERFOLK
+                && grd[you.x_pos][you.y_pos] != DNGN_LAVA)
+            {
+#ifdef JP
+                mpr("あなたは水中に飛び込んで、本来の形態に変化した。");
+#else
+                mpr("You dive into the water and return to your normal form.");
+#endif
+                merfolk_start_swimming();
+            }
+
+            if (grd[you.x_pos][you.y_pos] != DNGN_SHALLOW_WATER)
+                fall_into_a_pool( true, grd[you.x_pos][you.y_pos] );
+        }
     }
 
     return;
@@ -118,14 +165,26 @@ void random_blink(bool allow_partial_control)
     bool succ = false;
 
     if (scan_randarts(RAP_PREVENT_TELEPORTATION))
+#ifdef JP
+        mpr("あなたは奇妙な停滞感を覚えた。");
+#else
         mpr("You feel a weird sense of stasis.");
+#endif
     else if (you.level_type == LEVEL_ABYSS && !one_chance_in(3))
     {
+#ifdef JP
+        mpr("アビスの力があなたをその場から離さない！");
+#else
         mpr("The power of the Abyss keeps you in your place!");
+#endif
     }
     else if (!random_near_space(you.x_pos, you.y_pos, tx, ty))
     {
+#ifdef JP
+        mpr("あなたは一瞬、苛立ちを覚えた。");
+#else
         mpr("You feel jittery for a moment.");
+#endif
     }
 
 #ifdef USE_SEMI_CONTROLLED_BLINK
@@ -133,7 +192,11 @@ void random_blink(bool allow_partial_control)
     else if (you.attribute[ATTR_CONTROL_TELEPORT] && !you.conf
              && allow_partial_control && allow_control_teleport())
     {
+#ifdef JP
+        mpr("あなたは転送先の方向を指定できる。");
+#else
         mpr("You may select the general direction of your translocation.");
+#endif
         cast_semi_controlled_blink(100);
         succ = true;
     }
@@ -141,7 +204,11 @@ void random_blink(bool allow_partial_control)
 
     else
     {
+#ifdef JP
+        mpr("あなたは瞬間移動した。");
+#else
         mpr("You blink.");
+#endif
 
         succ = true;
         you.x_pos = tx;
@@ -195,7 +262,11 @@ void cast_fire_storm(int powc)
     struct bolt beam;
     struct dist targ;
 
+#ifdef JP
+    mpr("どこに向けて撃ちますか？");
+#else
     mpr("Where?");
+#endif
 
     direction( targ, DIR_TARGET, TARG_ENEMY );
 
@@ -219,12 +290,20 @@ void cast_fire_storm(int powc)
     beam.isBeam = false;
     beam.isTracer = false;
     beam.ench_power = powc;     // used for radius
+#ifdef JP
+    strcpy( beam.beam_name, "火焔の嵐" );
+#else
     strcpy( beam.beam_name, "great blast of fire" );
+#endif
     beam.hit = 20 + powc / 10;
     beam.damage = calc_dice( 6, 15 + powc );
 
     explosion( beam );
+#ifdef JP
+    mpr("猛烈な火焔の嵐が巻き起こった！");
+#else
     mpr("A raging storm of fire appears!");
+#endif
 
     viewwindow(1, false);
 }                               // end cast_fire_storm()
@@ -241,7 +320,11 @@ void identify(int power)
 
     do
     {
-        item_slot = prompt_invent_item( "Identify which item?", -1, true, 
+#ifdef JP
+        item_slot = prompt_invent_item( "どのアイテムを鑑定しますか？([*][?]で一覧)", -1, true,
+#else
+        item_slot = prompt_invent_item( "Identify which item?", -1, true,
+#endif
                                         false, false );
         if (item_slot == PROMPT_ABORT)
         {
@@ -249,7 +332,7 @@ void identify(int power)
             return;
         }
 
-        set_ident_type( you.inv[item_slot].base_type, 
+        set_ident_type( you.inv[item_slot].base_type,
                         you.inv[item_slot].sub_type, ID_KNOWN_TYPE );
 
         set_ident_flags( you.inv[item_slot], ISFLAG_IDENT_MASK );
@@ -275,10 +358,18 @@ void conjure_flame(int pow)
     for (;;)
     {
         if (done_first_message)
+#ifdef JP
+            mpr("どこに発生させますか？", MSGCH_PROMPT);
+#else
             mpr("Where would you like to place the cloud?", MSGCH_PROMPT);
-        else 
+#endif
+        else
         {
+#ifdef JP
+            mpr("あなたは炎の雲の呪文を唱えた！どこに発生させますか？", MSGCH_PROMPT);
+#else
             mpr("You cast a flaming cloud spell! But where?", MSGCH_PROMPT);
+#endif
             done_first_message = true;
         }
 
@@ -292,19 +383,27 @@ void conjure_flame(int pow)
 
         if (!see_grid(spelld.tx, spelld.ty))
         {
+#ifdef JP
+            mpr("あなたにはその場所が見えない！");
+#else
             mpr("You can't see that place!");
+#endif
             continue;
         }
 
-        if (grd[ spelld.tx ][ spelld.ty ] <= DNGN_LAST_SOLID_TILE 
-            || mgrd[ spelld.tx ][ spelld.ty ] != NON_MONSTER 
+        if (grd[ spelld.tx ][ spelld.ty ] <= DNGN_LAST_SOLID_TILE
+            || mgrd[ spelld.tx ][ spelld.ty ] != NON_MONSTER
             || env.cgrid[ spelld.tx ][ spelld.ty ] != EMPTY_CLOUD)
         {
+#ifdef JP
+            mpr( "そこには既に何かある！" );
+#else
             mpr( "There's already something there!" );
+#endif
             continue;
         }
 
-        break;    
+        break;
     }
 
     int durat = 5 + (random2(pow) / 2) + (random2(pow) / 2);
@@ -338,7 +437,11 @@ void stinking_cloud( int pow )
     beem.source_x = you.x_pos;
     beem.source_y = you.y_pos;
 
+#ifdef JP
+    strcpy(beem.beam_name, "瘴気の爆裂球");
+#else
     strcpy(beem.beam_name, "ball of vapour");
+#endif
     beem.colour = GREEN;
     beem.range = 6;
     beem.rangeMax = 6;
@@ -360,7 +463,11 @@ void cast_big_c(int pow, char cty)
 {
     struct dist cdis;
 
+#ifdef JP
+    mpr("どこに魔法を発生させますか？", MSGCH_PROMPT);
+#else
     mpr("Where do you want to put it?", MSGCH_PROMPT);
+#endif
     direction( cdis, DIR_TARGET, TARG_ENEMY );
 
     if (!cdis.isValid)
@@ -383,7 +490,11 @@ static char healing_spell( int healed )
     struct monsters *monster = 0;       // NULL {dlb}
     struct dist bmove;
 
+#ifdef JP
+    mpr("どの方角に？", MSGCH_PROMPT);
+#else
     mpr("Which direction?", MSGCH_PROMPT);
+#endif
     direction( bmove, DIR_DIR, TARG_FRIEND );
 
     if (!bmove.isValid)
@@ -396,14 +507,22 @@ static char healing_spell( int healed )
 
     if (bmove.dx == 0 && bmove.dy == 0)
     {
+#ifdef JP
+        mpr("あなたは回復した。");
+#else
         mpr("You are healed.");
+#endif
         inc_hp(healed, false);
         return 1;
     }
 
     if (mgr == NON_MONSTER)
     {
+#ifdef JP
+        mpr("そこには何もいない。");
+#else
         mpr("There isn't anything there!");
+#endif
         return -1;
     }
 
@@ -411,13 +530,25 @@ static char healing_spell( int healed )
 
     if (heal_monster(monster, healed, false))
     {
+#ifdef JP
+        strcpy(info, "あなたは");
+#else
         strcpy(info, "You heal ");
+#endif
         strcat(info, ptr_monam( monster, DESC_NOCAP_THE ));
+#ifdef JP
+        strcat(info, "の体力を回復した。");
+#else
         strcat(info, ".");
+#endif
         mpr(info);
 
         if (monster->hit_points == monster->max_hit_points)
+#ifdef JP
+            simple_monster_message( monster, "は完全に体力を回復した。" );
+#else
             simple_monster_message( monster, " is completely healed." );
+#endif
         else
             print_wounds(monster);
     }
@@ -444,14 +575,14 @@ char cast_greatest_healing( int pow )
 {
     return healing_spell(50 + random2avg(49, 2));
 }                               // end cast_greatest_healing()
-#endif 
+#endif
 
 char cast_healing( int pow )
 {
     if (pow > 50)
         pow = 50;
 
-    return (healing_spell( pow + roll_dice( 2, pow ) - 2 )); 
+    return (healing_spell( pow + roll_dice( 2, pow ) - 2 ));
 }
 
 bool cast_revivification(int power)
@@ -463,10 +594,18 @@ bool cast_revivification(int power)
     if (you.hp == you.hp_max)
         canned_msg(MSG_NOTHING_HAPPENS);
     else if (you.hp_max < 21)
+#ifdef JP
+        mpr("あなたはこの呪文を唱えるには体力が足りない。");
+#else
         mpr("You lack the resilience to cast this spell.");
+#endif
     else
     {
+#ifdef JP
+        mpr("あなたの肉体は恐るべき苦痛に満ちた方法で治療された。");
+#else
         mpr("Your body is healed in an amazingly painful way.");
+#endif
 
         loss = 2;
         for (loopy = 0; loopy < 9; loopy++)
@@ -495,7 +634,11 @@ void cast_cure_poison(int mabil)
 
 void purification(void)
 {
+#ifdef JP
+    mpr("あなたの肉体は浄化された！");
+#else
     mpr("You feel purified!");
+#endif
 
     you.poison = 0;
     you.rotting = 0;
@@ -518,13 +661,26 @@ int allowed_deaths_door_hp(void)
 void cast_deaths_door(int pow)
 {
     if (you.is_undead)
+#ifdef JP
+        mpr("あなたは元より死者だ！");
+#else
         mpr("You're already dead!");
+#endif
     else if (you.deaths_door)
+#ifdef JP
+        mpr("あなたの延命の嘆願は拒否された。");
+#else
         mpr("Your appeal for an extension has been denied.");
+#endif
     else
     {
+#ifdef JP
+        mpr("あなたは無敵になったようだ！");
+        mpr("あなたは砂時計の砂が流れ落ちる音を耳にしたような気がした。");
+#else
         mpr("You feel invincible!");
         mpr("You seem to hear sand running through an hourglass...");
+#endif
 
         set_hp( allowed_deaths_door_hp(), false );
         deflate_hp( you.hp_max, false );
@@ -543,7 +699,11 @@ void abjuration(int pow)
 {
     struct monsters *monster = 0;       // NULL {dlb}
 
+#ifdef JP
+    mpr("送還の呪文が発動した！");
+#else
     mpr("Send 'em back where they came from!");
+#endif
 
     for (int ab = 0; ab < MAX_MONSTERS; ab++)
     {
@@ -566,7 +726,11 @@ void abjuration(int pow)
                 monster_die(monster, KILL_RESET, 0);
             else
             {
+#ifdef JP
+                simple_monster_message(monster, "は身震いした。");
+#else
                 simple_monster_message(monster, " shudders.");
+#endif
                 mons_add_ench(monster, abjLevel);
             }
         }
@@ -683,7 +847,7 @@ void extension(int pow)
     if (you.might)
     {
         potion_effect(POT_MIGHT, pow);
-        contamination++;  
+        contamination++;
     }
 
     if (you.levitation)
@@ -714,7 +878,11 @@ void extension(int pow)
         if (you.fire_shield > 50)
             you.fire_shield = 50;
 
+#ifdef JP
+        mpr("あなたの炎の環は新たな活力を得て唸りを上げた！");
+#else
         mpr("Your ring of flames roars with new vigour!");
+#endif
     }
 
     if ( !(you.duration[DUR_WEAPON_BRAND] < 1
@@ -743,7 +911,11 @@ void extension(int pow)
 
     if (you.duration[DUR_TRANSFORMATION])
     {
+#ifdef JP
+        mpr("あなたの変身時間は延長された。");
+#else
         mpr("Your transformation has been extended.");
+#endif
         you.duration[DUR_TRANSFORMATION] += random2(pow);
         if (you.duration[DUR_TRANSFORMATION] > 100)
             you.duration[DUR_TRANSFORMATION] = 100;
@@ -774,7 +946,11 @@ void ice_armour(int pow, bool extending)
     if (!player_light_armour())
     {
         if (!extending)
+#ifdef JP
+            mpr("あなたは過剰に防具をつけすぎている。");
+#else
             mpr("You are wearing too much armour.");
+#endif
 
         return;
     }
@@ -782,22 +958,38 @@ void ice_armour(int pow, bool extending)
     if (you.duration[DUR_STONEMAIL] || you.duration[DUR_STONESKIN])
     {
         if (!extending)
+#ifdef JP
+            mpr("この呪文は現在効果中の他の呪文と相容れない。");
+#else
             mpr("The spell conflicts with another spell still in effect.");
+#endif
 
         return;
     }
 
     if (you.duration[DUR_ICY_ARMOUR])
+#ifdef JP
+        mpr( "あなたの氷の鎧は厚みを増した。" );
+#else
         mpr( "Your icy armour thickens." );
-    else 
+#endif
+    else
     {
         if (you.attribute[ATTR_TRANSFORMATION] == TRAN_ICE_BEAST)
+#ifdef JP
+            mpr( "あなたの氷の体はいっそう固くなった。" );
+#else
             mpr( "Your icy body feels more resilient." );
+#endif
         else
+#ifdef JP
+            mpr( "氷の薄膜があなたの体を防護した！" );
+#else
             mpr( "A film of ice covers your body!" );
+#endif
 
         you.redraw_armour_class = 1;
-    }     
+    }
 
     you.duration[DUR_ICY_ARMOUR] += 20 + random2(pow) + random2(pow);
 
@@ -811,22 +1003,38 @@ void stone_scales(int pow)
 
     if (you.duration[DUR_ICY_ARMOUR] || you.duration[DUR_STONESKIN])
     {
+#ifdef JP
+        mpr("この呪文は現在効果中の他の呪文と相容れない。");
+#else
         mpr("The spell conflicts with another spell still in effect.");
+#endif
         return;
     }
 
     if (you.duration[DUR_STONEMAIL])
+#ifdef JP
+        mpr("あなたの鱗状の装甲はよりしっかりとしたようだ。");
+#else
         mpr("Your scaly armour looks firmer.");
-    else 
+#endif
+    else
     {
         if (you.attribute[ATTR_TRANSFORMATION] == TRAN_STATUE)
+#ifdef JP
+            mpr( "あなたの石の体はいっそう固くなった。" );
+#else
             mpr( "Your stone body feels more resilient." );
+#endif
         else
+#ifdef JP
+            mpr( "鱗状の石があなたの体を防護した！" );
+#else
             mpr( "A set of stone scales covers your body!" );
+#endif
 
         you.redraw_evasion = 1;
         you.redraw_armour_class = 1;
-    }     
+    }
 
     dur_change = 20 + random2(pow) + random2(pow);
 
@@ -840,7 +1048,11 @@ void stone_scales(int pow)
 
 void missile_prot(int pow)
 {
+#ifdef JP
+    mpr("あなたは飛び道具から防護されているようだ。");
+#else
     mpr("You feel protected from missiles.");
+#endif
 
     you.duration[DUR_REPEL_MISSILES] += 8 + roll_dice( 2, pow );
 
@@ -850,7 +1062,11 @@ void missile_prot(int pow)
 
 void deflection(int pow)
 {
+#ifdef JP
+    mpr("あなたは飛び道具から非常に安全に護られているようだ。");
+#else
     mpr("You feel very safe from missiles.");
+#endif
 
     you.duration[DUR_DEFLECT_MISSILES] += 15 + random2(pow);
 
@@ -861,7 +1077,11 @@ void deflection(int pow)
 void cast_regen(int pow)
 {
     //if (pow > 150) pow = 150;
+#ifdef JP
+    mpr("あなたの皮膚はむずむずしてきた。");
+#else
     mpr("Your skin crawls.");
+#endif
 
     you.duration[DUR_REGENERATION] += 5 + roll_dice( 2, pow / 3 + 1 );
 
@@ -881,16 +1101,28 @@ void cast_swiftness(int power)
     if (player_in_water())
     {
         if (you.species == SP_MERFOLK)
+#ifdef JP
+            mpr("あなたが泳いでいる間は、この呪文は役に立たない！");
+#else
             mpr("This spell will not benefit you while you're swimming!");
-        else 
+#endif
+        else
+#ifdef JP
+            mpr("あなたが水中にいる間は、この呪文は役に立たない！");
+#else
             mpr("This spell will not benefit you while you're in water!");
+#endif
 
         return;
     }
 
     if (!you.duration[DUR_SWIFTNESS] && player_movement_speed() <= 6)
     {
+#ifdef JP
+        mpr( "あなたは今よりも速く動くことはできない。" );
+#else
         mpr( "You can't move any more quickly." );
+#endif
         return;
     }
 
@@ -899,8 +1131,12 @@ void cast_swiftness(int power)
     dur_incr = 20 + random2( power );
 
     // Centaurs do have feet and shouldn't get here anyways -- bwr
-    snprintf( info, INFO_SIZE, "You feel quick%s",  
+#ifdef JP
+    snprintf( info, INFO_SIZE, "あなたは素早くなったようだ。" );
+#else
+    snprintf( info, INFO_SIZE, "You feel quick%s",
               (you.species == SP_NAGA) ? "." : " on your feet." );
+#endif
 
     mpr(info);
 
@@ -915,9 +1151,17 @@ void cast_fly(int power)
     int dur_change = 25 + random2(power) + random2(power);
 
     if (!player_is_levitating())
+#ifdef JP
+        mpr("あなたは空中へと飛びあがった。");
+#else
         mpr("You fly up into the air.");
+#endif
     else
+#ifdef JP
+        mpr("あなたは更に体が軽くなった。");
+#else
         mpr("You feel more buoyant.");
+#endif
 
     if (you.levitation + dur_change > 100)
         you.levitation = 100;
@@ -929,7 +1173,7 @@ void cast_fly(int power)
     else
         you.duration[DUR_CONTROLLED_FLIGHT] += dur_change;
 
-    // duration[DUR_CONTROLLED_FLIGHT] makes the game think player 
+    // duration[DUR_CONTROLLED_FLIGHT] makes the game think player
     // wears an amulet of controlled flight
 
     burden_change();
@@ -939,7 +1183,11 @@ void cast_insulation(int power)
 {
     int dur_incr = 10 + random2(power);
 
+#ifdef JP
+    mpr("あなたは絶縁化されたようだ。");
+#else
     mpr("You feel insulated.");
+#endif
 
     if (dur_incr + you.duration[DUR_INSULATION] > 100)
         you.duration[DUR_INSULATION] = 100;
@@ -951,7 +1199,11 @@ void cast_resist_poison(int power)
 {
     int dur_incr = 10 + random2(power);
 
+#ifdef JP
+    mpr("あなたは毒への耐性を得た。");
+#else
     mpr("You feel resistant to poison.");
+#endif
 
     if (dur_incr + you.duration[DUR_RESIST_POISON] > 100)
         you.duration[DUR_RESIST_POISON] = 100;
@@ -966,7 +1218,11 @@ void cast_teleport_control(int power)
     if (you.duration[DUR_CONTROL_TELEPORT] == 0)
         you.attribute[ATTR_CONTROL_TELEPORT]++;
 
+#ifdef JP
+    mpr("あなたはテレポートを制御できるようになったようだ。");
+#else
     mpr("You feel in control.");
+#endif
 
     if (dur_incr + you.duration[DUR_CONTROL_TELEPORT] >= 50)
         you.duration[DUR_CONTROL_TELEPORT] = 50;
@@ -981,17 +1237,26 @@ void cast_ring_of_flames(int power)
     if (you.fire_shield > 50)
         you.fire_shield = 50;
 
+#ifdef JP
+    mpr("あなたの周囲の大気が炎に転じた！");
+#else
     mpr("The air around you leaps into flame!");
+#endif
 
     manage_fire_shield();
 }                               // end cast_ring_of_flames()
 
 void cast_confusing_touch(int power)
 {
+#ifdef JP
+    snprintf( info, INFO_SIZE, "あなたの%sは%s",
+              your_hand(true), (you.confusing_touch ? "輝きを増した。" : "赤く輝いた。") );
+#else
     snprintf( info, INFO_SIZE, "Your %s begin to glow %s.",
-              your_hand(true), (you.confusing_touch ? "brighter" : "red") ); 
+              your_hand(true), (you.confusing_touch ? "brighter" : "red") );
+#endif
 
-    mpr( info ); 
+    mpr( info );
 
     you.confusing_touch += 5 + (random2(power) / 5);
 
@@ -1005,18 +1270,34 @@ bool cast_sure_blade(int power)
     bool success = false;
 
     if (you.equip[EQ_WEAPON] == -1)
+#ifdef JP
+        mpr("あなたは武器を手にしていない！");
+#else
         mpr("You aren't wielding a weapon!");
+#endif
     else if (weapon_skill( you.inv[you.equip[EQ_WEAPON]].base_type,
                      you.inv[you.equip[EQ_WEAPON]].sub_type) != SK_SHORT_BLADES)
     {
+#ifdef JP
+        mpr("あなたはこの武器と結合することはできない。");
+#else
         mpr("You cannot bond with this weapon.");
+#endif
     }
     else
     {
         if (!you.sure_blade)
+#ifdef JP
+            mpr("あなたは武器と一体になった。");
+#else
             mpr("You become one with your weapon.");
+#endif
         else if (you.sure_blade < 25)
+#ifdef JP
+            mpr("あなたの結合はより強固になった。");
+#else
             mpr("Your bond becomes stronger.");
+#endif
 
         you.sure_blade += 8 + (random2(power) / 10);
 

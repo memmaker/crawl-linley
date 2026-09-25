@@ -43,6 +43,10 @@
 #include "view.h"
 #include "wpn-misc.h"
 
+#ifdef USE_TILE
+#include "tiles.h"
+#endif
+
 int raise_corpse( int corps, int corx, int cory, int corps_beh,
                   int corps_hit, int actual );
 
@@ -72,6 +76,9 @@ unsigned char detect_traps( int pow )
 
                 grd[ etx ][ ety ] = trap_category( env.trap[count_x].type );
                 env.map[etx - 1][ety - 1] = '^';
+#ifdef USE_TILE
+                update_gmap(etx-1, ety-1, '^');
+#endif
             }
         }
     }
@@ -87,7 +94,11 @@ unsigned char detect_items( int pow )
     unsigned char items_found = 0;
     const int     map_radius = 8 + random2(8) + pow;
 
+#ifdef JP
+    mpr("あなたはアイテムを探知した！");
+#else
     mpr("You detect items!");
+#endif
 
     for (int i = you.x_pos - map_radius; i < you.x_pos + map_radius; i++)
     {
@@ -99,6 +110,9 @@ unsigned char detect_items( int pow )
             if (igrd[i][j] != NON_ITEM)
             {
                 env.map[i - 1][j - 1] = '~';
+#ifdef USE_TILE
+                update_gmap(i-1, j-1, '~');
+#endif
             }
         }
     }
@@ -114,7 +128,11 @@ unsigned char detect_creatures( int pow )
     unsigned char creatures_found = 0;
     const int     map_radius = 8 + random2(8) + pow;
 
+#ifdef JP
+    mpr("あなたはモンスターを探知した！");
+#else
     mpr("You detect creatures!");
+#endif
 
     for (int i = you.x_pos - map_radius; i < you.x_pos + map_radius; i++)
     {
@@ -128,13 +146,15 @@ unsigned char detect_creatures( int pow )
                 struct monsters *mon = &menv[ mgrd[i][j] ];
 
                 env.map[i - 1][j - 1] = mons_char( mon->type );
-
+#ifdef USE_TILE
+                update_gmap(i-1, j-1, mons_char( mon->type ));
+#endif
                 // Assuming that highly intelligent spellcasters can
                 // detect scyring. -- bwr
                 if (mons_intel( mon->type ) == I_HIGH
                     && mons_flag( mon->type, M_SPELLCASTER ))
                 {
-                    behaviour_event( mon, ME_DISTURB, MHITYOU, 
+                    behaviour_event( mon, ME_DISTURB, MHITYOU,
                                      you.x_pos, you.y_pos );
                 }
             }
@@ -154,7 +174,7 @@ int corpse_rot(int power)
     char minx = you.x_pos - 6;
     char maxx = you.x_pos + 7;
     char miny = you.y_pos - 6;
-    char maxy = you.y_pos + 6;
+    char maxy = you.y_pos + 7;
     char xinc = 1;
     char yinc = 1;
 
@@ -220,7 +240,11 @@ int corpse_rot(int power)
     }
 
     if (you.species != SP_MUMMY)   // josh declares mummies cannot smell {dlb}
+#ifdef JP
+        mpr("あなたは腐敗の臭いを嗅いだ。");
+#else
         mpr("You smell decay.");
+#endif
 
     // should make zombies decay into skeletons
 
@@ -237,7 +261,7 @@ int animate_dead( int power, int corps_beh, int corps_hit, int actual )
     int minx = you.x_pos - 6;
     int maxx = you.x_pos + 7;
     int miny = you.y_pos - 6;
-    int maxy = you.y_pos + 6;
+    int maxy = you.y_pos + 7;
     int xinc = 1;
     int yinc = 1;
 
@@ -296,7 +320,11 @@ int animate_dead( int power, int corps_beh, int corps_hit, int actual )
 
     if (number_raised > 0)
     {
+#ifdef JP
+        mpr("死体が動きだした！");
+#else
         mpr("The dead are walking!");
+#endif
         //else
         //  mpr("The dark energy consumes the dead!"); - no, this
         // means that no corpses were found. Better to say:
@@ -312,6 +340,39 @@ int animate_dead( int power, int corps_beh, int corps_hit, int actual )
 int animate_a_corpse( int axps,  int ayps, int corps_beh, int corps_hit,
                       int class_allowed )
 {
+    if (igrd[axps][ayps] != NON_ITEM)
+    {
+        int objl = igrd[axps][ayps];
+        int hrg = 0;
+        int suc_raised = 0;
+
+        //this searches all the items on the ground for a corpse
+        while (objl != NON_ITEM)
+        {
+            if ( mitm[objl].base_type != OBJ_CORPSES
+                 ||(mitm[objl].base_type == OBJ_CORPSES
+                    && class_allowed == CORPSE_SKELETON
+                    && mitm[objl].sub_type != CORPSE_SKELETON) )
+            {
+                objl = mitm[objl].link;
+                continue;
+            }
+
+            if (raise_corpse(objl, axps, ayps,
+                                      corps_beh, corps_hit, 1 ) > 0);
+#ifdef JP
+            mpr("死体が動きだした！");
+#else
+            mpr("The dead are walking!");
+#endif
+            break;
+        }
+    }
+
+    return 0;
+}
+/*
+{
     if (igrd[axps][ayps] == NON_ITEM)
         return 0;
     else if (mitm[igrd[axps][ayps]].base_type != OBJ_CORPSES)
@@ -320,16 +381,21 @@ int animate_a_corpse( int axps,  int ayps, int corps_beh, int corps_hit,
              && mitm[igrd[axps][ayps]].sub_type != CORPSE_SKELETON)
         return 0;
     else
-        if (raise_corpse( igrd[axps][ayps], axps, ayps, 
+        if (raise_corpse( igrd[axps][ayps], axps, ayps,
                           corps_beh, corps_hit, 1 ) > 0)
     {
+#ifdef JP
+        mpr("死体が動きだした！");
+#else
         mpr("The dead are walking!");
+#endif
     }
 
     return 0;
 }                               // end animate_a_corpse()
+*/
 
-int raise_corpse( int corps, int corx, int cory, 
+int raise_corpse( int corps, int corx, int cory,
                   int corps_beh, int corps_hit, int actual )
 {
     int returnVal = 1;
@@ -374,7 +440,11 @@ void cast_twisted(int power, int corps_beh, int corps_hit)
 
     if (igrd[you.x_pos][you.y_pos] == NON_ITEM)
     {
+#ifdef JP
+        mpr("そこには何もない！");
+#else
         mpr("There's nothing here!");
+#endif
         return;
     }
 
@@ -401,27 +471,40 @@ void cast_twisted(int power, int corps_beh, int corps_hit)
     }
 
 #if DEBUG_DIAGNOSTICS
+#ifdef JP
     snprintf( info, INFO_SIZE, "Mass for abomination: %d", total_mass);
+#else
+    snprintf( info, INFO_SIZE, "Mass for abomination: %d", total_mass);
+#endif
     mpr( info, MSGCH_DIAGNOSTICS );
 #endif
 
-    // This is what the old statement pretty much boils down to, 
+    // This is what the old statement pretty much boils down to,
     // the average will be approximately 10 * power (or about 1000
     // at the practical maximum).  That's the same as the mass
-    // of a hippogriff, a spiny frog, or a steam dragon.  Thus, 
+    // of a hippogriff, a spiny frog, or a steam dragon.  Thus,
     // material components are far more important to this spell. -- bwr
     total_mass += roll_dice( 20, power );
 
 #if DEBUG_DIAGNOSTICS
+#ifdef JP
     snprintf( info, INFO_SIZE, "Mass including power bonus: %d", total_mass);
+#else
+    snprintf( info, INFO_SIZE, "Mass including power bonus: %d", total_mass);
+#endif
     mpr( info, MSGCH_DIAGNOSTICS );
 #endif
 
     if (total_mass < 400 + roll_dice( 2, 500 )
         || num_corpses < (coinflip() ? 3 : 2))
     {
+#ifdef JP
+        mpr("呪文は失敗した。");
+        mpr("死体は崩れてドロドロの汚物になってしまった。");
+#else
         mpr("The spell fails.");
         mpr("The corpses collapse into a pulpy mess.");
+#endif
         return;
     }
 
@@ -439,14 +522,22 @@ void cast_twisted(int power, int corps_beh, int corps_hit)
                               corps_hit, colour );
 
     if (mon == -1)
+#ifdef JP
+        mpr("死体は崩れてドロドロの汚物になってしまった。");
+#else
         mpr("The corpses collapse into a pulpy mess.");
+#endif
     else
     {
+#ifdef JP
+        mpr("死体の山は混じり合って、身悶えする肉塊に結合した！");
+#else
         mpr("The heap of corpses melds into an agglomeration of writhing flesh!");
+#endif
         if (type_resurr == MONS_ABOMINATION_LARGE)
         {
             menv[mon].hit_dice = 8 + total_mass / ((colour == LIGHTRED) ? 500 :
-                                                   (colour == RED)      ? 1000 
+                                                   (colour == RED)      ? 1000
                                                                         : 2500);
 
             if (menv[mon].hit_dice > 30)
@@ -498,12 +589,20 @@ bool brand_weapon(int which_brand, int power)
     switch (which_brand)        // use SPECIAL_WEAPONS here?
     {
     case SPWPN_FLAMING:
+#ifdef JP
+        strcat(info, "から炎が迸った！");
+#else
         strcat(info, " bursts into flame!");
+#endif
         duration_affected = 7;
         break;
 
     case SPWPN_FREEZING:
+#ifdef JP
+        strcat(info, "は蒼く輝いた。");
+#else
         strcat(info, " glows blue.");
+#endif
         duration_affected = 7;
         break;
 
@@ -511,12 +610,20 @@ bool brand_weapon(int which_brand, int power)
         if (wpn_type == DVORP_CRUSHING)
             return false;
 
+#ifdef JP
+        strcat(info, "は毒を滴らせ始めた。");
+#else
         strcat(info, " starts dripping with poison.");
+#endif
         duration_affected = 15;
         break;
 
     case SPWPN_DRAINING:
+#ifdef JP
+        strcat(info, "は邪悪なエネルギーに満ちた。");
+#else
         strcat(info, " crackles with unholy energy.");
+#endif
         duration_affected = 12;
         break;
 
@@ -524,27 +631,53 @@ bool brand_weapon(int which_brand, int power)
         if (wpn_type != DVORP_SLICING)
             return false;
 
+#ifdef JP
+        strcat(info, "は銀色に輝いて、非常に鋭くなったようだ。");
+#else
         strcat(info, " glows silver and looks extremely sharp.");
+#endif
         duration_affected = 10;
         break;
 
     case SPWPN_DISTORTION:      //jmf: added for Warp Weapon
+#ifdef JP
+        strcat(info, "は");
+        strcat( info, coinflip() ? "奇妙に" : "不思議に" );
+#else
         strcat(info, " seems to ");
+#endif
 
         temp_rand = random2(6);
+#ifdef JP
+        strcat(info, (temp_rand == 0) ? "捻れた" :
+                     (temp_rand == 1) ? "曲がった" :
+                     (temp_rand == 2) ? "揺れた" :
+                     (temp_rand == 3) ? "収縮した" :
+                     (temp_rand == 4) ? "ぐらついた"
+                                      : "痙攣した");
+#else
         strcat(info, (temp_rand == 0) ? "twist" :
                      (temp_rand == 1) ? "bend" :
                      (temp_rand == 2) ? "vibrate" :
                      (temp_rand == 3) ? "flex" :
                      (temp_rand == 4) ? "wobble"
                                       : "twang");
+#endif
 
+#ifdef JP
+        strcat( info, "。" );
+#else
         strcat( info, coinflip() ? " oddly." : " strangely." );
+#endif
         duration_affected = 5;
 
         // This brand is insanely powerful, this isn't even really
         // a start to balancing it, but it needs something. -- bwr
+#ifdef JP
+        miscast_effect(SPTYP_TRANSLOCATION, 9, 90, 100, "歪曲の効果");
+#else
         miscast_effect(SPTYP_TRANSLOCATION, 9, 90, 100, "a distortion effect");
+#endif
         break;
 
     case SPWPN_DUMMY_CRUSHING:  //jmf: added for Maxwell's Silver Hammer
@@ -552,7 +685,11 @@ bool brand_weapon(int which_brand, int power)
             return false;
 
         which_brand = SPWPN_VORPAL;
+#ifdef JP
+        strcat(info, "は銀色に輝いて、より重量を増したようだ。");
+#else
         strcat(info, " glows silver and feels heavier.");
+#endif
         duration_affected = 7;
         break;
     }
@@ -594,7 +731,11 @@ bool restore_stat(unsigned char which_stat, bool suppress_msg)
     char *ptr_redraw = 0;       // NULL {dlb}
 
     if (!suppress_msg)
+#ifdef JP
+        strcpy(info, "あなたは");
+#else
         strcpy(info, "You feel your ");
+#endif
 
     if (which_stat == STAT_RANDOM)
         which_stat = random2(NUM_STATS);
@@ -603,7 +744,11 @@ bool restore_stat(unsigned char which_stat, bool suppress_msg)
     {
     case STAT_STRENGTH:
         if (!suppress_msg)
+#ifdef JP
+            strcat(info, "腕力");
+#else
             strcat(info, "strength");
+#endif
 
         ptr_stat = &you.strength;
         ptr_stat_max = &you.max_strength;
@@ -612,7 +757,11 @@ bool restore_stat(unsigned char which_stat, bool suppress_msg)
 
     case STAT_DEXTERITY:
         if (!suppress_msg)
+#ifdef JP
+            strcat(info, "器用さ");
+#else
             strcat(info, "dexterity");
+#endif
 
         ptr_stat = &you.dex;
         ptr_stat_max = &you.max_dex;
@@ -621,7 +770,11 @@ bool restore_stat(unsigned char which_stat, bool suppress_msg)
 
     case STAT_INTELLIGENCE:
         if (!suppress_msg)
+#ifdef JP
+            strcat(info, "知性");
+#else
             strcat(info, "intelligence");
+#endif
 
         ptr_stat = &you.intel;
         ptr_stat_max = &you.max_intel;
@@ -633,7 +786,11 @@ bool restore_stat(unsigned char which_stat, bool suppress_msg)
     {
         if (!suppress_msg)
         {
+#ifdef JP
+            strcat(info, "が回復した。");
+#else
             strcat(info, " returning.");
+#endif
             mpr(info);
         }
 
@@ -652,7 +809,11 @@ void turn_undead(int pow)
 {
     struct monsters *monster;
 
+#ifdef JP
+    mpr("あなたはアンデッドの退散を試みた。");
+#else
     mpr("You attempt to repel the undead.");
+#endif
 
     for (int tu = 0; tu < MAX_MONSTERS; tu++)
     {
@@ -667,17 +828,25 @@ void turn_undead(int pow)
         {
             if (check_mons_resist_magic( monster, pow ))
             {
+#ifdef JP
+                simple_monster_message( monster, "は呪文に抵抗した。" );
+#else
                 simple_monster_message( monster, " resists." );
+#endif
                 continue;
             }
 
             if (!mons_add_ench(monster, ENCH_FEAR))
                 continue;
 
+#ifdef JP
+            simple_monster_message( monster, "は遁走した！" );
+#else
             simple_monster_message( monster, " is repelled!" );
+#endif
 
             //mv: must be here to work
-            behaviour_event( monster, ME_SCARE, MHITYOU ); 
+            behaviour_event( monster, ME_SCARE, MHITYOU );
 
             // reduce power based on monster turned
             pow -= monster->hit_dice * 3;
@@ -692,7 +861,11 @@ void holy_word(int pow)
 {
     struct monsters *monster;
 
+#ifdef JP
+    mpr("あなたは強大な力の言葉を口にした！");
+#else
     mpr("You speak a Word of immense power!");
+#endif
 
     // doubt this will ever happen, but it's here as a safety -- bwr
     if (pow > 300)
@@ -708,7 +881,11 @@ void holy_word(int pow)
         if (mons_holiness(monster->type) == MH_UNDEAD
                 || mons_holiness(monster->type) == MH_DEMONIC)
         {
+#ifdef JP
+            simple_monster_message(monster, "は激しく痙攣した！");
+#else
             simple_monster_message(monster, " convulses!");
+#endif
 
             hurt_monster( monster, roll_dice( 2, 15 ) + (random2(pow) / 3) );
 
@@ -733,7 +910,11 @@ void cast_toxic_radiance(void)
 {
     struct monsters *monster;
 
+#ifdef JP
+    mpr("あなたはぼんやりとした緑の光に輝いた！");
+#else
     mpr("You radiate a sickly green light!");
+#endif
 
     show_green = GREEN;
     viewwindow(1, false);
@@ -743,11 +924,19 @@ void cast_toxic_radiance(void)
     // determine whether the player is hit by the radiance: {dlb}
     if (you.invis)
     {
+#ifdef JP
+        mpr("光はあなたの体をまっすぐに通過した。");
+#else
         mpr("The light passes straight through your body.");
+#endif
     }
     else if (!player_res_poison())
     {
+#ifdef JP
+        mpr("あなたは毒に冒された。");
+#else
         mpr("You feel rather sick.");
+#endif
         poison_player(2);
     }
 
@@ -762,16 +951,28 @@ void cast_toxic_radiance(void)
             {
                 poison_monster(monster, true);
 
+#ifdef JP
                 if (coinflip()) // 50-50 chance for a "double hit" {dlb}
+#else
+                if (coinflip()) // 50-50 chance for a "double hit" {dlb}
+#endif
                     poison_monster(monster, true);
 
             }
             else if (player_see_invis())
             {
                 // message player re:"miss" where appropriate {dlb}
+#ifdef JP
+                strcpy(info, "光は");
+#else
                 strcpy(info, "The light passes through ");
+#endif
                 strcat(info, ptr_monam( monster, DESC_NOCAP_THE ));
+#ifdef JP
+                strcat(info, "の体を透過した。");
+#else
                 strcat(info, ".");
+#endif
                 mpr(info);
             }
         }
@@ -789,7 +990,11 @@ void cast_refrigeration(int pow)
 
     const dice_def  dam_dice( 3, 5 + pow / 10 );
 
+#ifdef JP
+    mpr("あなたの周辺から熱が奪われた。");
+#else
     mpr("The heat is drained from your surroundings.");
+#endif
 
     show_green = LIGHTCYAN;
     viewwindow(1, false);
@@ -802,11 +1007,15 @@ void cast_refrigeration(int pow)
 
     if (hurted > 0)
     {
+#ifdef JP
+        mpr("あなたは非常な寒さを覚えた。");
+#else
         mpr("You feel very cold.");
+#endif
         ouch( hurted, 0, KILLED_BY_FREEZING );
 
-        // Note: this used to be 12!... and it was also applied even if 
-        // the player didn't take damage from the cold, so we're being 
+        // Note: this used to be 12!... and it was also applied even if
+        // the player didn't take damage from the cold, so we're being
         // a lot nicer now.  -- bwr
         scrolls_burn( 5, OBJ_POTIONS );
     }
@@ -821,7 +1030,11 @@ void cast_refrigeration(int pow)
 
         if (mons_near(monster))
         {
-            snprintf( info, INFO_SIZE, "You freeze %s.", 
+#ifdef JP
+            snprintf( info, INFO_SIZE, "あなたは%sを凍りつかせた。",
+#else
+            snprintf( info, INFO_SIZE, "You freeze %s.",
+#endif
                       ptr_monam( monster, DESC_NOCAP_THE ));
 
             mpr(info);
@@ -854,7 +1067,11 @@ void drain_life(int pow)
     int hurted = 0;
     struct monsters *monster = 0;       // NULL {dlb}
 
+#ifdef JP
+    mpr("あなたは周囲から生命力を汲み上げた。");
+#else
     mpr("You draw life from your surroundings.");
+#endif
 
     // Incoming power to this function is skill in INVOCATIONS, so
     // we'll add an assert here to warn anyone who tries to use
@@ -881,9 +1098,17 @@ void drain_life(int pow)
 
         if (mons_near(monster))
         {
+#ifdef JP
+            strcpy(info, "あなたは");
+#else
             strcpy(info, "You draw life from ");
+#endif
             strcat(info, ptr_monam( monster, DESC_NOCAP_THE ));
+#ifdef JP
+            strcat(info, "から生命力を吸い取った。");
+#else
             strcat(info, ".");
+#endif
             mpr(info);
 
             hurted = 3 + random2(7) + random2(pow);
@@ -906,7 +1131,11 @@ void drain_life(int pow)
 
     if (hp_gain)
     {
+#ifdef JP
+        mpr( "あなたは体の中が生命で満たされるのを感じた。" );
+#else
         mpr( "You feel life flooding into your body." );
+#endif
         inc_hp( hp_gain, false );
     }
 }                               // end drain_life()
@@ -919,7 +1148,11 @@ int vampiric_drain(int pow)
     struct dist vmove;
 
   dirc:
+#ifdef JP
+    mpr("どちらの方向に？", MSGCH_PROMPT);
+#else
     mpr("Which direction?", MSGCH_PROMPT);
+#endif
     direction( vmove, DIR_DIR, TARG_ENEMY );
 
     if (!vmove.isValid)
@@ -932,13 +1165,21 @@ int vampiric_drain(int pow)
 
     if (vmove.dx == 0 && vmove.dy == 0)
     {
+#ifdef JP
+        mpr("あなたはそれをできない。");
+#else
         mpr("You can't do that.");
+#endif
         goto dirc;
     }
 
     if (mgr == NON_MONSTER)
     {
+#ifdef JP
+        mpr("そこには何もいない！");
+#else
         mpr("There isn't anything there!");
+#endif
         return -1;
     }
 
@@ -948,7 +1189,11 @@ int vampiric_drain(int pow)
 
     if (holy == MH_UNDEAD || holy == MH_DEMONIC)
     {
+#ifdef JP
+        mpr("うあアアァァァッ！");
+#else
         mpr("Aaaarggghhhhh!");
+#endif
         dec_hp(random2avg(39, 2) + 10, false);
         return -1;
     }
@@ -976,9 +1221,17 @@ int vampiric_drain(int pow)
 
     hurt_monster(monster, inflicted);
 
+#ifdef JP
+    strcpy(info, "あなたは");
+#else
     strcpy(info, "You feel life coursing from ");
+#endif
     strcat(info, ptr_monam( monster, DESC_NOCAP_THE ));
+#ifdef JP
+    strcat(info, "から生命力が流れ込んでくるのを感じた。");
+#else
     strcat(info, " into your body!");
+#endif
     mpr(info);
 
     print_wounds(monster);
@@ -1003,7 +1256,11 @@ char burn_freeze(int pow, char flavour)
 
     while (mgr == NON_MONSTER)
     {
+#ifdef JP
+        mpr("どちらの方向に？", MSGCH_PROMPT);
+#else
         mpr("Which direction?", MSGCH_PROMPT);
+#endif
         direction( bmove, DIR_DIR, TARG_ENEMY );
 
         if (!bmove.isValid)
@@ -1023,26 +1280,44 @@ char burn_freeze(int pow, char flavour)
         // Yes, this is strange, but it does maintain the original behaviour
         if (mgr == NON_MONSTER)
         {
+#ifdef JP
+            mpr("十分なだけの近くには何もいない！");
+#else
             mpr("There isn't anything close enough!");
+#endif
             return -1;
         }
     }
 
     monster = &menv[mgr];
 
+#ifdef JP
+    strcpy(info, "あなたは");
+    strcat(info, ptr_monam( monster, DESC_NOCAP_THE ));
+    strcat(info, "を");
+    strcat(info, (flavour == BEAM_FIRE)        ? "燃やした" :
+                 (flavour == BEAM_COLD)        ? "凍らせた" :
+                 (flavour == BEAM_MISSILE)     ? "砕いた" :
+                 (flavour == BEAM_ELECTRICITY) ? "感電させた"
+                                               : "______");
+#else
     strcpy(info, "You ");
     strcat(info, (flavour == BEAM_FIRE)        ? "burn" :
                  (flavour == BEAM_COLD)        ? "freeze" :
                  (flavour == BEAM_MISSILE)     ? "crush" :
                  (flavour == BEAM_ELECTRICITY) ? "zap"
                                                : "______");
-
     strcat(info, " ");
     strcat(info, ptr_monam( monster, DESC_NOCAP_THE ));
+#endif
+#ifdef JP
+    strcat(info, "。");
+#else
     strcat(info, ".");
+#endif
     mpr(info);
 
-    int hurted = roll_dice( 1, 3 + pow / 3 ); 
+    int hurted = roll_dice( 1, 3 + pow / 3 );
 
     struct bolt beam;
 
@@ -1083,7 +1358,7 @@ char burn_freeze(int pow, char flavour)
 //              postal on the caster (after taking into account
 //              chance of that happening to unskilled casters
 //              anyway)
-int summon_elemental(int pow, unsigned char restricted_type,
+int summon_elemental(int pow, int restricted_type,
                      unsigned char unfriendly)
 {
     int type_summoned = MONS_PROGRAM_BUG;       // error trapping {dlb}
@@ -1100,9 +1375,13 @@ int summon_elemental(int pow, unsigned char restricted_type,
     if (numsc > ENCH_ABJ_VI)
         numsc = ENCH_ABJ_VI;
 
-    for (;;) 
+    for (;;)
     {
+#ifdef JP
+        mpr("どの方位の地形を素材として召換しますか？", MSGCH_PROMPT);
+#else
         mpr("Summon from material in which direction?", MSGCH_PROMPT);
+#endif
 
         direction( smove, DIR_DIR );
 
@@ -1118,10 +1397,18 @@ int summon_elemental(int pow, unsigned char restricted_type,
         targ_y = you.y_pos + dir_y;
 
         if (mgrd[ targ_x ][ targ_y ] != NON_MONSTER)
+#ifdef JP
+            mpr("そこでは駄目だ！");
+#else
             mpr("Not there!");
+#endif
         else if (dir_x == 0 && dir_y == 0)
+#ifdef JP
+            mpr("あなたは自身の体から精霊を召換することはできない！");
+#else
             mpr("You can't summon an elemental from yourself!");
-        else 
+#endif
+        else
             break;
     }
 
@@ -1193,7 +1480,11 @@ int summon_elemental(int pow, unsigned char restricted_type,
                                        targ_x, targ_y, MHITYOU, 250 );
 
         if (summ_success >= 0)
+#ifdef JP
+            mpr( "精霊は召換されたことを喜んではいない様子だ。" );
+#else
             mpr( "The elemental doesn't seem to appreciate being summoned." );
+#endif
     }
     else
     {
@@ -1280,16 +1571,24 @@ void summon_scorpions(int pow)
             if (create_monster( MONS_SCORPION, ENCH_ABJ_III, BEH_HOSTILE,
                                 you.x_pos, you.y_pos, MHITYOU, 250 ) != -1)
             {
+#ifdef JP
+                mpr("サソリが現れた。あまり上機嫌には見えない。");
+#else
                 mpr("A scorpion appears. It doesn't look very happy.");
+#endif
             }
         }
         else
         {
             if (create_monster( MONS_SCORPION, ENCH_ABJ_III, BEH_FRIENDLY,
-                                you.x_pos, you.y_pos, 
+                                you.x_pos, you.y_pos,
                                 you.pet_target, 250 ) != -1)
             {
+#ifdef JP
+                mpr("サソリが現れた。");
+#else
                 mpr("A scorpion appears.");
+#endif
             }
         }
     }
@@ -1306,35 +1605,75 @@ void summon_ice_beast_etc(int pow, int ibc)
     switch (ibc)
     {
     case MONS_ICE_BEAST:
+#ifdef JP
+        mpr("冷たい風があなたの周りを吹きぬけた。");
+#else
         mpr("A chill wind blows around you.");
+#endif
         break;
 
     case MONS_IMP:
+#ifdef JP
+        mpr("忌まわしい小悪魔がひと吹きの炎から現れた。");
+#else
         mpr("A beastly little devil appears in a puff of flame.");
+#endif
         break;
 
     case MONS_WHITE_IMP:
+#ifdef JP
+        mpr("忌まわしい小悪魔がひと吹きの冷気から現れた。");
+#else
         mpr("A beastly little devil appears in a puff of frigid air.");
+#endif
         break;
 
     case MONS_SHADOW_IMP:
+#ifdef JP
+        mpr("影のような存在が空間から出現した。");
+#else
         mpr("A shadowy apparition takes form in the air.");
+#endif
         break;
 
     case MONS_ANGEL:
+#ifdef JP
+        mpr("あなたはジンの領域への門を開いた！");
+#else
         mpr("You open a gate to the realm of Zin!");
+#endif
+
+#ifdef V_FIX
+            beha = BEH_GOD_GIFT; // modified 2005/10/02
+#endif
         break;
 
     case MONS_DAEVA:
+#ifdef JP
+        mpr("あなたは鮮やかな黄金の光に目をくらませた。");
+#else
         mpr("You are momentarily dazzled by a brilliant golden light.");
+#endif
+
+#ifdef V_FIX
+            beha = BEH_GOD_GIFT; // modified 2005/10/02
+#endif
         break;
 
     default:
+#ifdef JP
+        mpr("デーモンが現れた！");
+#else
         mpr("A demon appears!");
+#endif
         if (random2(pow) < 4)
         {
             beha = BEH_HOSTILE;
+#ifdef JP
+            mpr("それはあまり上機嫌には見えない。");
+#else
             mpr("It doesn't look very happy.");
+#endif
         }
         break;
 
@@ -1410,7 +1749,7 @@ bool summon_swarm( int pow, bool unfriendly, bool god_gift )
         else if (!unfriendly && random2(pow) > 7)
             behaviour = BEH_FRIENDLY;
 
-        if (create_monster( thing_called, ENCH_ABJ_III, behaviour, 
+        if (create_monster( thing_called, ENCH_ABJ_III, behaviour,
                             you.x_pos, you.y_pos, MHITYOU, 250 ))
         {
             summoned = true;
@@ -1428,7 +1767,11 @@ void summon_undead(int pow)
     int numsc = 1 + random2(pow) / 30 + random2(pow) / 30;
     numsc = stepdown_value(numsc, 2, 2, 6, 8);  //see stuff.cc {dlb}
 
+#ifdef JP
+    mpr("あなたは味方となるアンデッドを呼び出した！");
+#else
     mpr("You call on the undead to aid you!");
+#endif
 
     for (int scount = 0; scount < numsc; scount++)
     {
@@ -1443,7 +1786,11 @@ void summon_undead(int pow)
             if (create_monster( thing_called, ENCH_ABJ_V, BEH_HOSTILE,
                                 you.x_pos, you.y_pos, MHITYOU, 250 ) != -1)
             {
+#ifdef JP
+                mpr("あなたは敵対的な存在に気がついた。");
+#else
                 mpr("You sense a hostile presence.");
+#endif
             }
         }
         else
@@ -1451,7 +1798,11 @@ void summon_undead(int pow)
             if (create_monster( thing_called, ENCH_ABJ_V, BEH_FRIENDLY,
                                 you.x_pos, you.y_pos, you.pet_target, 250 ) != -1)
             {
+#ifdef JP
+                mpr("実体のない何者かが宙に浮かび上がった。");
+#else
                 mpr("An insubstantial figure forms in the air.");
+#endif
             }
         }
     }                           // end for loop
@@ -1472,7 +1823,11 @@ void summon_things( int pow )
     int numsc = 2 + (random2(pow) / 10) + (random2(pow) / 10);
 
     if (one_chance_in(3) && !lose_stat( STAT_INTELLIGENCE, 1, true ))
+#ifdef JP
+        mpr("あなたの呼びかけに応える者はいなかった。");
+#else
         mpr("Your call goes unanswered.");
+#endif
     else
     {
         numsc = stepdown_value( numsc, 2, 2, 6, -1 );
@@ -1506,8 +1861,12 @@ void summon_things( int pow )
             numsc--;
         }
 
-        snprintf( info, INFO_SIZE, "Some Thing%s answered your call!", 
+#ifdef JP
+        snprintf( info, INFO_SIZE, "何者かがあなたの呼びかけに応えた！" );
+#else
+        snprintf( info, INFO_SIZE, "Some Thing%s answered your call!",
                   (numsc + big_things > 1) ? "s" : "" );
+#endif
 
         mpr(info);
     }
