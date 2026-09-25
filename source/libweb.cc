@@ -758,37 +758,11 @@ MSG             |
 
     if (Options.show_items[0] != 0)
     {
-
-        if (Options.use_qv_mode)
-        {
-            item_x = (region_msg->ex) / TILE_X;
-            item_y = (win_main->wy - region_msg->ey) / TILE_Y;
-            while(item_x * item_y < 40) item_y++;
-            region_item = new TileRegionClass(item_x, item_y, TILE_X, TILE_Y);
-            win_main->placeRegion (region_item, 0, region_msg, PLACE_BOTTOM,
-                               0, 0, 0, 0);
-        }
-        else
-        if (region_msg->ex < region_tile->ex)
-        {
-            item_x = (win_main->wx - region_map->sx) / TILE_X;
-            item_y = (win_main->wy - region_map->ey) / TILE_Y;
-            while(item_x * item_y < 40) item_y++;
-
-            region_item = new TileRegionClass(item_x, item_y, TILE_X, TILE_Y);
-            win_main->placeRegion (region_item, 0, region_map, PLACE_BOTTOM,
-                               0, 0, 0, 0);
-        }
-        else
-        {
-            item_x = (win_main->wx - region_msg->ex) / TILE_X;
-            item_y = (win_main->wy - region_msg->sy) / TILE_Y;
-            while(item_x * item_y < 40) item_y++;
-
-            region_item = new TileRegionClass(item_x, item_y, TILE_X, TILE_Y);
-            win_main->placeRegion (region_item, 0, region_msg, PLACE_RIGHT,
-                               0, 0, 0, 0);
-        }
+        // web: the page shows the items in their own window, a fixed
+        // grid (8 x 8 >= MAX_ITEMLIST) instead of the X11 leftover space
+        region_item = new TileRegionClass(8, 8, TILE_X, TILE_Y);
+        win_main->placeRegion (region_item, 0, region_map, PLACE_BOTTOM,
+                           0, 0, 0, 0);
         region_item->init_backbuf();
     }
 #endif

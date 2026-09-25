@@ -33,8 +33,9 @@ SAVING = '''<ul>
 </ul>'''
 
 WEB = '''<ul>
-<li><strong>Windows:</strong> the tile view top left (32×32 tiles from the 2005 tile version), Messages under it, the character on the right, and the level map with your items below it. Lists, menus and help appear as a box over the game, in the IBM VGA 8×16 font (<a href="https://int10h.org/oldschool-pc-fonts/" target="_blank" rel="noopener">The Oldschool PC Font Resource</a>, CC BY-SA 4.0).</li>
+<li><strong>Windows:</strong> the tile view top left (32×32 tiles from the 2005 tile version), Messages under it, the character on the right, the level map below it and your inventory (the item types from <code>show_items</code> in init.txt) at the bottom right. Lists, menus and help appear as a box over the game, in the IBM VGA 8×16 font (<a href="https://int10h.org/oldschool-pc-fonts/" target="_blank" rel="noopener">The Oldschool PC Font Resource</a>, CC BY-SA 4.0).</li>
 <li><strong>Resize windows</strong> by dragging the gaps between them. <em>Reset windows</em> puts everything back.</li>
+<li><strong>Inventory window:</strong> click an item to use it (eat, wield, drop…), right-click to describe it. Which item classes it shows is <code>show_items</code> in init.txt; every class is on by default.</li>
 <li><strong>Zoom:</strong> <em>Zoom −</em> / <em>Zoom +</em> change the size of the tiles (scaled without blurring). Hover over a text window's title to show its <em>A−</em> / <em>A+</em> buttons; the text is sharpest at 16 and 32 px.</li>
 <li><strong>No sound:</strong> the original game has none.</li>
 <li><strong>Keys:</strong> the arrow keys, the numeric keypad or the vi keys (<kbd>h</kbd><kbd>j</kbd><kbd>k</kbd><kbd>l</kbd><kbd>y</kbd><kbd>u</kbd><kbd>b</kbd><kbd>n</kbd>) move you; Shift+direction runs.</li>

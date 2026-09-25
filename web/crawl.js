@@ -10,9 +10,9 @@
 	/* region roles (libweb.cc) and where they are drawn */
 	var R_TILE = 0, R_MSG = 1, R_STAT = 2, R_MAP = 3, R_ITEM = 4, R_CRT = 5, R_ITEM2 = 6;
 	var CANVAS = ['#t-map canvas', '#t-msg canvas', '#t-stat canvas', '#t-inv canvas.mini',
-		'#t-inv canvas.items', '#pop canvas.crt', '#pop canvas.items'];
+		'#t-items canvas', '#pop canvas.crt', '#pop canvas.items'];
 	var TEXT_WIN = { 1: 'msg', 2: 'stat', 5: 'pop' };  /* text role -> font setting */
-	var WIN = ['map', 'msg', 'stat', 'inv'];
+	var WIN = ['map', 'msg', 'stat', 'inv', 'items'];
 	var ROOT = '/crawl-linley', DIR = ROOT + '/save', LAYOUT_FILE = DIR + '/web-layout.json';
 	var FONT = 'Web437_IBM_VGA_8x16';
 	var GUT = 6, TITLE_H = 20, BORDER = 2;
@@ -219,13 +219,14 @@
 	/*
 	 *   +--------------------+--------+   side:   x of left part | right column
 	 *   |                    | stats  |   bottom: y of map | messages (left part)
-	 *   |     tile view      +--------+   stat:   y of stats | minimap and items
-	 *   |                    |minimap |
-	 *   +--------------------+ items  |
-	 *   |      messages      |        |
+	 *   |     tile view      +--------+   stat:   y of stats | minimap
+	 *   |                    |minimap |   items:  y of minimap | inventory
+	 *   +--------------------+--------+
+	 *   |      messages      | items  |
 	 *   +--------------------+--------+
 	 */
-	var SPLITS = ['bottom', 'side', 'stat'];
+	var SPLITS = ['bottom', 'side', 'stat', 'items'];
+	var ITEMS_H = 8 * 32 + TITLE_H + BORDER;    /* the 8 x 8 item grid (libweb.cc) */
 
 	function areaSize() {
 		var g = $('game');
@@ -241,7 +242,8 @@
 		var mapW = 544 * zoom + BORDER, mapH = 544 * zoom + BORDER;
 		return { v: 1, zoom: zoom, mini: 2, items: 1, auto: true, font: { msg: font, stat: font, pop: font },
 			split: { side: clamp((mapW + GUT / 2) / W, 0.3, 0.85), bottom: clamp((mapH + GUT / 2) / H, 0.3, 0.9),
-				stat: clamp((18 * font + TITLE_H + BORDER + GUT / 2) / H, 0.2, 0.8) } };
+				stat: clamp((18 * font + TITLE_H + BORDER + GUT / 2) / H, 0.2, 0.8),
+				items: clamp(1 - (ITEMS_H + GUT / 2) / H, 0.3, 0.95) } };
 	}
 
 	function loadLayout() {
@@ -276,12 +278,15 @@
 		var xs = clamp(Math.round(W * s.side), 200, W - 100);
 		var yb = clamp(Math.round(H * s.bottom), 100, H - 60);
 		var ys = clamp(Math.round(H * s.stat), 60, H - 60);
+		var yi = clamp(Math.round(H * s.items), ys + 40, H - 40);
 		return {
 			map: [0, 0, xs - h, yb - h],
 			msg: [0, yb + h, xs - h, H - yb - h],
 			stat: [xs + h, 0, W - xs - h, ys - h],
-			inv: [xs + h, ys + h, W - xs - h, H - ys - h],
-			split: { side: [xs - h, 0, GUT, H], bottom: [0, yb - h, xs - h, GUT], stat: [xs + h, ys - h, W - xs - h, GUT] }
+			inv: [xs + h, ys + h, W - xs - h, yi - ys - GUT],
+			items: [xs + h, yi + h, W - xs - h, H - yi - h],
+			split: { side: [xs - h, 0, GUT, H], bottom: [0, yb - h, xs - h, GUT], stat: [xs + h, ys - h, W - xs - h, GUT],
+				items: [xs + h, yi - h, W - xs - h, GUT] }
 		};
 	}
 
@@ -319,6 +324,7 @@
 			if (k === 'bottom') L.split.bottom = clamp((ev.clientY - g.top) / H, 0.1, 0.9);
 			if (k === 'side') L.split.side = clamp((ev.clientX - g.left) / g.width, 0.1, 0.9);
 			if (k === 'stat') L.split.stat = clamp((ev.clientY - g.top) / H, 0.1, 0.9);
+			if (k === 'items') L.split.items = clamp((ev.clientY - g.top) / H, 0.1, 0.95);
 			L.auto = false;
 			applyDom();
 		}

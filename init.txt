@@ -30,7 +30,7 @@
 #    }		Misc items
 #    X		Corpses
 
-show_items = %!?/
+show_items = )([/%?=!+\}
 
 
 # character name defaults to the previous game's
