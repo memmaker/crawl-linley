@@ -42,7 +42,8 @@
 	.win canvas { display: block; }
 	.win > .body { display: flex; flex-direction: column; align-items: center; gap: 6px; }
 	#t-map > .body { justify-content: center; }
-	#t-msg > .body, #t-stat > .body { align-items: flex-start; }
+	#t-msg > .body, #t-stat > .body, #t-vis > .body { align-items: flex-start; }
+	#t-vis > .body { display: block; }
 	canvas.img, #t-map canvas { image-rendering: pixelated; }
 	#pop { position: absolute; z-index: 3; background: #000; border: 1px solid var(--dim); box-shadow: 0 6px 24px rgba(0,0,0,.7); }
 	#pop canvas { display: block; }
@@ -109,15 +110,12 @@
 <div id="status">Loading Linley's Dungeon Crawl…</div>
 
 <div id="game" hidden>
-	<div class="win" id="t-map"><div class="body"><canvas></canvas></div></div>
+	<div class="win" id="t-map"><div class="t"><span class="name">Map</span></div><div class="body"><canvas></canvas></div></div>
 	<div class="win" id="t-msg"><div class="t"><span class="name">Messages</span><span class="zoom"><button class="zout" title="Smaller text">A−</button><button class="zin" title="Bigger text">A+</button></span></div><div class="body"><canvas></canvas></div></div>
 	<div class="win" id="t-stat"><div class="t"><span class="name">Character</span><span class="zoom"><button class="zout" title="Smaller text">A−</button><button class="zin" title="Bigger text">A+</button></span></div><div class="body"><canvas></canvas></div></div>
 	<div class="win" id="t-inv"><div class="t"><span class="name">Level map</span></div><div class="body"><canvas class="mini img"></canvas></div></div>
+	<div class="win" id="t-vis"><div class="t"><span class="name">Visible</span></div><div class="body wm-list" id="vis"></div></div>
 	<div class="win" id="t-items"><div class="t"><span class="name">Inventory</span></div><div class="body"><canvas class="items img"></canvas></div></div>
-	<div class="split h" id="split-bottom" title="Drag to resize"></div>
-	<div class="split v" id="split-side" title="Drag to resize"></div>
-	<div class="split h" id="split-stat" title="Drag to resize"></div>
-	<div class="split h" id="split-items" title="Drag to resize"></div>
 	<div id="pop" hidden><div class="clip"><canvas class="crt"></canvas></div><canvas class="items img"></canvas></div>
 </div>
 
@@ -136,6 +134,7 @@
 	</div>
 </div>
 
+<script src="rvip-wm.js"></script>
 <script src="crawl.js"></script>
 <script src="crawl-core.js"></script>
 </body>

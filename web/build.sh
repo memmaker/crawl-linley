@@ -19,6 +19,6 @@ em++ -O2 -std=gnu++98 -w -Isource -DLINUX -DV_FIX -DUSE_TILE -DUSE_X11 -DUSE_WEB
 	-sFORCE_FILESYSTEM -lidbfs.js -sENVIRONMENT=web \
 	--preload-file "$STAGE@/crawl-linley"
 rm -rf "$STAGE"
-cp web/index.html web/crawl.js web/*.woff "$OUT/"
+cp web/index.html web/crawl.js web/rvip-wm.js web/*.woff "$OUT/"
 python3 web/make-help.py > "$OUT/help.html"
 ls -la "$OUT"

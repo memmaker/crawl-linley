@@ -81,6 +81,11 @@ void web_present();   // winclass-web.cc
 //ウィンドウ＆領域のクラス
 #include "winclass.h"
 #include "rvip.h"
+#include "itemname.h"
+#include "mon-util.h"
+#include "player.h"
+#include "stuff.h"
+#include "view.h"
 
 /*
  * Tile related stuff
@@ -1060,11 +1065,41 @@ EM_JS(void, js_present, (int layer, int cur_role, int cx, int cy, int cw), {
     Module.cr.present(layer, cur_role, cx, cy, cw);
 });
 
+// Visible window (rvip-wm.js): "M<glyph><name>\t<colour>" per monster in
+// sight, "I<glyph><name>\t<colour>" per item on a square in view (colours:
+// libx11 palette indexes, crawl.js maps them)
+EM_JS(void, js_vis, (const char *s), { Module.cr.vis(UTF8ToString(s)); });
+static void send_visible()
+{
+    static char vis[16384];
+    static const char GLYPH[] = ")([/%?? =!?+\\0}%$*";
+    char *p = vis, *e = vis + sizeof vis - 200, name[ITEMNAME_SIZE];
+
+    *p = 0;
+    for (int i = 0; i < MAX_MONSTERS && p < e; i++)
+    {
+        monsters *m = &menv[i];
+        if (m->type == -1 || mgrd[m->x][m->y] != i || mons_is_mimic(m->type) || !mons_near(m) || !player_monster_visible(m))
+            continue;
+        p += sprintf(p, "M%c%.60s\t%d\n", mons_char(m->type), ptr_monam(m, DESC_PLAIN), mons_colour(m->type) & 15);
+    }
+    for (int i = 0; i < MAX_ITEMS && p < e; i++)
+    {
+        item_def &it = mitm[i];
+        if (it.base_type == OBJ_UNASSIGNED || it.quantity < 1 || it.x < 1 || !see_grid(it.x, it.y))
+            continue;
+        item_name(it, DESC_PLAIN, name);
+        p += sprintf(p, "I%c%.80s\t%d\n", it.base_type < sizeof GLYPH - 1 ? GLYPH[it.base_type] : '*', name, it.colour & 15);
+    }
+    js_vis(vis);
+}
+
 // Hands every region's state to the page, which redraws the dirty ones.
 void web_present()
 {
     if (!win_main)
         return;
+    send_visible();
 
     int cur_role = -1, cx = 0, cy = 0;
     for (int i = 0; i < R_COUNT; i++)

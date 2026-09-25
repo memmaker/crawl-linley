@@ -12,7 +12,7 @@
 	var CANVAS = ['#t-map canvas', '#t-msg canvas', '#t-stat canvas', '#t-inv canvas.mini',
 		'#t-items canvas', '#pop canvas.crt', '#pop canvas.items'];
 	var TEXT_WIN = { 1: 'msg', 2: 'stat', 5: 'pop' };  /* text role -> font setting */
-	var WIN = ['map', 'msg', 'stat', 'inv', 'items'];
+	var WIN = ['map', 'msg', 'stat', 'inv', 'items', 'vis'], wm = null;
 	var ROOT = '/crawl-linley', DIR = ROOT + '/save', LAYOUT_FILE = DIR + '/web-layout.json';
 	var FONT = 'Web437_IBM_VGA_8x16';
 	var GUT = 6, TITLE_H = 20, BORDER = 2;
@@ -132,7 +132,7 @@
 		present: function (lay, curRole, cx, cy, cw) {
 			if ($('game').hidden) {
 				$('game').hidden = false;
-				if (L.auto) { var d = defaultLayout(); L.split = d.split; L.zoom = d.zoom; }
+				if (L.auto) L.zoom = defaultLayout().zoom;
 				redrawAll();
 			}
 			if (lay !== layer) { layer = lay; $('pop').hidden = layer !== 1; fitPop(); }
@@ -141,6 +141,7 @@
 			if (curRole >= 0 && regs[curRole]) { drawText(regs[curRole]); drawCursor(regs[curRole], cx, cy, cw); }
 			lastCur = curRole;
 		},
+		vis: function (s) { RvipWM.visible($('vis'), s.replace(/\t(\d+)$/gm, function (m, c) { return '\t' + PAL[+c || 7]; })); },
 		event: function () { return events.length ? events.shift() : null; },
 		pending: function () { return events.length > 0 ? 1 : 0; },
 		sync: function () { syncFiles(); },
@@ -225,7 +226,6 @@
 	 *   |      messages      | items  |
 	 *   +--------------------+--------+
 	 */
-	var SPLITS = ['bottom', 'side', 'stat', 'items'];
 	var ITEMS_H = 8 * 32 + TITLE_H + BORDER;    /* the 8 x 8 item grid (libweb.cc) */
 
 	function areaSize() {
@@ -253,12 +253,13 @@
 			if (s && s.v === 1) {
 				if (!s.auto) {
 					d.auto = false;
-					SPLITS.forEach(function (k) { if (s.split[k] > 0 && s.split[k] < 1) d.split[k] = s.split[k]; });
 					if (ZOOM_STEPS.indexOf(s.zoom) >= 0) d.zoom = s.zoom;
 				}
 				Object.keys(d.font).forEach(function (k) {
 					if (s.font && FONT_STEPS.indexOf(s.font[k]) >= 0) d.font[k] = s.font[k];
 				});
+				if (s.font && s.font.vis >= 8 && s.font.vis <= 28) d.font.vis = s.font.vis;
+				if (s.wm) d.wm = s.wm;
 			}
 		} catch (err) { /* nothing saved yet */ }
 		L = d;
@@ -271,23 +272,6 @@
 			try { Module.FS.writeFile(LAYOUT_FILE, JSON.stringify(L)); syncFiles(); }
 			catch (err) { console.warn('layout not saved', err); }
 		}, 400);
-	}
-
-	function computeRects() {
-		var A = areaSize(), W = A.w, H = A.h, h = GUT / 2, s = L.split;
-		var xs = clamp(Math.round(W * s.side), 200, W - 100);
-		var yb = clamp(Math.round(H * s.bottom), 100, H - 60);
-		var ys = clamp(Math.round(H * s.stat), 60, H - 60);
-		var yi = clamp(Math.round(H * s.items), ys + 40, H - 40);
-		return {
-			map: [0, 0, xs - h, yb - h],
-			msg: [0, yb + h, xs - h, H - yb - h],
-			stat: [xs + h, 0, W - xs - h, ys - h],
-			inv: [xs + h, ys + h, W - xs - h, yi - ys - GUT],
-			items: [xs + h, yi + h, W - xs - h, H - yi - h],
-			split: { side: [xs - h, 0, GUT, H], bottom: [0, yb - h, xs - h, GUT], stat: [xs + h, ys - h, W - xs - h, GUT],
-				items: [xs + h, yi - h, W - xs - h, GUT] }
-		};
 	}
 
 	function place(el, r) {
@@ -303,40 +287,33 @@
 		pop.style.top = Math.max(0, (A.h - pop.offsetHeight) / 2) + 'px';
 	}
 
-	function applyDom() {
-		rects = computeRects();
-		WIN.forEach(function (id) { place($('t-' + id), rects[id]); });
-		SPLITS.forEach(function (k) { place($('split-' + k), rects.split[k]); });
-		fitPop();
+	function applyDom() { if (!wm) makeWM(); wm.apply(); }
+	/* windows: the shared tiling window manager (rvip-wm.js, RVIP.md 5b);
+	 * the game's regions draw into them, Inventory is its 8 x 8 item grid */
+	function makeWM() {
+		var s = defaultLayout().split, A = areaSize(), line = L.font.msg + 4;
+		wm = RvipWM({
+			area: $('game'), menu: $('btn-layout'),
+			wins: [{ id: 'map', title: 'Map' }, { id: 'msg', title: 'Messages' }, { id: 'stat', title: 'Character' },
+				{ id: 'items', title: 'Inventory' }, { id: 'vis', title: 'Visible' }, { id: 'inv', title: 'Level map' }],
+			multi: { d: 'h', r: s.side, a: { d: 'v', r: s.bottom, a: 'map', b: 'msg' },
+				b: { d: 'v', r: s.stat, a: 'stat', b: { d: 'v', r: (ITEMS_H + GUT / 2) / (A.h * (1 - s.stat)), a: 'items', b: 'vis' } } },
+			single: { d: 'v', r: 1 - 3 * line / A.h, a: 'map', b: 'msg' },
+			state: L.wm, noFont: 'map',
+			save: function (st) { L.wm = st; saveLayout(); },
+			layout: function (r) { rects = r; $('vis').style.fontSize = (L.font.vis || 13) + 'px'; fitPop(); },
+			font: function (id, d) {
+				if (id === 'vis') { L.font.vis = clamp((L.font.vis || 13) + d, 8, 28); applyDom(); saveLayout(); }
+				else if (id === 'msg' || id === 'stat') zoomText(id, d);
+				else { L[id === 'items' ? 'items' : 'mini'] = clamp(L[id === 'items' ? 'items' : 'mini'] + d * 0.5, 0.5, 4); redrawAll(); saveLayout(); }
+			},
+			onReset: resetLayout
+		});
 	}
 
 	function redrawAll() {
 		regs.forEach(function (R) { if (R && R.w) { if (R.text) drawText(R); else drawImage(R); } });
 		applyDom();
-	}
-
-	function startDrag(k, e) {
-		var el = $('split-' + k);
-		el.setPointerCapture(e.pointerId);
-		el.classList.add('drag');
-		function move(ev) {
-			var g = $('game').getBoundingClientRect(), H = g.height;
-			if (k === 'bottom') L.split.bottom = clamp((ev.clientY - g.top) / H, 0.1, 0.9);
-			if (k === 'side') L.split.side = clamp((ev.clientX - g.left) / g.width, 0.1, 0.9);
-			if (k === 'stat') L.split.stat = clamp((ev.clientY - g.top) / H, 0.1, 0.9);
-			if (k === 'items') L.split.items = clamp((ev.clientY - g.top) / H, 0.1, 0.95);
-			L.auto = false;
-			applyDom();
-		}
-		function up() {
-			el.classList.remove('drag');
-			el.removeEventListener('pointermove', move);
-			el.removeEventListener('pointerup', up);
-			saveLayout();
-		}
-		el.addEventListener('pointermove', move);
-		el.addEventListener('pointerup', up);
-		e.preventDefault();
 	}
 
 	function zoomMap(d) {
@@ -354,7 +331,7 @@
 	}
 
 	function resetLayout() {
-		L = defaultLayout();
+		L = defaultLayout(); L.wm = wm.state();
 		redrawAll(); saveLayout();
 	}
 
@@ -506,16 +483,9 @@
 		$('help-close').onclick = toggleHelp;
 		$('btn-zoom-in').onclick = function () { zoomMap(1); };
 		$('btn-zoom-out').onclick = function () { zoomMap(-1); };
-		$('btn-layout').onclick = resetLayout;
 		$('btn-restart').onclick = function () { location.reload(); };
 		document.querySelectorAll('button').forEach(function (b) {
 			b.addEventListener('mousedown', function (e) { e.preventDefault(); });
-		});
-		SPLITS.forEach(function (k) { $('split-' + k).addEventListener('pointerdown', function (e) { startDrag(k, e); }); });
-		['msg', 'stat'].forEach(function (id) {
-			var w = $('t-' + id);
-			w.querySelector('.zin').addEventListener('click', function () { zoomText(id, 1); });
-			w.querySelector('.zout').addEventListener('click', function () { zoomText(id, -1); });
 		});
 	});
 	var resizeTimer = 0;
@@ -524,8 +494,7 @@
 		clearTimeout(resizeTimer);
 		resizeTimer = setTimeout(function () {
 			if (L.auto) {                        /* not customised: follow the window */
-				var d = defaultLayout();
-				L.split = d.split; L.zoom = d.zoom;
+				L.zoom = defaultLayout().zoom;
 			}
 			redrawAll();
 		}, 150);
