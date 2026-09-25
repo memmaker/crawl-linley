@@ -222,7 +222,10 @@ void mpr(const char *inf, int channel, int param)
 
     // If you're travelling, only certain user-specified messages can break 
     // travel
-    if (you.running < 0)
+    // RVIP: any message stops explore; travel keeps the stop_travel list
+    if (you.running == -2)  // RUN_EXPLORE (travel.h)
+        you.running = 0;
+    else if (you.running < 0)
     {
         std::string message = inf;
         for (unsigned i = 0; i < Options.stop_travel.size(); ++i)

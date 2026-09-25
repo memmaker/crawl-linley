@@ -381,6 +381,7 @@ static void x11_keypress(XKeyEvent *xev){
                     base = '\e';
                     break;
                 case XK_Return:
+                case XK_KP_Enter:       // port: keypad Enter
                     base = '\r';
                     break;
                 case XK_Tab:
@@ -457,6 +458,7 @@ static void x11_keypress(XKeyEvent *xev){
 
                 case XK_KP_2:
                 case XK_KP_Down:
+                case XK_Down:          // port: cursor keys move too
                     dir = 2;
                     break;
 
@@ -467,6 +469,7 @@ static void x11_keypress(XKeyEvent *xev){
 
                 case XK_KP_6:
                 case XK_KP_Right:
+                case XK_Right:          // port: cursor keys move too
                     dir = 6;
                     break;
 
@@ -477,6 +480,7 @@ static void x11_keypress(XKeyEvent *xev){
 
                 case XK_KP_8:
                 case XK_KP_Up:
+                case XK_Up:          // port: cursor keys move too
                     dir = 8;
                     break;
 
@@ -487,6 +491,7 @@ static void x11_keypress(XKeyEvent *xev){
 
                 case XK_KP_4:
                 case XK_KP_Left:
+                case XK_Left:          // port: cursor keys move too
                     dir = 4;
                     break;
 

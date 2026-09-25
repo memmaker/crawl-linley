@@ -14,6 +14,7 @@
 
 #include "AppHdr.h"
 #include "invent.h"
+#include "rvip.h"
 
 #include <stdlib.h>
 #include <string.h>
@@ -584,7 +585,7 @@ int prompt_invent_item( const char *prompt, int type_expect,
     if (Options.auto_list && allow_auto_list)
     {
         // pretend the player has hit '?' and setup state.
-        keyin = invent( type_expect, false );
+        keyin = rvip_item_list( type_expect, false, prompt );  // RVIP: cursor list
 
         need_getch = false;
 
@@ -629,10 +630,8 @@ int prompt_invent_item( const char *prompt, int type_expect,
         else if (keyin == '?' || keyin == '*')
         {
             // The "view inventory listing" mode.
-            if (keyin == '*')
-                keyin = invent( -1, false );
-            else
-                keyin = invent( type_expect, false );
+            // RVIP: cursor list
+            keyin = rvip_item_list( keyin == '*' ? -1 : type_expect, false, prompt );
 
             need_getch  = false;
 
@@ -983,7 +982,14 @@ const char *command_string( int i )
            (i == 465) ? "/ DIR : long walk"                       :
            (i == 470) ? "Ctrl  & DIR : door; untrap; attack"      :
            (i == 475) ? "* DIR : door; untrap; attack"            :
-           (i == 478) ? "Shift & 5 on keypad : rest 100 turns"
+           (i == 478) ? "Shift & 5 on keypad : rest 100 turns"  :
+           (i == 479) ? "Ctrl-O/kp 0 : explore the level"       :
+           (i == 480) ? "Ctrl-G : travel to a level"             :
+           (i == 481) ? "Ctrl-F : add travel waypoint"           :
+           (i == 482) ? "Ctrl-S/E : mark/forget stash here"      :
+           (i == 483) ? "</> off stairs: walk to nearest ones"  :
+           (i == 484) ? "Enter : menu of all commands"           :
+           (i == 485) ? "i : inventory; letter uses, Enter menu"
 #endif /* JP */
                       : "");
 }                               // end command_string()

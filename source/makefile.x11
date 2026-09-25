@@ -7,7 +7,7 @@ GAME = crawl
 # it will make a variable called OBJECTS that contains all the libraries
 include makefile.obj
 
-OBJECTS += tiles.o libx11.o libx11_png.o libtile.o winclass.o winclass-x11.o
+OBJECTS += rvip.o tiles.o libx11.o libx11_png.o libtile.o winclass.o winclass-x11.o
 
 # CXX = /usr/local/bin/g++
 CXX = clang++

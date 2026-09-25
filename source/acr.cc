@@ -124,6 +124,7 @@
 #include "tags.h"
 #include "transfor.h"
 #include "travel.h"
+#include "rvip.h"
 #include "view.h"
 #include "wpn-misc.h"
 #include "stash.h"
@@ -1197,14 +1198,7 @@ static void input(void)
                 }
 #endif
                 set_keyin_mode(KEYIN_MODE_COMMAND);
-                while(1)
-                {
-                    keyin = getch_with_command_macros();
-                    if (keyin == CMD_MOUSE_WHEEL_UP ||
-                        keyin == CMD_MOUSE_WHEEL_DOWN)
-                        continue;
-                    break;
-                }
+                keyin = rvip_getkey();
                 set_keyin_mode(KEYIN_MODE_NONE);
 
                 if (Options.use_tile && Options.rotate_numpad
@@ -1213,7 +1207,7 @@ static void input(void)
                     rotate_qv_key(&keyin);
                 }
 #else
-                keyin = getch_with_command_macros();
+                keyin = rvip_getkey();
 #endif
             }
             mesclr();
@@ -1448,7 +1442,8 @@ static void input(void)
 #ifdef JP
             mpr( "Ç±Ç±Ç©ÇÁÇÕè„ÇÃäKÇ…çsÇ≠Ç±Ç∆ÇÕÇ≈Ç´Ç»Ç¢ÅB" );
 #else
-            mpr( "You can't go up here!" );
+            if (!rvip_walk_stairs('<'))
+                mpr( "You can't go up here!" );
 #endif
             break;
         }
@@ -1472,7 +1467,8 @@ static void input(void)
 #ifdef JP
             mpr( "Ç±Ç±Ç©ÇÁÇÕâ∫ÇÃäKÇ…çsÇ≠Ç±Ç∆ÇÕÇ≈Ç´Ç»Ç¢ÅB" );
 #else
-            mpr( "You can't go down here!" );
+            if (!rvip_walk_stairs('>'))
+                mpr( "You can't go down here!" );
 #endif
             break;
         }
@@ -1534,7 +1530,12 @@ static void input(void)
             use_item(letter_to_index(ix));
     }
 #else
-        get_invent(-1);
+    {
+        // RVIP: inventory with a cursor and item menus
+        const int key = rvip_item_list(-1, true);
+        if (key && key != ESCAPE)
+            rvip_push_key(key);
+    }
 #endif
         break;
 
@@ -1865,7 +1866,6 @@ static void input(void)
 #endif
 
     case '?':
-    case '\r':
     case CMD_DISPLAY_COMMANDS:
         list_commands(false);
         redraw_screen();
@@ -3495,8 +3495,10 @@ static bool initialise(void)
     init_emx();
 #endif
 
-    srandom(time(NULL));
-    srand(time(NULL));
+    // port: CRAWL_SEED makes test games repeatable
+    const int seed = getenv("CRAWL_SEED") ? atoi(getenv("CRAWL_SEED")) : time(NULL);
+    srandom(seed);
+    srand(seed);
     cf_setseed();               // required for stuff::coinflip()
 
     mons_init(mcolour);          // this needs to be way up top {dlb}
