@@ -210,6 +210,8 @@ static char channel_to_colour( int channel, int param )
 
 #endif
 
+int auto_more = 1;  // RVIP: --more-- does not wait when the message area is full
+
 void mpr(const char *inf, int channel, int param)
 {
     char info2[80];
@@ -263,7 +265,10 @@ void mpr(const char *inf, int channel, int param)
 
     if (Message_Line == num_lines - 18) // ( Message_Line == 8 )
     {
-        more();
+        if (auto_more)      // RVIP: full message area clears, no wait (^P recalls)
+            mesclr(true);
+        else
+            more();
     }
     gotoxy( (Options.delay_message_clear) ? 2 : 1, Message_Line + 18 );
 
@@ -286,7 +291,8 @@ void mpr(const char *inf, int channel, int param)
 
     if (Options.delay_message_clear 
             && channel != MSGCH_PROMPT 
-            && Message_Line == num_lines - 18)
+            && Message_Line == num_lines - 18
+            && !auto_more)
     {
         more();
     }
