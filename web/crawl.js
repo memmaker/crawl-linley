@@ -142,7 +142,8 @@
 			lastCur = curRole;
 		},
 		vis: function (s) { RvipWM.visible($('vis'), s.replace(/\t(\d+)$/gm, function (m, c) { return '\t' + PAL[+c || 7]; })); },
-		event: function () { return events.length ? events.shift() : null; },
+		event: function (atCmd) { RvipWM.prompt.wait(atCmd); return events.length ? events.shift() : null; },
+		prompt: function (s) { RvipWM.prompt.text(s); },
 		pending: function () { return events.length > 0 ? 1 : 0; },
 		sync: function () { syncFiles(); },
 		requestSave: function () { saveReq = true; },   /* also for testing */

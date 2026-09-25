@@ -64,8 +64,8 @@
 #define XK_Delete 0xffff
 
 // the page: web/crawl.js (Module.cr)
-EM_JS(int, js_event, (int *ev), {
-    var e = Module.cr.event();
+EM_JS(int, js_event, (int *ev, int at_cmd), {
+    var e = Module.cr.event(at_cmd);
     if (!e) return 0;
     for (var i = 0; i < 5; i++) HEAP32[(ev >> 2) + i] = e[i] | 0;
     return 1;
@@ -73,6 +73,7 @@ EM_JS(int, js_event, (int *ev), {
 EM_JS(int, js_pending, (void), { return Module.cr.pending(); });
 
 void web_present();   // winclass-web.cc
+extern int rvip_at_cmd;   // rvip.cc
 
 
 //Options
@@ -601,7 +602,7 @@ int getch(){
 
     while(key_tail == key_head)
     {
-        if (js_event(ev))
+        if (js_event(ev, rvip_at_cmd))
             web_event(ev);
         else
         {
@@ -1061,6 +1062,7 @@ EM_JS(void, js_region, (int role, int layer, int flag, int dirty, int text,
                         int w, int h, void *a, void *b), {
     Module.cr.region(role, layer, flag, dirty, text, ox, oy, dx, dy, w, h, a, b);
 });
+EM_JS(void, js_prompt, (const char *s), { Module.cr.prompt(UTF8ToString(s)); });
 EM_JS(void, js_present, (int layer, int cur_role, int cx, int cy, int cw), {
     Module.cr.present(layer, cur_role, cx, cy, cw);
 });
@@ -1128,6 +1130,21 @@ void web_present()
     }
     js_present(win_main->active_layer, cur_role, cx, cy,
                TextRegionClass::old_cursor_width);
+    // the message row the game writes to (a question waits there): the prompt line over the map
+    {
+        TextRegionClass *t = TextRegionClass::text_mode;
+        char line[256];
+        int n = 0;
+        if (t && t == region_msg && t->flag)
+        {
+            int row = TextRegionClass::cursor_y - t->cy_ofs;
+            if (row >= 0 && row < t->my)
+                for (int x = 0; x < t->mx && n < 255; x++)
+                    line[n++] = t->cbuf[row * t->mx + x] & 0x7f ? t->cbuf[row * t->mx + x] & 0x7f : ' ';
+        }
+        line[n] = 0;
+        js_prompt(line);
+    }
 }
 
 /*

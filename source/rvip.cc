@@ -27,6 +27,7 @@ int pop_inven_idx();
 int pop_inven_count();
 
 int rvip_raw_dirs = 0;
+int rvip_at_cmd = 0;            // waiting for a command key (the web prompt line)
 
 // keeps rvip_raw_dirs raised while a list or menu is open
 struct raw_dirs
@@ -712,7 +713,9 @@ int rvip_getkey()
 
     for (;;)
     {
+        rvip_at_cmd = 1;
         int key = getch_with_command_macros();
+        rvip_at_cmd = 0;
 
         if (key == CMD_MOUSE_WHEEL_UP || key == CMD_MOUSE_WHEEL_DOWN)
             continue;
