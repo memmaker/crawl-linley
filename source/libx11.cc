@@ -29,6 +29,7 @@
 
 //ウィンドウ＆領域のクラス
 #include "winclass.h"
+#include "rvip.h"
 
 /*
  * Tile related stuff
@@ -503,6 +504,11 @@ static void x11_keypress(XKeyEvent *xev){
     //Handle keypad first
     if (dir != 0)
     {
+	if (rvip_raw_dirs && !ms && !mc)   // RVIP: lists and menus
+	{
+	    add_keypress(RVIP_KEY_DIR(dir));
+	    return;
+	}
 	dir --;
 	//if ( (Options.use_qv_mode)&&(Options.rotate_numpad) )
         //dir = qv_table[dir]-1;

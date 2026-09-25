@@ -26,6 +26,15 @@ void push_inven_count(int c);
 int pop_inven_idx();
 int pop_inven_count();
 
+int rvip_raw_dirs = 0;
+
+// keeps rvip_raw_dirs raised while a list or menu is open
+struct raw_dirs
+{
+    raw_dirs()  { rvip_raw_dirs++; }
+    ~raw_dirs() { rvip_raw_dirs--; }
+};
+
 /* ---------------- queued command keys ---------------- */
 
 static int queue[8];
@@ -133,12 +142,12 @@ static int step_row(const std::vector<box_row> &rows, int cur, int step)
 
 static bool key_up(int key)
 {
-    return key == CMD_MOVE_UP || key == RVIP_KEY_UP;
+    return key == RVIP_KEY_DIR(8) || key == RVIP_KEY_UP;
 }
 
 static bool key_down(int key)
 {
-    return key == CMD_MOVE_DOWN || key == RVIP_KEY_DOWN;
+    return key == RVIP_KEY_DIR(2) || key == RVIP_KEY_DOWN;
 }
 
 static bool key_close(int key)
@@ -148,7 +157,7 @@ static bool key_close(int key)
 
 static bool key_choose(int key)
 {
-    return key == '\r' || key == '\n' || key == CMD_MOVE_NOWHERE;
+    return key == '\r' || key == '\n' || key == RVIP_KEY_DIR(5);
 }
 
 /* ---------------- inventory ---------------- */
@@ -258,6 +267,8 @@ static void do_item_action(int idx, int key, bool reopen)
 // Action menu for one item; returns the chosen action key or 0.
 static int item_menu(int idx)
 {
+    raw_dirs guard;
+
     std::vector<item_action> acts = item_actions(idx);
     std::vector<box_row> rows;
     char title[ITEMNAME_SIZE];
@@ -278,13 +289,13 @@ static int item_menu(int idx)
         draw_box(rows, cur, title);
         const int key = getch();
 
-        if (key_close(key) || key == CMD_MOVE_LEFT)
+        if (key_close(key) || key == RVIP_KEY_DIR(4))
             return 0;
         if (key_up(key))
             cur = step_row(rows, cur, -1);
         else if (key_down(key))
             cur = step_row(rows, cur, 1);
-        else if (key_choose(key) || key == CMD_MOVE_RIGHT || key == ' ')
+        else if (key_choose(key) || key == RVIP_KEY_DIR(6) || key == ' ')
             return rows[cur].key;
         else
             for (unsigned i = 0; i < rows.size(); i++)
@@ -298,6 +309,8 @@ static int item_menu(int idx)
 // letter, ESCAPE, or any other key for the prompt to handle.
 int rvip_item_list(int type_expect, bool browse, const char *prompt)
 {
+    raw_dirs guard;
+
     for (;;)
     {
         std::vector<box_row> rows;
@@ -399,7 +412,7 @@ int rvip_item_list(int type_expect, bool browse, const char *prompt)
             // browse mode
             int act = 0, item = idx;
 
-            if (key_choose(key) || key == ' ' || key == CMD_MOVE_RIGHT)
+            if (key_choose(key) || key == ' ' || key == RVIP_KEY_DIR(6))
                 act = item_menu(idx);
             else if (key == RVIP_KEY_KP_ADD)
                 act = item_actions(idx)[0].key;
@@ -568,6 +581,8 @@ static int next_command(int i, int step)
 // screen) and returns the chosen command key, or 0.
 static int command_menu()
 {
+    raw_dirs guard;
+
     int width = 0;
     for (int i = 0; i < NCOMMANDS; i++)
     {
@@ -638,15 +653,15 @@ static int command_menu()
 
         if (key == ESCAPE || key == ' ' || key == '0')
             break;
-        else if (key == '\r' || key == '\n' || key == '5')
+        else if (key_choose(key) || key == '5')
         {
             result = commands[cur].key;
             break;
         }
-        else if ((key == CMD_MOVE_DOWN || key == RVIP_KEY_DOWN || key == '2')
+        else if ((key_down(key) || key == '2')
                  && (n = next_command(cur, 1)) >= 0)
             cur = n;
-        else if ((key == CMD_MOVE_UP || key == RVIP_KEY_UP || key == '8')
+        else if ((key_up(key) || key == '8')
                  && (n = next_command(cur, -1)) >= 0)
             cur = n;
         else

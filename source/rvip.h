@@ -8,6 +8,11 @@
 #define RVIP_KEY_KP_SUB (10000 + 0xad)
 #define RVIP_KEY_KP_MUL (10000 + 0xaa)
 
+// keypad / cursor directions while an RVIP list or menu is open
+// (the frontend sends these instead of vi keys when rvip_raw_dirs > 0)
+#define RVIP_KEY_DIR(d) (10100 + (d))
+extern int rvip_raw_dirs;
+
 // queued marker: reopen the inventory unless a monster is in view
 #define RVIP_REOPEN     (-2)
 
