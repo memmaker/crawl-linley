@@ -14,6 +14,7 @@
 #include "message.h"
 #include "religion.h"
 
+#include <stdio.h>
 #include <string.h>
 
 #ifdef DOS
@@ -262,6 +263,31 @@ void mpr(const char *inf, int channel, int param)
     textcolor(LIGHTGREY);
 
     const int num_lines = get_number_of_lines();
+
+    // RVIP: a repeat of the last message, still on screen, becomes
+    // "message (xN)" in its row and in the recall buffer
+    static std::string prev_msg;
+    static int prev_reps;
+    if (channel != MSGCH_EQUIPMENT && Message_Line > 0 && prev_msg == inf)
+    {
+        char fold[100];
+        snprintf(fold, sizeof fold, "%s (x%d)", inf, ++prev_reps);
+        fold[78] = 0;
+        gotoxy( (Options.delay_message_clear) ? 2 : 1, Message_Line - 1 + 18 );
+        textcolor( colour );
+#ifdef USE_TILE
+        mpr_on( MODE_MPR );
+#endif
+        cprintf(fold);
+#ifdef USE_TILE
+        mpr_on( MODE_CRT );
+#endif
+        textcolor(LIGHTGREY);
+        Store_Message[ (Next_Message + NUM_STORED_MESSAGES - 1) % NUM_STORED_MESSAGES ].text = fold;
+        return;
+    }
+    prev_msg = channel != MSGCH_EQUIPMENT ? inf : "";
+    prev_reps = 1;
 
     if (Message_Line == num_lines - 18) // ( Message_Line == 8 )
     {
