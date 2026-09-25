@@ -266,6 +266,10 @@ static bool check_saved_game(void)
 #endif
     }
 
+#elif defined(SAVE_DIR_PATH)
+    // port: same name restore_game() reads
+    snprintf( char_fil, sizeof(char_fil),
+              SAVE_DIR_PATH "%s%d.sav", you.your_name, (int) getuid() );
 #else
     strcpy(char_fil, "");
     strncat(char_fil, you.your_name, kFileNameLen);

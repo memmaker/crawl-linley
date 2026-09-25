@@ -161,7 +161,8 @@ void builder(int level_number, char level_type)
     int x,y;        // generic map loop variables
 
     static int time_p = 0;
-    int        time_c = time(NULL);
+    int        time_c = getenv("CRAWL_SEED") ? atoi(getenv("CRAWL_SEED"))  // port: test hook
+                                          : time(NULL);
 
     //srandom(time(NULL));
     if (time_p == time_c)
