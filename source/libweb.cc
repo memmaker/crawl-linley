@@ -1157,6 +1157,30 @@ EM_JS(void, web_sync_files, (void), { Module.cr.sync(); });
 EM_JS(int, js_want_save, (void), { return Module.cr.wantSave(); });
 EM_JS(void, js_end, (int code), { Module.cr.end(code); });
 
+/* Run report (roguelikes-index/server/CONTRACT.md): fire-and-forget GET,
+   never throws, offline just fails silently. Negative ints are omitted. */
+EM_JS(void, js_beacon, (const char *g, const char *ev, const char *name, const char *killer, int depth, int score, int turns, int lvl), {
+    try {
+        var p = [['g', UTF8ToString(g)], ['ev', UTF8ToString(ev)], ['name', name ? UTF8ToString(name) : ''],
+                 ['killer', killer ? UTF8ToString(killer) : ''], ['depth', depth], ['score', score], ['turns', turns], ['lvl', lvl]];
+        var q = p.filter(function (a) { return a[1] !== '' && !(a[1] < 0); })
+                 .map(function (a) { return a[0] + '=' + encodeURIComponent(a[1]); }).join('&');
+        fetch('/roguelikes/beacon?' + q, { keepalive: true, mode: 'no-cors' }).catch(function () {});
+    } catch (e) {}
+});
+
+// Called from end_game() (ouch.cc) with the finished scorefile entry.
+void web_run_end(const struct scorefile_entry &se)
+{
+    const char *k = se.death_source_name, *ev = "death";
+    if (se.death_type == KILLED_BY_WINNING) ev = "win", k = NULL;
+    else if (se.death_type == KILLED_BY_QUITTING || se.death_type == KILLED_BY_LEAVING) ev = "quit", k = NULL;
+    else if (!strncmp(k, "a ", 2)) k += 2;
+    else if (!strncmp(k, "an ", 3)) k += 3;
+    else if (!strncmp(k, "the ", 4)) k += 4;
+    js_beacon("crawl-linley", ev, you.your_name, k, you.your_level + 1, (int)se.points, (int)se.num_turns, se.lvl);
+}
+
 // At the command prompt (rvip_getkey): autosave when the page asks.
 void web_autosave()
 {

@@ -1038,6 +1038,9 @@ void end_game( struct scorefile_entry &se )
     char del_file[300];         // massive overkill!
     bool dead = true;
 
+#ifdef USE_WEB
+    void web_run_end(const struct scorefile_entry &se); web_run_end(se);
+#endif
 #ifdef USE_TILE
     set_keyin_mode(KEYIN_MODE_END);
 #endif
