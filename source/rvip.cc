@@ -471,7 +471,7 @@ static bool is_down_stair(int g)
 }
 
 // '<' / '>' off stairs: travel to the nearest known staircase of that kind,
-// take it on arrival.  Returns false when none is known.
+// stop there (press the key again to take them).  Returns false when none is known.
 bool rvip_walk_stairs(int key)
 {
     std::vector<coord_def> features;
@@ -688,14 +688,8 @@ int rvip_getkey()
     web_autosave();
 #endif
 
-    // arrived at the stairs we were walking to: take them
-    if (stairs_key)
-    {
-        const int key = stairs_key;
-        stairs_key = 0;
-        if (you.x_pos == stairs_x && you.y_pos == stairs_y)
-            return key;
-    }
+    // walking to stairs ends at the stairs: the player presses < or > again
+    stairs_key = 0;
 
     while (queue_len)
     {
