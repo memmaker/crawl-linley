@@ -282,6 +282,11 @@ int main( int argc, char *argv[] )
 #ifndef WINDOWS
     // Read the init file
     read_init_file();
+#ifdef USE_WEB
+    // explore and travel move visibly: paint each step (RVIP finetuning)
+    if (Options.travel_delay < 0)
+        Options.travel_delay = 40;
+#endif
 
     // now parse the args again, looking for everything else.
     parse_args( argc, argv, false );
