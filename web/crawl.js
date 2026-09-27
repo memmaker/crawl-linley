@@ -15,6 +15,7 @@
 	var WIN = ['map', 'msg', 'stat', 'inv', 'items', 'vis'], wm = null;
 	var ROOT = '/crawl-linley', DIR = ROOT + '/save', LAYOUT_FILE = DIR + '/web-layout.json';
 	var FONT = 'Web437_IBM_VGA_8x16';
+	function face() { return L && L.face ? '"' + L.face + '", ' + FONT : FONT; }
 	var GUT = 6, TITLE_H = 20, BORDER = 2;
 	var ZOOM_STEPS = [1, 1.25, 1.5, 1.75, 2, 2.5, 3];  /* tiles, nearest-neighbour */
 	var FONT_STEPS = [12, 14, 16, 20, 24, 28, 32];     /* crisp at 16 and 32 */
@@ -56,7 +57,7 @@
 		}
 		var c = R.cv.getContext('2d'), H = Module.HEAPU8;
 		c.setTransform(dpr, 0, 0, dpr, 0, 0);
-		c.font = f + 'px ' + FONT;
+		c.font = f + 'px ' + face();
 		c.textBaseline = 'top';
 		for (var y = 0; y < R.h; y++) {
 			for (var x = 0; x < R.w; x++) {
@@ -261,6 +262,7 @@
 				});
 				if (s.font && s.font.vis >= 8 && s.font.vis <= 28) d.font.vis = s.font.vis;
 				if (s.wm) d.wm = s.wm;
+				if (typeof s.face === 'string') d.face = s.face;
 			}
 		} catch (err) { /* nothing saved yet */ }
 		L = d;
@@ -300,11 +302,12 @@
 			multi: { d: 'h', r: s.side, a: { d: 'v', r: s.bottom, a: 'map', b: 'msg' },
 				b: { d: 'v', r: s.stat, a: 'stat', b: { d: 'v', r: (ITEMS_H + GUT / 2) / (A.h * (1 - s.stat)), a: 'items', b: 'vis' } } },
 			single: { d: 'v', r: 1 - 3 * line / A.h, a: 'map', b: 'msg' },
-			state: L.wm, noFont: 'map',
+			state: L.wm,
 			save: function (st) { L.wm = st; saveLayout(); },
-			layout: function (r) { rects = r; $('vis').style.fontSize = (L.font.vis || 13) + 'px'; fitPop(); },
+			layout: function (r) { rects = r; $('vis').style.fontSize = (L.font.vis || 13) + 'px'; $('vis').style.fontFamily = L.face ? '"' + L.face + '", monospace' : ''; fitPop(); },
 			font: function (id, d) {
-				if (id === 'vis') { L.font.vis = clamp((L.font.vis || 13) + d, 8, 28); applyDom(); saveLayout(); }
+				if (id === 'map') zoomMap(d);
+				else if (id === 'vis') { L.font.vis = clamp((L.font.vis || 13) + d, 8, 28); applyDom(); saveLayout(); }
 				else if (id === 'msg' || id === 'stat') zoomText(id, d);
 				else { L[id === 'items' ? 'items' : 'mini'] = clamp(L[id === 'items' ? 'items' : 'mini'] + d * 0.5, 0.5, 4); redrawAll(); saveLayout(); }
 			},
@@ -332,7 +335,7 @@
 	}
 
 	function resetLayout() {
-		L = defaultLayout(); L.wm = wm.state();
+		var fc = L.face; L = defaultLayout(); L.face = fc; L.wm = wm.state();
 		redrawAll(); saveLayout();
 	}
 
@@ -409,6 +412,12 @@
 		syncFiles(function (err) { if (!err) location.reload(); });
 	}
 
+	function loadFace(n) {
+		if (!n) { redrawAll(); return; }
+		var ff = new FontFace(n, 'url(../fonts/' + n + '.woff)');
+		ff.load().then(function () { document.fonts.add(ff); if (!$('game').hidden) redrawAll(); }).catch(function () { status('Could not load the font ' + n + '.', true); });
+	}
+
 	/* ---------- help ---------- */
 	var helpLoaded = false;
 	function toggleHelp() {
@@ -440,6 +449,7 @@
 				var name = newestSave();
 				if (name) Module.arguments.push('-name', name);   /* continue that character */
 				loadLayout();
+				if (L.face) loadFace(L.face);
 				Module.removeRunDependency('idbfs');
 			});
 		}],
@@ -482,8 +492,14 @@
 		$('btn-new').onclick = newGame;
 		$('btn-help').onclick = toggleHelp;
 		$('help-close').onclick = toggleHelp;
-		$('btn-zoom-in').onclick = function () { zoomMap(1); };
-		$('btn-zoom-out').onclick = function () { zoomMap(-1); };
+		RvipWM.dropdown($('btn-file'), $('menu-file'));
+		/* text font: a face from the index page's fonts/ (web/build.sh lists them) */
+		var sel = $('sel-font');
+		fetch('fonts.json').then(function (r) { return r.json(); }).then(function (list) {
+			list.forEach(function (n) { var o = document.createElement('option'); o.value = n; o.textContent = n.replace(/^Web(Plus|437)_/, '').replace(/_/g, ' '); sel.appendChild(o); });
+			sel.value = (L && L.face) || '';
+		}).catch(function () { });
+		sel.onchange = function () { if (!L) return; L.face = this.value; saveLayout(); loadFace(this.value); this.blur(); };
 		$('btn-restart').onclick = function () { location.reload(); };
 		document.querySelectorAll('button').forEach(function (b) {
 			b.addEventListener('mousedown', function (e) { e.preventDefault(); });

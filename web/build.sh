@@ -20,5 +20,7 @@ em++ -O2 -std=gnu++98 -w -Isource -DLINUX -DV_FIX -DUSE_TILE -DUSE_X11 -DUSE_WEB
 	--preload-file "$STAGE@/crawl-linley"
 rm -rf "$STAGE"
 cp web/index.html web/crawl.js web/*.woff "$OUT/"
+# the font chooser lists the index page's fonts/ (loaded from ../fonts/)
+(cd ~/Games/roguelikes-index/fonts 2>/dev/null && ls *.woff | sed 's/\.woff$//') | python3 -c 'import json,sys; print(json.dumps(sys.stdin.read().split()))' > "$OUT/fonts.json"
 python3 web/make-help.py > "$OUT/help.html"
 ls -la "$OUT"

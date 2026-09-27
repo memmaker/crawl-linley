@@ -28,7 +28,9 @@
 #bar h1 a { color: inherit; text-decoration: none; }
 	#bar .sep { width: 1px; height: 18px; background: var(--line); margin: 0 4px; flex: none; }
 	#bar .sp { flex: 1; }
-	#bar .hint { color: var(--dim); overflow: hidden; text-overflow: ellipsis; }
+	#bar .hint { color: var(--dim); overflow: hidden; text-overflow: ellipsis; min-width: 0; }
+	#bar .hint kbd { font-size: 11px; line-height: 1.3; min-width: 0; }
+	#bar select { background: #22222a; color: var(--text); border: 1px solid var(--line); border-radius: 4px; font: inherit; padding: 1px 4px; }
 	button { background: #22222a; color: var(--text); border: 1px solid var(--line); border-radius: 4px;
 		padding: 2px 10px; font: inherit; cursor: pointer; }
 	button:hover { border-color: var(--accent); }
@@ -104,17 +106,19 @@
 <div id="bar">
 	<h1><a href="../shrine/crawl-linley.html">Linley's Dungeon Crawl</a></h1>
 	<button id="btn-help" title="Game guide, controls and saving">Help</button>
+	<button id="btn-file" title="Export, import, new game">File ▾</button>
 	<span class="sep"></span>
-	<button id="btn-zoom-out" title="Smaller map">Zoom −</button>
-	<button id="btn-zoom-in" title="Bigger map">Zoom +</button>
-	<button id="btn-layout" title="Put the windows back where they started">Reset windows</button>
-	<span class="sep"></span>
-	<button id="btn-export" title="Download the save file">Export save</button>
-	<button id="btn-import" title="Load a save file from disk">Import save</button>
-	<button id="btn-new" title="Delete the saved games in this browser">New game</button>
+	<button id="btn-layout" title="Window layout">Windows ▾</button>
+	<select id="sel-font" title="Font for the text windows"><option value="">Font: default</option></select>
+	<div id="menu-file">
+		<button id="btn-export" title="Download the save file">Export save</button>
+		<button id="btn-import" title="Load a save file from disk">Import save</button>
+		<hr>
+		<button id="btn-new" title="Delete the saved games in this browser">New game</button>
+	</div>
 	<input type="file" id="import-file" hidden>
 	<span class="sp"></span>
-	<span class="hint">Drag the gaps between windows to resize them · Enter: all commands · Ctrl+O: explore</span>
+	<span class="hint"><kbd>^O</kbd> explore · <kbd>i</kbd> inventory · <kbd>Enter</kbd> command menu · <kbd>?</kbd> command help</span>
 </div>
 
 <div id="status">Loading Linley's Dungeon Crawl…</div>
