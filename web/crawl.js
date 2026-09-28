@@ -11,14 +11,13 @@
 	var R_TILE = 0, R_MSG = 1, R_STAT = 2, R_MAP = 3, R_ITEM = 4, R_CRT = 5, R_ITEM2 = 6;
 	var CANVAS = ['#t-map canvas', '#t-msg canvas', '#t-stat canvas', '#t-inv canvas.mini',
 		'#t-items canvas', '#pop canvas.crt', '#pop canvas.items'];
-	var TEXT_WIN = { 1: 'msg', 2: 'stat', 5: 'pop' };  /* text role -> font setting */
+	var TEXT_WIN = { 1: 'msg', 2: 'stat', 5: 'msg' };  /* text role -> window whose A-/A+ size it uses (lists follow the messages) */
 	var WIN = ['map', 'msg', 'stat', 'inv', 'items', 'vis'], wm = null;
 	var ROOT = '/crawl-linley', DIR = ROOT + '/save', LAYOUT_FILE = DIR + '/web-layout.json';
 	var FONT = 'Web437_IBM_VGA_8x16';
 	function face() { return L && L.face ? '"' + L.face + '", ' + FONT : FONT; }
 	var GUT = 6, TITLE_H = 20, BORDER = 2;
 	var ZOOM_STEPS = [1, 1.25, 1.5, 1.75, 2, 2.5, 3];  /* tiles, nearest-neighbour */
-	var FONT_STEPS = [12, 14, 16, 20, 24, 28, 32];     /* crisp at 16 and 32 */
 	/* libx11_init() colours */
 	var PAL = ['#000', '#0000a0', '#64b946', '#00b4b4', '#a00000', '#ee5cee', '#a55b00', '#a2a2a2',
 		'#525252', '#5266ff', '#52ff52', '#52ffff', '#ff5252', '#ff52ff', '#ffff52', '#fff'];
@@ -31,19 +30,13 @@
 
 	var regs = [];             /* per role: state from the game + canvas */
 	var events = [];
-	var running = false, saveReq = false, layer = 0;
+	var app, saveReq = false, layer = 0;
 	var dpr = Math.max(1, Math.min(3, window.devicePixelRatio || 1));
 	var L = null, rects = {};
 
 	function $(id) { return document.getElementById(id); }
 	function clamp(v, lo, hi) { return Math.max(lo, Math.min(hi, v)); }
-	function status(msg, isError) {
-		var s = $('status');
-		s.textContent = msg;
-		s.className = isError ? 'error' : '';
-		s.hidden = !msg;
-	}
-	function fontPx(role) { return role === R_CRT ? L.font.pop : L.font[TEXT_WIN[role]]; }
+	function fontPx(role) { if (!wm) makeWM(); return RvipWM.fontSize(TEXT_WIN[role]); }   /* WM-owned, default 16px (index.html) */
 
 	/* ---------- drawing ---------- */
 
@@ -146,17 +139,17 @@
 		event: function (atCmd) { RvipWM.prompt.wait(atCmd); return events.length ? events.shift() : null; },
 		prompt: function (s) { RvipWM.prompt.text(s); },
 		pending: function () { return events.length > 0 ? 1 : 0; },
-		sync: function () { syncFiles(); },
+		sync: function () { app.sync(); },
 		requestSave: function () { saveReq = true; },   /* also for testing */
 		wantSave: function () {
-			if (!saveReq || !running) return 0;
+			if (!saveReq || !app.running) return 0;
 			saveReq = false;
 			return 1;
 		},
 		end: function () {
-			running = false;
+			app.running = false;
 			var saved = !!newestSave();
-			syncFiles(function () {
+			app.sync(function () {
 				$('overlay-msg').textContent = saved ? 'Your game has been saved. Play again to continue it.'
 					: 'The game is over.';
 				$('overlay').hidden = false;
@@ -166,7 +159,7 @@
 
 	/* ---------- input ---------- */
 	function mouse(R, e, type) {
-		if (!running) return;
+		if (!app.running) return;
 		var box = R.cv.getBoundingClientRect();
 		var px = e.clientX - box.left, py = e.clientY - box.top, x, y;
 		if (R.text) {
@@ -191,13 +184,9 @@
 	}
 
 	function onKey(e) {
-		if (!$('help').hidden) {
-			if (e.key === 'Escape') { $('help').hidden = true; e.preventDefault(); }
-			return;
-		}
 		var t = e.target;
 		if (t && (t.tagName === 'INPUT' || t.tagName === 'TEXTAREA' || t.isContentEditable)) return;
-		if (!running || e.isComposing || e.metaKey) return;
+		if (!app.running || e.isComposing || e.metaKey) return;
 		var k = e.key, code = e.code || '', m = /^Numpad(\d)$/.exec(code), ks = 0, ch = 0;
 		var mods = (e.shiftKey ? 1 : 0) | (e.ctrlKey ? 2 : 0) | (e.altKey ? 4 : 0);
 		if (m) ks = 0xffb0 + +m[1];
@@ -242,7 +231,7 @@
 		var zoom = ZOOM_STEPS[0];
 		ZOOM_STEPS.forEach(function (z) { if (544 * z + BORDER <= W - sideW - GUT && 544 * z + BORDER <= H - msgH - GUT) zoom = z; });
 		var mapW = 544 * zoom + BORDER, mapH = 544 * zoom + BORDER;
-		return { v: 1, zoom: zoom, mini: 2, items: 1, auto: true, font: { msg: font, stat: font, pop: font },
+		return { v: 1, zoom: zoom, mini: 2, items: 1, auto: true,
 			split: { side: clamp((mapW + GUT / 2) / W, 0.3, 0.85), bottom: clamp((mapH + GUT / 2) / H, 0.3, 0.9),
 				stat: clamp((18 * font + TITLE_H + BORDER + GUT / 2) / H, 0.2, 0.8),
 				items: clamp(1 - (ITEMS_H + GUT / 2) / H, 0.3, 0.95) } };
@@ -257,11 +246,8 @@
 					d.auto = false;
 					if (ZOOM_STEPS.indexOf(s.zoom) >= 0) d.zoom = s.zoom;
 				}
-				Object.keys(d.font).forEach(function (k) {
-					if (s.font && FONT_STEPS.indexOf(s.font[k]) >= 0) d.font[k] = s.font[k];
-				});
-				if (s.font && s.font.vis >= 8 && s.font.vis <= 28) d.font.vis = s.font.vis;
 				if (s.wm) d.wm = s.wm;
+				if (s.font && d.wm && !d.wm.fs) d.wm.fs = { msg: s.font.msg, stat: s.font.stat, vis: s.font.vis };   /* old layout: sizes were ours */
 				if (typeof s.face === 'string') d.face = s.face;
 			}
 		} catch (err) { /* nothing saved yet */ }
@@ -272,7 +258,7 @@
 	function saveLayout() {
 		clearTimeout(saveTimer);
 		saveTimer = setTimeout(function () {
-			try { Module.FS.writeFile(LAYOUT_FILE, JSON.stringify(L)); syncFiles(); }
+			try { Module.FS.writeFile(LAYOUT_FILE, JSON.stringify(L)); app.sync(); }
 			catch (err) { console.warn('layout not saved', err); }
 		}, 400);
 	}
@@ -294,7 +280,7 @@
 	/* windows: the shared tiling window manager (rvip-wm.js, RVIP.md 5b);
 	 * the game's regions draw into them, Inventory is its 8 x 8 item grid */
 	function makeWM() {
-		var s = defaultLayout().split, A = areaSize(), line = L.font.msg + 4;
+		var s = defaultLayout().split, A = areaSize(), line = 20;
 		wm = RvipWM({
 			area: $('game'), menu: $('btn-layout'),
 			wins: [{ id: 'map', title: 'Map' }, { id: 'msg', title: 'Messages' }, { id: 'stat', title: 'Character' },
@@ -304,12 +290,12 @@
 			single: { d: 'v', r: 1 - 3 * line / A.h, a: 'map', b: 'msg' },
 			state: L.wm,
 			save: function (st) { L.wm = st; saveLayout(); },
-			layout: function (r) { rects = r; $('vis').style.fontSize = (L.font.vis || 13) + 'px'; $('vis').style.fontFamily = L.face ? '"' + L.face + '", monospace' : ''; fitPop(); },
-			font: function (id, d) {
-				if (id === 'map') zoomMap(d);
-				else if (id === 'vis') { L.font.vis = clamp((L.font.vis || 13) + d, 8, 28); applyDom(); saveLayout(); }
-				else if (id === 'msg' || id === 'stat') zoomText(id, d);
-				else { L[id === 'items' ? 'items' : 'mini'] = clamp(L[id === 'items' ? 'items' : 'mini'] + d * 0.5, 0.5, 4); redrawAll(); saveLayout(); }
+			layout: function (r) { rects = r; $('vis').style.fontFamily = L.face ? '"' + L.face + '", monospace' : ''; fitPop(); },
+			zoom: {   /* text windows redraw their canvas at the new size; image windows step their own scale */
+				map: function (px, d) { zoomMap(d); },
+				msg: redrawAll, stat: redrawAll,
+				items: function (px, d) { L.items = clamp(L.items + d * 0.5, 0.5, 4); redrawAll(); saveLayout(); },
+				inv: function (px, d) { L.mini = clamp(L.mini + d * 0.5, 0.5, 4); redrawAll(); saveLayout(); }
 			},
 			onReset: resetLayout
 		});
@@ -324,14 +310,8 @@
 		L.zoom = ZOOM_STEPS[clamp(ZOOM_STEPS.indexOf(L.zoom) + d, 0, ZOOM_STEPS.length - 1)];
 		L.auto = false;
 		redrawAll(); saveLayout();
-		status('Map tiles: ' + Math.round(32 * L.zoom) + ' px');
-		setTimeout(function () { status(''); }, 1200);
-	}
-
-	function zoomText(id, d) {
-		L.font[id] = FONT_STEPS[clamp(FONT_STEPS.indexOf(L.font[id]) + d, 0, FONT_STEPS.length - 1)];
-		if (id === 'msg') L.font.pop = L.font.msg;      /* lists follow the messages */
-		redrawAll(); saveLayout();
+		app.status('Map tiles: ' + Math.round(32 * L.zoom) + ' px');
+		setTimeout(function () { app.status(''); }, 1200);
 	}
 
 	function resetLayout() {
@@ -340,20 +320,6 @@
 	}
 
 	/* ---------- saves: IndexedDB (IDBFS) ---------- */
-	var syncing = false, syncAgain = false, pendingCbs = [];
-	function syncFiles(cb) {
-		if (!Module.FS) { if (cb) cb(); return; }
-		if (typeof cb === 'function') pendingCbs.push(cb);
-		if (syncing) { syncAgain = true; return; }
-		syncing = true;
-		var cbs = pendingCbs; pendingCbs = [];
-		Module.FS.syncfs(false, function (err) {
-			syncing = false;
-			if (err) status('Saving to browser storage (IndexedDB) failed: ' + err + '. Use "Export save" to keep a copy.', true);
-			cbs.forEach(function (f) { f(err); });
-			if (syncAgain) { syncAgain = false; syncFiles(); }
-		});
-	}
 	function saveFiles() {
 		return Module.FS.readdir(DIR).filter(function (f) { return f !== '.' && f !== '..' && f !== 'web-layout.json'; });
 	}
@@ -368,71 +334,39 @@
 		});
 		return best;
 	}
-	function exportSave() {
-		if (running) saveReq = true;
-		setTimeout(function () {
-			var files = saveFiles();
-			if (!newestSave()) { status('There is no saved game yet.', true); setTimeout(function () { status(''); }, 2000); return; }
-			var pack = {};
-			files.forEach(function (f) {
-				var d = Module.FS.readFile(DIR + '/' + f), s = '';
-				for (var i = 0; i < d.length; i++) s += String.fromCharCode(d[i]);
-				pack[f] = btoa(s);
-			});
-			var a = document.createElement('a');
-			a.href = URL.createObjectURL(new Blob([JSON.stringify({ crawl: 1, files: pack })], { type: 'application/json' }));
-			a.download = 'crawl-save.json';
-			document.body.appendChild(a); a.click();
-			setTimeout(function () { URL.revokeObjectURL(a.href); a.remove(); }, 1000);
-		}, running ? 1500 : 0);
+	function clearSaves() { saveFiles().forEach(function (f) { Module.FS.unlink(DIR + '/' + f); }); }
+	/* Export save: every save file as one JSON pack, written to /tmp for RvipApp to download */
+	function packFile() {
+		if (!newestSave()) return null;
+		var pack = {};
+		saveFiles().forEach(function (f) {
+			var d = Module.FS.readFile(DIR + '/' + f), s = '';
+			for (var i = 0; i < d.length; i++) s += String.fromCharCode(d[i]);
+			pack[f] = btoa(s);
+		});
+		Module.FS.writeFile('/tmp/crawl-save.json', JSON.stringify({ crawl: 1, files: pack }));
+		return '/tmp/crawl-save.json';
 	}
-	function importSave(file) {
-		var r = new FileReader();
-		r.onload = function () {
-			var pack;
-			try { pack = JSON.parse(r.result); if (!pack.crawl) throw 0; }
-			catch (e) { status('That is not a save exported from this page.', true); return; }
-			if (!confirm('Replace the saved games in this browser with "' + file.name + '"?')) return;
-			running = false;
-			saveFiles().forEach(function (f) { Module.FS.unlink(DIR + '/' + f); });
-			Object.keys(pack.files).forEach(function (f) {
-				if (/[\/]/.test(f)) return;
-				var s = atob(pack.files[f]), d = new Uint8Array(s.length);
-				for (var i = 0; i < s.length; i++) d[i] = s.charCodeAt(i);
-				Module.FS.writeFile(DIR + '/' + f, d);
-			});
-			syncFiles(function (err) { if (!err) location.reload(); });
-		};
-		r.readAsText(file);
-	}
-	function newGame() {
-		if (!confirm('Delete the saved games in this browser and start a new character?')) return;
-		running = false;
-		saveFiles().forEach(function (f) { Module.FS.unlink(DIR + '/' + f); });
-		syncFiles(function (err) { if (!err) location.reload(); });
+	function putPack(file, data) {
+		var pack;
+		try { pack = JSON.parse(new TextDecoder().decode(data)); if (!pack.crawl) throw 0; }
+		catch (e) { return 'That is not a save exported from this page.'; }
+		Object.keys(pack.files).forEach(function (f) {
+			if (/[\/]/.test(f)) return;
+			var s = atob(pack.files[f]), d = new Uint8Array(s.length);
+			for (var i = 0; i < s.length; i++) d[i] = s.charCodeAt(i);
+			Module.FS.writeFile(DIR + '/' + f, d);
+		});
 	}
 
 	function loadFace(n) {
 		if (!n) { redrawAll(); return; }
 		var ff = new FontFace(n, 'url(../fonts/' + n + '.woff)');
-		ff.load().then(function () { document.fonts.add(ff); if (!$('game').hidden) redrawAll(); }).catch(function () { status('Could not load the font ' + n + '.', true); });
+		ff.load().then(function () { document.fonts.add(ff); if (!$('game').hidden) redrawAll(); }).catch(function () { app.status('Could not load the font ' + n + '.', true); });
 	}
 
-	/* ---------- help ---------- */
-	var helpLoaded = false;
-	function toggleHelp() {
-		var h = $('help');
-		h.hidden = !h.hidden;
-		if (!h.hidden && !helpLoaded) {
-			helpLoaded = true;
-			fetch('help.html').then(function (r) { if (!r.ok) throw new Error(r.status); return r.text(); })
-				.then(function (t) { $('help-body').innerHTML = t; })
-				.catch(function (err) { helpLoaded = false; $('help-body').textContent = 'Could not load the guide (' + err + '). Press ? in the game for its own help.'; });
-		}
-		if (!h.hidden) $('help-body').focus();
-	}
-
-	/* ---------- startup ---------- */
+	app = RvipApp({ name: 'crawl', save: packFile, clear: clearSaves, put: putPack,
+		flush: function (done) { saveReq = true; setTimeout(done, 1500); } });   /* the game saves at its next wantSave() poll */
 	window.Module = {
 		cr: cr,
 		arguments: [],
@@ -445,7 +379,7 @@
 			Module.ENV.CRAWL_DIR = 'save/';
 			Module.addRunDependency('idbfs');
 			FS.syncfs(true, function (err) {
-				if (err) status('Could not read saved games from IndexedDB (' + err + '). Saving may not work in this browser mode.', true);
+				if (err) app.status('Could not read saved games from IndexedDB (' + err + '). Saving may not work in this browser mode.', true);
 				var name = newestSave();
 				if (name) Module.arguments.push('-name', name);   /* continue that character */
 				loadLayout();
@@ -454,44 +388,23 @@
 			});
 		}],
 		onRuntimeInitialized: function () {
-			running = true;
-			status('');
+			app.running = true;
+			app.status('');
 		},
 		print: function (s) { console.log(s); },
 		printErr: function (s) { console.warn(s); },
-		setStatus: function (s) { if (s && !running) status(s.replace(/\(\d+\/\d+\)/, '').trim() || 'Loading…'); },
-		onAbort: function (what) { crashed(what); }
+		setStatus: function (s) { if (s && !app.running) app.status(s.replace(/\(\d+\/\d+\)/, '').trim() || 'Loading…'); },
+		onAbort: function (what) { app.crashed(what); }
 	};
-
-	function crashed(err) {
-		if (!running) return;
-		running = false;
-		var msg = (err && (err.message || err.reason && err.reason.message)) || String(err);
-		console.error('[crawl] crash:', err);
-		status('The game crashed (' + msg + '). Reload the page to continue from the last autosave.', true);
-	}
-	window.addEventListener('unhandledrejection', function (e) {
-		if (e.reason && e.reason.name === 'ExitStatus') return;   /* exit() is the normal end */
-		crashed(e.reason);
-	});
-	window.addEventListener('error', function (e) {
-		if (e.error && e.error.name === 'ExitStatus') return;
-		if (e.error instanceof WebAssembly.RuntimeError || /crawl-core/.test(e.filename || '')) crashed(e.error || e.message);
-	});
 
 	/* autosave: every 2 minutes and when the page is hidden */
 	setInterval(function () { saveReq = true; }, 120000);
-	document.addEventListener('visibilitychange', function () { if (document.hidden) saveReq = true; });
-	window.addEventListener('beforeunload', function (e) { if (running) { e.preventDefault(); e.returnValue = ''; } });
+	document.addEventListener('visibilitychange', function () { if (document.hidden) { saveReq = true; app.sync(); } });
+	window.addEventListener('pagehide', function () { app.sync(); });
+	window.addEventListener('beforeunload', function (e) { if (app.running) { e.preventDefault(); e.returnValue = ''; } });
 
 	document.addEventListener('keydown', onKey);
 	document.addEventListener('DOMContentLoaded', function () {
-		$('btn-export').onclick = exportSave;
-		$('btn-import').onclick = function () { $('import-file').click(); };
-		$('import-file').onchange = function () { if (this.files[0]) importSave(this.files[0]); this.value = ''; };
-		$('btn-new').onclick = newGame;
-		$('btn-help').onclick = toggleHelp;
-		$('help-close').onclick = toggleHelp;
 		RvipWM.dropdown($('btn-file'), $('menu-file'));
 		/* text font: a face from the index page's fonts/ (web/build.sh lists them) */
 		var sel = $('sel-font');
