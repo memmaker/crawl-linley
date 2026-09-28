@@ -268,12 +268,11 @@
 		el.style.width = Math.max(0, r[2]) + 'px'; el.style.height = Math.max(0, r[3]) + 'px';
 	}
 
-	/* the text layer (menus, lists, help) as a box over the game */
+	/* the text layer (menus, lists, help) as a box centred on the map body
+	   (never over its title bar); it scrolls when larger */
 	function fitPop() {
-		var pop = $('pop'), A = areaSize();
-		if (pop.hidden) return;
-		pop.style.left = Math.max(0, (A.w - pop.offsetWidth) / 2) + 'px';
-		pop.style.top = Math.max(0, (A.h - pop.offsetHeight) / 2) + 'px';
+		var pop = $('pop');
+		if (!pop.hidden) RvipWM.popup(pop, { center: true });
 	}
 
 	function applyDom() { if (!wm) makeWM(); wm.apply(); }
@@ -405,6 +404,9 @@
 
 	document.addEventListener('keydown', onKey);
 	document.addEventListener('DOMContentLoaded', function () {
+		/* the canvases draw with the VGA font: fetch it now, redraw once it is there
+		   (drawn before it loads, text falls back to a serif face until the next change) */
+		document.fonts.load('16px ' + FONT).then(function () { if (!$('game').hidden) redrawAll(); });
 		RvipWM.dropdown($('btn-file'), $('menu-file'));
 		/* text font: a face from the index page's fonts/ (web/build.sh lists them) */
 		var sel = $('sel-font');
