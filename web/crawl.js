@@ -135,7 +135,7 @@
 			if (curRole >= 0 && regs[curRole]) { drawText(regs[curRole]); drawCursor(regs[curRole], cx, cy, cw); }
 			lastCur = curRole;
 		},
-		vis: function (s) { RvipWM.visible($('vis'), s.replace(/\t(\d+)$/gm, function (m, c) { return '\t' + PAL[+c || 7]; })); },
+		vis: function (s) { RvipWM.visible($('vis'), s.replace(/\t(\d+)\t/gm, function (m, c) { return '\t' + PAL[+c || 7] + '\t'; }), visIcon); },
 		event: function (atCmd) { RvipWM.prompt.wait(atCmd); return events.length ? events.shift() : null; },
 		prompt: function (s) { RvipWM.prompt.text(s); },
 		pending: function () { return events.length > 0 ? 1 : 0; },
@@ -356,6 +356,15 @@
 			for (var i = 0; i < s.length; i++) d[i] = s.charCodeAt(i);
 			Module.FS.writeFile(DIR + '/' + f, d);
 		});
+	}
+
+	/* Visible window icon: the game's tile (tiles/tile.png, 30 x 32 px per row) as a 16 px CSS sprite */
+	function visIcon(t) {
+		if (!(t >= 0)) return null;
+		var e = document.createElement('i');
+		e.className = 'wm-ic';
+		e.style.cssText = 'background:url(tile.png) -' + (t % 30) * 16 + 'px -' + ((t / 30) | 0) * 16 + 'px / 480px auto';
+		return e;
 	}
 
 	function loadFace(n) {

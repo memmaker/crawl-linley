@@ -84,6 +84,8 @@ extern int rvip_at_cmd;   // rvip.cc
 #include "rvip.h"
 #include "itemname.h"
 #include "mon-util.h"
+#include "tiles.h"
+int tileidx_monster(int mon_idx);   // tiles.cc (not in tiles.h)
 #include "player.h"
 #include "stuff.h"
 #include "view.h"
@@ -1067,9 +1069,10 @@ EM_JS(void, js_present, (int layer, int cur_role, int cx, int cy, int cw), {
     Module.cr.present(layer, cur_role, cx, cy, cw);
 });
 
-// Visible window (rvip-wm.js): "M<glyph><name>\t<colour>" per monster in
-// sight, "I<glyph><name>\t<colour>" per item on a square in view (colours:
-// libx11 palette indexes, crawl.js maps them)
+// Visible window (rvip-wm.js): "M<glyph><name>\t<colour>\t<tile>" per monster
+// in sight, "I<glyph><name>\t<colour>\t<tile>" per item on a square in view
+// (colours: libx11 palette indexes, crawl.js maps them; tile: its picture
+// in tiles/tile.png, the icon)
 EM_JS(void, js_vis, (const char *s), { Module.cr.vis(UTF8ToString(s)); });
 static void send_visible()
 {
@@ -1083,7 +1086,8 @@ static void send_visible()
         monsters *m = &menv[i];
         if (m->type == -1 || mgrd[m->x][m->y] != i || mons_is_mimic(m->type) || !mons_near(m) || !player_monster_visible(m))
             continue;
-        p += sprintf(p, "M%c%.60s\t%d\n", mons_char(m->type), ptr_monam(m, DESC_PLAIN), mons_colour(m->type) & 15);
+        p += sprintf(p, "M%c%.60s\t%d\t%d\n", mons_char(m->type), ptr_monam(m, DESC_PLAIN), mons_colour(m->type) & 15,
+            tileidx_monster(i) & TILE_FLAG_MASK);
     }
     for (int i = 0; i < MAX_ITEMS && p < e; i++)
     {
@@ -1091,7 +1095,8 @@ static void send_visible()
         if (it.base_type == OBJ_UNASSIGNED || it.quantity < 1 || it.x < 1 || !see_grid(it.x, it.y))
             continue;
         item_name(it, DESC_PLAIN, name);
-        p += sprintf(p, "I%c%.80s\t%d\n", it.base_type < sizeof GLYPH - 1 ? GLYPH[it.base_type] : '*', name, it.colour & 15);
+        p += sprintf(p, "I%c%.80s\t%d\t%d\n", it.base_type < sizeof GLYPH - 1 ? GLYPH[it.base_type] : '*', name, it.colour & 15,
+            tileidx_item(it) & TILE_FLAG_MASK);
     }
     js_vis(vis);
 }
