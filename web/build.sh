@@ -9,7 +9,7 @@ rm -rf "$OUT" "$STAGE" && mkdir -p "$OUT" "$STAGE/save"
 cp -R tiles tips_e init.txt dolls.txt "$STAGE/"
 # the objects of makefile.obj, with the web platform files
 SRCS=$(tr -d '\r' < source/makefile.obj | grep -o '[A-Za-z0-9_-]*\.o' | sed 's/\.o$/.cc/' | sed 's|^|source/|')
-em++ -O2 -std=gnu++98 -w -Isource -DLINUX -DV_FIX -DUSE_TILE -DUSE_X11 -DUSE_WEB \
+em++ -O2 -std=gnu++98 -Isource -DLINUX -DV_FIX -DUSE_TILE -DUSE_X11 -DUSE_WEB \
 	$SRCS source/rvip.cc source/tiles.cc source/libtile.cc source/winclass.cc \
 	source/libweb.cc source/winclass-web.cc -o "$OUT/crawl-core.js" \
 	-sUSE_LIBPNG=1 -sASYNCIFY -sASYNCIFY_STACK_SIZE=131072 -sSTACK_SIZE=1048576 \
