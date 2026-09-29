@@ -419,8 +419,8 @@
 		RvipWM.dropdown($('btn-file'), $('menu-file'));
 		/* text font: a face from the index page's fonts/ (web/build.sh lists them) */
 		var sel = $('sel-font');
-		fetch('fonts.json').then(function (r) { return r.json(); }).then(function (list) {
-			list.forEach(function (n) { var o = document.createElement('option'); o.value = n; o.textContent = n.replace(/^Web(Plus|437)_/, '').replace(/_/g, ' '); sel.appendChild(o); });
+		RvipWM.fonts.then(function (list) {
+			RvipWM.fontOptions(sel);
 			sel.value = (L && L.face) || '';
 		}).catch(function () { });
 		sel.onchange = function () { if (!L) return; L.face = this.value; saveLayout(); loadFace(this.value); this.blur(); };
